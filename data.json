@@ -1,0 +1,123 @@
+{
+  "lesson_names": {
+    "rel": [
+      "religia",
+      "lookup/h2g6dftul7"
+    ],
+    "gw": [
+      "godzina wychowawcza",
+      "lookup/ezg3aoqlpe"
+    ],
+    "mat": [
+      "matematyka",
+      ""
+    ],
+    "ang-1": [
+      "j\u0119zyk angielski",
+      "lookup/bpwq26lzht"
+    ],
+    "inf": [
+      "informatyka",
+      "lookup/f7mwatesda"
+    ],
+    "edb": [
+      "edukacja dla bezpiecze\u0144stwa",
+      "lookup/daw4tvxftt"
+    ],
+    "chem": [
+      "chemia",
+      "lookup/ccydofjmsy"
+    ],
+    "geo": [
+      "geografia",
+      "lookup/dzuekigxx3"
+    ],
+    "wos": [
+      "wiedza o spo\u0142ecze\u0144stwie",
+      "lookup/flikhkjfkr"
+    ],
+    "fiz": [
+      "fizyka",
+      "lookup/exacwjtr67"
+    ],
+    "ang-kw": [
+      "j\u0119zyk angielski z p. Kwiatkowsk\u0105",
+      "lookup/bgz74rwodu"
+    ],
+    "pol": [
+      "j\u0119zyk polski",
+      "lookup/fthvbikyap"
+    ],
+    "ang-2": [
+      "j\u0119zyk angielski",
+      "lookup/fbrsxfud26"
+    ],
+    "tok": [
+      "theory of knowledge",
+      "lookup/dpvw6r3mg7"
+    ],
+    "wf": [
+      "wychowanie fizyczne",
+      "lookup/gb75o2kzx4"
+    ],
+    "bio": [
+      "biologia",
+      "lookup/bhaw4bkiwa"
+    ],
+    "dram": [
+      "drama",
+      "lookup/dzhxxxfabz"
+    ],
+    "plas-1": [
+      "plastyka",
+      ""
+    ],
+    "plas-2": [
+      "plastyka",
+      ""
+    ],
+    "fr": [
+      "j\u0119zyk francuski",
+      "xwa-ahgy-wns"
+    ],
+    "es": [
+      "j\u0119zyk hiszpa\u0144ski",
+      "fpv-tduz-ptc"
+    ],
+    "de-1": [
+      "j\u0119zyk niemiecki",
+      "otb-miyx-xfw"
+    ],
+    "de-2": [
+      "j\u0119zyk niemiecki",
+      "lookup/ggm2fxojv6"
+    ],
+    "his": [
+      "historia",
+      "lookup/e5elwpevj5"
+    ],
+    "chem-ks": [
+      "zaj\u0119cia indywidualne z chemii",
+      "lookup/ajgdbjndtv"
+    ],
+    "separator": [
+      "\u200b",
+      " "
+    ]
+  },
+  "homework_events": {},
+  "tracked_market_items": [],
+  "lucky_numbers": {
+    "date": "2/12/2021",
+    "luckyNumbers": [
+      2,
+      21
+    ],
+    "excludedClasses": [
+      "2a",
+      "3ag",
+      "3eg"
+    ]
+  },
+  "token": "ODE5NDg5NDcxNTQzMTE1Nzc3.YEnXCw.A393vR3ONxLUxRA-K4aOQbWANHs"
+}
