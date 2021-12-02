@@ -1,0 +1,5 @@
+# Project details for PyCharm IDE
+.idea
+
+# Python cache for files generated during compilation
+*.pyc
