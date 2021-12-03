@@ -55,3 +55,8 @@ def make_request(url: str):
     if response.status_code not in [requests.codes.ok, 500]:
         raise InvalidResponseException(response.status_code)
     return response.json()
+
+
+if __name__ == "__main__":
+    print("Hello there!")
+    input("Press enter to continue... ")
