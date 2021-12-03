@@ -3,3 +3,9 @@
 
 # Python cache for files generated during compilation
 *.pyc
+
+# Environment variable files
+*.env
+
+# Local data file
+data.json
