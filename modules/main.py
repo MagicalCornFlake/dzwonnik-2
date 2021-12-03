@@ -198,10 +198,11 @@ lesson_names = {
     "separator": ["\u200b", " "]
 }
 prefix = '!'  # Prefix used before commands
-enable_debug_messages = True  # Print messages to the console during the sorting process
+enable_debug_messages = True
 use_bot_testing = False
 homework_events = HomeworkEventContainer()
 tracked_market_items = []
+restart_on_exit = True
 
 
 def force_exit_program(dialog_box_message: str, dialog_box_title: str = "Dzwonnik 2 - Critical error") -> None:
@@ -1093,12 +1094,13 @@ async def on_message(message) -> None:
             f"{client.get_channel(773135499627593738).mention} numerem odpowiedniej grupy.**\n"
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
-    if message.channel.id in [ChannelID.bot_testing, ChannelID.bot_logs] and msg_first_word in ["exec", "restart"]:
+    admin_commands = ["exec", "restart", "quit", "exit"]
+    if message.channel.id in [ChannelID.bot_testing, ChannelID.bot_logs] and msg_first_word in admin_commands:
         if message.author != client.get_user(member_ids[7]):
             author_name = message.author.name if message.author.nick is None else message.author.nick
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
-        if msg_first_word == "exec":
+        if msg_first_word == admin_commands[0]:
             code = message.content.replace('!', '', 1)[5:]
             attempt_debug_message("Executing code:", code)
             try:
@@ -1107,11 +1109,19 @@ async def on_message(message) -> None:
                 exec_result = f"{type(e).__name__}: {e}"
             if exec_result is not None:
                 attempt_debug_message(">", exec_result)
-        else:
+            return
+
+        if msg_first_word == admin_commands[1]:
             await message.channel.send("Restarting bot...")
-            track_time_changes.stop()
-            track_api_updates.stop()
-            await client.close()
+        else:
+            await message.channel.send("Exiting program.")
+            print(f"\nProgram manually closed by user ('{msg_first_word}' command).\nGoodbye!\n")
+            global restart_on_exit
+            restart_on_exit = False
+
+        track_time_changes.stop()
+        track_api_updates.stop()
+        await client.close()
     if msg_first_word not in command_descriptions:
         return
     await message.delete()
@@ -1181,13 +1191,15 @@ def start_bot() -> bool:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
             print("\nProgram manually closed by user.\nGoodbye!\n")
-            return False
+            return restart_on_exit
     finally:
         save_data_file(should_send_debug_messages=False)
         print("Successfully saved data file 'data.json' (program exiting).\n")
-    return True
+    return restart_on_exit
 
 
 if __name__ == "__main__":
     print("Started bot from main file! Assuming this is debug behaviour.\n")
+    use_bot_testing = True
+    enable_debug_messages = True
     start_bot()
