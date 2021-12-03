@@ -16,11 +16,13 @@ from discord.ext import tasks
 
 # Local application imports
 if __name__ == "__main__":
-    from util import web_api, steam_api, lucky_numbers
+    import file_management
+    from util import web_api, steam_api, lucky_numbers_api
 else:
+    file_management = importlib.import_module('modules.file_management')
     web_api = importlib.import_module('modules.util.web_api')
     steam_api = importlib.import_module('modules.util.steam_api')
-    lucky_numbers = importlib.import_module('modules.util.lucky_numbers')
+    lucky_numbers_api = importlib.import_module('modules.util.lucky_numbers_api')
 
 
 intents = discord.Intents.default()
@@ -189,27 +191,32 @@ lesson_names = {
 }
 prefix = '!'  # Prefix used before commands
 enable_debug_messages = True  # Print messages to the console during the sorting process
-use_bot_testing = False
+use_bot_testing = True
 homework_events = HomeworkEventContainer()
 tracked_market_items = []
 
 
-class DataFileManagement:
-    def __init__(self):
-        self.bot_token = None
-
-    def __enter__(self):
-        self.bot_token = read_data_file(get_token=True)
-        return self.bot_token
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        save_data_file(debug_message=False)
-        print("Successfully saved data file 'data.json' (program exiting).\n")
+def force_exit_program(dialog_box_message: str, dialog_box_title: str = "Dzwonnik 2 - Critical error") -> None:
+    import sys
+    from tkinter import Tk, messagebox
+    window = Tk()
+    window.wm_withdraw()
+    messagebox.showerror(title=dialog_box_title, message=dialog_box_message)
+    sys.exit("Program force-closed due to user error.")
 
 
-def read_data_file(filename="data.json", get_token=False) -> str:
+def read_data_file(filename="data.json") -> None:
     global homework_events
     # Reads data file and updates settings
+    if not os.path.isfile(filename):
+        with open(filename, 'w') as file:
+            default_settings = {
+                "lesson_names": {},
+                "homework_events": {},
+                "tracked_market_items": [],
+                "lucky_numbers": {}
+            }
+            json.dump(default_settings, file, indent=2)
     with open(filename, 'r', encoding="utf-8") as file:
         data = json.load(file)
     # We have defined lesson_names above, but this replaces any values that are different than the default
@@ -231,14 +238,11 @@ def read_data_file(filename="data.json", get_token=False) -> str:
         item = TrackedItem(item_name, min_price, max_price, author_id)
         if item not in tracked_market_items:
             tracked_market_items.append(item)
-    lucky_numbers.cached_data = data["lucky_numbers"]
-    if not get_token:
-        return ""
-    return data['token'] if os.getenv('TOKEN') is None else os.getenv('TOKEN')
+    lucky_numbers_api.cached_data = data["lucky_numbers"]
 
 
-def save_data_file(filename="data.json", debug_message=True) -> None:
-    if debug_message:
+def save_data_file(filename="data.json", should_send_debug_messages=True) -> None:
+    if should_send_debug_messages:
         attempt_debug_message("Saving data file", filename)
     # Creates containers with the data to be saved in .json format
     serialised_homework_events = {event.id_string: event.serialised for event in homework_events}
@@ -248,17 +252,13 @@ def save_data_file(filename="data.json", debug_message=True) -> None:
         "lesson_names": lesson_names,
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
-        "lucky_numbers": lucky_numbers.cached_data
+        "lucky_numbers": lucky_numbers_api.cached_data
     }
 
-    with open(filename, 'r') as file:
-        if "token" in json.load(file):
-            data_to_be_saved["token"] = file_manager.bot_token
-
-    # Actually saves the data to the file
+    # Replaces file content with new data
     with open(filename, 'w') as file:
         json.dump(data_to_be_saved, file, indent=2)
-    if debug_message:
+    if should_send_debug_messages:
         attempt_debug_message(f"Successfully saved data file '{filename}'.")
 
 
@@ -377,10 +377,11 @@ async def track_api_updates() -> None:
         tracked_market_items.remove(item)
         save_data_file()
     await asyncio.sleep(3)
-    data = lucky_numbers.get_lucky_numbers()
-    if data != lucky_numbers.cached_data:
-        lucky_numbers.cached_data = data
-        channel = client.get_channel(ChannelID.general)
+    data = lucky_numbers_api.get_lucky_numbers()
+    if data != lucky_numbers_api.cached_data:
+        attempt_debug_message(f"New data detected!\nOld data: {lucky_numbers_api.cached_data}\nNew data: {data}")
+        lucky_numbers_api.cached_data = data
+        channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
         await channel.send(embed=get_lucky_numbers_embed(data))
         save_data_file()
 
@@ -408,7 +409,7 @@ timetable = [
 # List of times bot should update status for
 watch_times = []
 for watch_time in timetable:
-    watch_times.extend(watch_time.split("-"))
+    watch_times += watch_time.split("-")
 
 # The following are timetables for each day
 # Format: [lesson code, group ID, period]
@@ -532,7 +533,7 @@ weekday_names = [
     "środa",
     "czwartek",
     "piątek",
-    "poniedziałek",  # When get_next_lesson() is called on Saturday or Sunday
+    "poniedziałek",  # When get_next_lesson() is called on Saturday or Sunday,
     "poniedziałek"   # the program looks at Monday as the next school day.
 ]
 
@@ -797,15 +798,15 @@ def get_lesson(query_period, loop_table, roles):
 def get_next_lesson_embed(message):
     args = message.content.split(" ")
     current_time = datetime.datetime.now()
-    if len(args) != 1:
+    if len(args) > 1:
         try:
             if not (0 <= int(args[1]) < 24 and 0 <= int(args[2]) < 60):
                 raise ValueError()
         except IndexError:
             args.append(0)
         except (TypeError, ValueError):
-            msg = "Należy napisać po komendzie '" + prefix + "nl' godzinę i ewentualnie minutę oddzieloną spacją, " \
-                                                             "lub zostawić parametry komendy puste. "
+            msg = f"Należy napisać po komendzie `{prefix}nl` godzinę i ewentualnie minutę oddzieloną spacją, " \
+                  f"lub zostawić parametry komendy puste. "
             return "ArgumentError", msg
         current_time = current_time.replace(hour=int(args[1]), minute=int(args[2]), second=0, microsecond=0)
     next_period = get_next_period(current_time)
@@ -948,7 +949,7 @@ def get_lucky_numbers_embed(data: dict) -> discord.Embed:
 
 def get_lucky_numbers_msg(_) -> tuple[bool, any]:
     try:
-        data = lucky_numbers.get_lucky_numbers()
+        data = lucky_numbers_api.get_lucky_numbers()
     except Exception as e:
         return False, get_web_api_error_message(e)
     else:
@@ -1142,8 +1143,7 @@ async def on_message(message) -> None:
 
 
 def debug(*debug_message) -> None:
-    # Function alias
-    attempt_debug_message(*debug_message)
+    attempt_debug_message(*debug_message, True)
 
 
 def attempt_debug_message(*debug_message, force=False) -> None:
@@ -1155,30 +1155,33 @@ def attempt_debug_message(*debug_message, force=False) -> None:
         debug_message_string = f"Error while attempting debug message! Debug message: {debug_message}"
     else:
         for substring in debug_message[1:]:
-            debug_message_string += " " + str(substring)
+            debug_message_string += f" {substring}"
+    print(debug_message_string)
     log_loop = asyncio.get_event_loop()
     log_loop.create_task(send_debug_message(debug_message_string))
 
 
 async def send_debug_message(debug_message) -> None:
-    print(debug_message)
     await client.wait_until_ready()
     await client.get_channel(ChannelID.bot_logs).send(f"```py\n{debug_message}\n```")
 
 
-file_manager = DataFileManagement()
-
-
 def start_bot() -> bool:
-    importlib.reload(steam_api)
-    with file_manager as token:
+    for module in (steam_api, web_api, lucky_numbers_api, file_management):
+        importlib.reload(module)
+    try:
+        file_management.read_env_files()
+        read_data_file('data.json')
         event_loop = asyncio.get_event_loop()
-        event_loop.run_until_complete(client.login(token))
+        event_loop.run_until_complete(client.login(os.environ["BOT_TOKEN"]))
         try:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
-            print("\nExited program from Pycharm ;)\nCya!\n")
+            print("\nProgram manually closed by user.\nGoodbye!\n")
             return False
+    finally:
+        save_data_file(should_send_debug_messages=False)
+        print("Successfully saved data file 'data.json' (program exiting).\n")
     return True
 
 
