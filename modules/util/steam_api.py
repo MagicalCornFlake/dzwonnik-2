@@ -92,7 +92,3 @@ def get_item_price(item_data: dict):
         price = item_data['median_price']
     return price
 
-
-if __name__ == "__main__":
-    while True:
-        get_item(input("What do you want to look up on the Steam Community Market?\n> "))
