@@ -41,6 +41,7 @@ class ChannelID:
 
 class Emoji:
     info = ":information_source:"
+    check = ":white_check_mark:"
 
 
 # This method is called when the bot comes online
@@ -625,7 +626,7 @@ def delete_homework_event(event_id):
     raise ValueError
 
 
-def get_homework_events_embed(message, should_display_event_ids=False):
+def get_homework_events(message, should_display_event_ids=False):
     read_data_file()
     amount_of_homeworks = len(homework_events)
     if amount_of_homeworks > 0:
@@ -697,7 +698,7 @@ def update_meet_link(message):
     return False, msg
 
 
-def get_help_message_embed(message):
+def get_help_message(message):
     if message is None:
         pass
     embed = discord.Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
@@ -712,7 +713,7 @@ def get_help_message_embed(message):
     return True, embed
 
 
-def get_lesson_plan_embed(message):
+def get_lesson_plan(message):
     args = message.content.split(" ")
     if len(args) == 1:
         today = datetime.datetime.now().weekday()
@@ -795,7 +796,7 @@ def get_lesson(query_period, loop_table, roles):
 
 
 # Returns the message to send when the user asks for the next lesson
-def get_next_lesson_embed(message):
+def get_next_lesson(message):
     args = message.content.split(" ")
     current_time = datetime.datetime.now()
     if len(args) > 1:
@@ -841,7 +842,7 @@ def get_next_lesson_embed(message):
 
 
 # Calculates the time of the next break
-def get_next_break_msg(message):
+def get_next_break(message):
     args = message.content.split(" ")
     current_time = datetime.datetime.now()
     if len(args) == 1:
@@ -877,7 +878,7 @@ def get_web_api_error_message(e: Exception):
 
 
 # Returns the message to send when the user asks for the price of an item on the Steam Community Market
-def get_market_price_msg(message, result_override=None):
+def get_market_price(message, result_override=None):
     args = message.content.lstrip(f"{prefix}cena ").split(" waluta=") if result_override is None else [message]
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
@@ -888,7 +889,7 @@ def get_market_price_msg(message, result_override=None):
 
 
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
-def get_market_track_msg(message):
+def start_market_tracking(message):
     # noinspection SpellCheckingInspection
     args = message.content.lstrip(f"{prefix}sledz ").split(" min=")
     min_price = args[-1].split(" max=")[0].strip()
@@ -918,10 +919,10 @@ def get_market_track_msg(message):
             save_data_file()
             return False, f":white_check_mark: Stworzono zlecenie śledzenia przedmiotu *{item_name}* w przedziale " \
                           f"`{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n" + \
-                get_market_price_msg(item_name, result_override=result)[1]
+                   get_market_price(item_name, result_override=result)[1]
 
 
-def get_market_stop_tracking_msg(message) -> tuple[bool, str]:
+def stop_market_tracking(message) -> tuple[bool, str]:
     # noinspection SpellCheckingInspection
     item_name = message.content.lstrip(prefix + 'odsledz ')
     for item in tracked_market_items:
@@ -929,7 +930,7 @@ def get_market_stop_tracking_msg(message) -> tuple[bool, str]:
             if item.author_id == message.author.id or message.channel.permissions_for(message.author).administrator:
                 tracked_market_items.remove(item)
                 save_data_file()
-                return False, f":white_check_mark: Zaprzestano śledzenie przedmiotu *{item.name}*."
+                return False, f"{Emoji.check} Zaprzestano śledzenie przedmiotu *{item.name}*."
             return False, f":x: Nie jesteś osobą, która zażyczyła śledzenia tego przedmiotu."
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."
 
@@ -947,7 +948,7 @@ def get_lucky_numbers_embed(data: dict) -> discord.Embed:
     return embed
 
 
-def get_lucky_numbers_msg(_) -> tuple[bool, any]:
+def get_lucky_numbers(_) -> tuple[bool, any]:
     try:
         data = lucky_numbers_api.get_lucky_numbers()
     except Exception as e:
@@ -1047,23 +1048,23 @@ command_descriptions = {
 }
 # noinspection SpellCheckingInspection
 command_methods = {
-    'help': get_help_message_embed,
-    'nl': get_next_lesson_embed,
-    'nb': get_next_break_msg,
-    'plan': get_lesson_plan_embed,
+    'help': get_help_message,
+    'nl': get_next_lesson,
+    'nb': get_next_break,
+    'plan': get_lesson_plan,
     'zad': create_homework_event,
     'zadanie': create_homework_event,
-    'zadania': get_homework_events_embed,
+    'zadania': get_homework_events,
     'meet': update_meet_link,
-    'cena': get_market_price_msg,
-    'sledz': get_market_track_msg,
-    'odsledz': get_market_stop_tracking_msg,
-    'numerki': get_lucky_numbers_msg,
-    'num': get_lucky_numbers_msg
+    'cena': get_market_price,
+    'sledz': start_market_tracking,
+    'odsledz': stop_market_tracking,
+    'numerki': get_lucky_numbers,
+    'num': get_lucky_numbers
 }
 
 # noinspection SpellCheckingInspection
-replies = {
+automatic_bot_replies = {
     "co jest?": "nie wjem"
 }
 
@@ -1075,9 +1076,9 @@ async def on_message(message) -> None:
     author_role_names = [str(role) for role in message.author.roles]
     if client.user in message.mentions:
         message.content = "!help"
-    for reply in replies:
+    for reply in automatic_bot_replies:
         if reply.lower().startswith(message.content) and len(message.content) >= 3:
-            await message.channel.send(replies[reply])
+            await message.channel.send(automatic_bot_replies[reply])
             return
     message_is_command = message.content.startswith(prefix)
     if message.author == client.user or "Bot" in author_role_names or not message_is_command:
@@ -1139,7 +1140,7 @@ async def on_message(message) -> None:
         else:
             # Someone has added detective reaction to message
             await reply_msg.clear_reactions()
-            await reply_msg.edit(embed=get_homework_events_embed(message, True)[1])
+            await reply_msg.edit(embed=get_homework_events(message, True)[1])
 
 
 def debug(*debug_message) -> None:
