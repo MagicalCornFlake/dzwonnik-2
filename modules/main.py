@@ -28,9 +28,10 @@ else:
 intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents=intents)
-my_server = client.get_guild(766346477874053130)  # 1D The Supreme server
+my_server = client.get_guild(766346477874053130)  # 2D The Supreme server
 
 
+# Code constants
 class ChannelID:
     general: int = 766346477874053132
     nauka: int = 769098845598515220
@@ -39,14 +40,20 @@ class ChannelID:
     bot_logs: int = 835561967007432784
 
 
+class RoleID:
+    gr1: int = 766346710712582155
+    gr2: int = 766346737400807474
+
+
 class Emoji:
-    info = ":information_source:"
-    check = ":white_check_mark:"
+    check: str = ":white_check_mark:"
+    info: str = ":information_source:"
+    warning: str = ":warning:"
 
 
 # This method is called when the bot comes online
 @client.event
-async def on_ready():
+async def on_ready() -> None:
     global my_server
     guilds = {guild.id: guild.name for guild in client.guilds}
     attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds)
@@ -192,7 +199,7 @@ lesson_names = {
 }
 prefix = '!'  # Prefix used before commands
 enable_debug_messages = True  # Print messages to the console during the sorting process
-use_bot_testing = True
+use_bot_testing = False
 homework_events = HomeworkEventContainer()
 tracked_market_items = []
 
@@ -279,8 +286,8 @@ async def update_status(query_time=None) -> None:
             new_status_msg = "przerwa do " + timetable[math.floor(next_period[0])].split("-")[0]
         else:  # Currently lesson
             lesson_period = math.floor(next_period[0])
-            lesson_group1 = get_lesson(lesson_period, next_period[1], [my_server.get_role(766346710712582155)])
-            lesson_group2 = get_lesson(lesson_period, next_period[1], [my_server.get_role(766346737400807474)])
+            lesson_group1 = get_lesson(lesson_period, next_period[1], [my_server.get_role(RoleID.gr1)])
+            lesson_group2 = get_lesson(lesson_period, next_period[1], [my_server.get_role(RoleID.gr2)])
             lesson = lesson_group1[0][0]
             if lesson_group1 != lesson_group2:  # If both groups have different lessons
                 lesson += "/" + lesson_group2[0][0]
@@ -292,8 +299,8 @@ async def update_status(query_time=None) -> None:
 async def remind_about_homework_event(event, tense) -> None:
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
-    for role in role_id_association:
-        if role_id_association[role] == event.group:
+    for role in role_ids:
+        if role_ids[role] == event.group:
             mention_role = discord.utils.get(my_server.roles, name=role)
             if role != "everyone":
                 mention_text = my_server.get_role(mention_role.id).mention
@@ -389,7 +396,7 @@ async def track_api_updates() -> None:
 
 @track_api_updates.before_loop
 @track_time_changes.before_loop
-async def wait_until_ready_before_loops():
+async def wait_until_ready_before_loops() -> None:
     await client.wait_until_ready()
 
 
@@ -408,9 +415,7 @@ timetable = [
 ]
 
 # List of times bot should update status for
-watch_times = []
-for watch_time in timetable:
-    watch_times += watch_time.split("-")
+watch_times = [time.split("-")[i] for time in timetable for i in range(2)]
 
 # The following are timetables for each day
 # Format: [lesson code, group ID, period]
@@ -489,7 +494,7 @@ lessons_friday = [
 # Table to easily identify which timetable to use for which day
 # Eg. weekday is 0 (Monday) -> use item 0 of this list (lessons_monday)
 # This means Saturday and Sunday (5 & 6) will use lessons_monday
-weekday_table_association = [
+weekday_tables = [
     lessons_monday,
     lessons_tuesday,
     lessons_wednesday,
@@ -500,7 +505,7 @@ weekday_table_association = [
 ]
 
 # Which Discord role correlates to what group ID
-role_id_association = {
+role_ids = {
     "everyone": "grupa_0",
     "Grupa 1": "grupa_1",
     "Grupa 2": "grupa_2",
@@ -512,7 +517,7 @@ role_id_association = {
 }
 
 # Dictionary with text to use when sending messages, eg. 'lekcja dla grupy drugiej'
-group_name_association = {
+group_names = {
     "grupa_0": "",
     "grupa_1": "dla grupy pierwszej",
     "grupa_2": "dla grupy drugiej",
@@ -526,7 +531,7 @@ group_name_association = {
 
 # Table to keep results of calling get_lesson_plan_embed() method so that we don't have to calculate the result
 # each time, since the it's always going to be the same for a given day
-table_embed_association = {}
+table_embed_cache = {}
 
 weekday_names = [
     "poniedziałek",
@@ -605,8 +610,8 @@ def create_homework_event(message):
             group_name = "everyone"
         else:
             return False, ":warning: Trzecim argumentem komendy musi być oznaczenie grupy, dla której jest zadanie."
-    group_id = role_id_association[group_name]
-    group_text = ' ' * (group_id != 'grupa_0') + group_name_association[group_id]
+    group_id = role_ids[group_name]
+    group_text = ' ' * (group_id != 'grupa_0') + group_names[group_id]
 
     new_event = HomeworkEvent(title, group_id, author, args[1] + " 17")
     if new_event.serialised in homework_events:
@@ -638,7 +643,7 @@ def get_homework_events(message, should_display_event_ids=False):
     # Adds an embed field for each event
     for homework_event in homework_events:
         group_role_name = list(
-            role_id_association.keys())[list(role_id_association.values()).index(homework_event.group)]
+            role_ids.keys())[list(role_ids.values()).index(homework_event.group)]
         role_mention = "@everyone"  # Defaults to setting @everyone as the group the homework event is for
         if group_role_name != "everyone":
             # Adjusts the mention string if the homework event is not for everyone
@@ -698,7 +703,7 @@ def update_meet_link(message):
     return False, msg
 
 
-def get_help_message(message):
+def get_help_message(message) -> (bool, discord.Embed):
     if message is None:
         pass
     embed = discord.Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
@@ -713,7 +718,7 @@ def get_help_message(message):
     return True, embed
 
 
-def get_lesson_plan(message):
+def get_lesson_plan(message) -> (bool, str or discord.Embed):
     args = message.content.split(" ")
     if len(args) == 1:
         today = datetime.datetime.now().weekday()
@@ -723,15 +728,15 @@ def get_lesson_plan(message):
             if not (any([weekday.startswith(args[1]) for weekday in weekday_names]) or 1 <= int(args[1]) <= 5):
                 raise ValueError()
         except (TypeError, ValueError):
-            return False, f"Należy napisać po komendzie '{prefix}plan' numer dnia (1-5) bądź dzień tygodnia, " + \
-                   "lub zostawić parametry komendy puste."
+            return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
+                          f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
         try:
             current_day = int(args[1]) - 1
-        except (TypeError, ValueError):
-            current_day = [day_no for day_no, weekday in enumerate(weekday_names) if weekday.startswith(args[1])][0]
+        except TypeError:
+            current_day = [i for i, weekday in enumerate(weekday_names) if weekday.startswith(args[1])][0]
     sender_is_admin = message.channel.permissions_for(message.author).administrator
-    if current_day + 5 * sender_is_admin not in table_embed_association:
-        loop_table = weekday_table_association[current_day]
+    if current_day + 5 * sender_is_admin not in table_embed_cache:
+        loop_table = weekday_tables[current_day]
         periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
         lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
         lesson_plan = [lessons_per_period, current_day, periods]
@@ -746,57 +751,48 @@ def get_lesson_plan(message):
                 text += "[{p}](https://meet.google.com/{k}?authuser=0&hs=179) ".format(
                     p=lesson_names[lesson[0]][0], k=lesson_names[lesson[0]][1])
                 if lesson[1] != "grupa_0":
-                    text += "({g})".format(g=group_name_association[lesson[1]])
+                    text += "({g})".format(g=group_names[lesson[1]])
                 if lesson != lesson_plan[0][period - lesson_plan[2][0]][-1]:
                     text += "\n"
             embed.add_field(name="Lekcja {p} ({t})".format(p=period, t=timetable[period]), value=text, inline=False)
         embed.set_footer(text="Użyj komendy {p}plan, aby pokazać tą wiadomość.".format(p=prefix))
-        table_embed_association[current_day + 5 * int(sender_is_admin)] = embed
-    return True, table_embed_association[current_day + 5 * sender_is_admin]
+        table_embed_cache[current_day + 5 * int(sender_is_admin)] = embed
+    return True, table_embed_cache[current_day + 5 * sender_is_admin]
 
 
-def get_next_period(given_time):
+def get_next_period(given_time: datetime.datetime) -> (float, list[list[str, str, int]], bool):
+    attempt_debug_message(f"\nGetting next period for {given_time:%x %X}...")
     current_day = given_time.weekday()
-    loop_table = weekday_table_association[current_day]
+    loop_table = weekday_tables[current_day]
     for lesson in loop_table:
-        period = lesson[-1]
-        times = timetable[lesson[-1]].split("-")
-        lesson_start = []
-        for number in times[0].split(":"):
-            lesson_start.append(int(number))
-        lesson_end = []
-        for number in times[1].split(":"):
-            lesson_end.append(int(number))
-        lesson_time = given_time.replace(hour=lesson_start[0], minute=lesson_start[1], second=0, microsecond=0)
-        break_time = lesson_time.replace(hour=lesson_end[0], minute=lesson_end[1])
-        if given_time < lesson_time:
-            return period, loop_table, True
-        if given_time < break_time:
-            return period + 0.5, loop_table, True
-    current_day = (given_time + datetime.timedelta(days=1)).weekday()
-    loop_table = weekday_table_association[current_day]
-    return loop_table[0][-1], loop_table, False, weekday_table_association.index(loop_table)
+        lesson_period = lesson[-1]
+        times = timetable[lesson_period].split("-")
+        lesson_start_time = datetime.datetime.strptime(f"{given_time.strftime('%x')} {times[0]}", "%x %H:%M")
+        if given_time < lesson_start_time or current_day > 4:
+            attempt_debug_message(f"... this is the break before period {lesson_period}.")
+            return lesson_period, loop_table, True
+        if given_time < lesson_start_time + datetime.timedelta(minutes=45):
+            attempt_debug_message(f"... this is period {lesson_period}.")
+            return lesson_period + 0.5, loop_table, True
+    next_school_day = weekday_tables.index(loop_table) + 1
+    loop_table = weekday_tables[next_school_day]
+    attempt_debug_message("... there are no more lessons today.")
+    return loop_table[0][-1], loop_table, False
 
 
 # Returns the lesson details for a given period, day and user roles
-def get_lesson(query_period, loop_table, roles):
-    desired_roles = ["grupa_0"]
-    for role in roles:
-        if str(role) in role_id_association:
-            desired_roles.append(role_id_association[str(role)])
-    for lesson_data in loop_table:
-        lesson_id = lesson_data[0]
-        lesson_group = lesson_data[1]
-        lesson_period = lesson_data[2]
+def get_lesson(query_period, loop_table, roles) -> list:
+    desired_roles = ["grupa_0"] + [role_ids[str(role)] for role in roles if str(role) in role_ids]
+    for lesson_id, lesson_group, lesson_period in loop_table:
         if lesson_period >= query_period:
             if lesson_group in desired_roles:
-                return [lesson_names[lesson_id], group_name_association[lesson_group], lesson_period]
+                return [lesson_names[lesson_id], group_names[lesson_group], lesson_period]
     attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}")
-    return False
+    return []
 
 
 # Returns the message to send when the user asks for the next lesson
-def get_next_lesson(message):
+def get_next_lesson(message) -> (bool, str or discord.Embed):
     args = message.content.split(" ")
     current_time = datetime.datetime.now()
     if len(args) > 1:
@@ -804,38 +800,44 @@ def get_next_lesson(message):
             if not (0 <= int(args[1]) < 24 and 0 <= int(args[2]) < 60):
                 raise ValueError()
         except IndexError:
-            args.append(0)
+            args.append(00)
         except (TypeError, ValueError):
-            msg = f"Należy napisać po komendzie `{prefix}nl` godzinę i ewentualnie minutę oddzieloną spacją, " \
+            msg = f":x: Należy napisać po komendzie `{prefix}nl` godzinę i ewentualnie minutę oddzieloną spacją, " \
                   f"lub zostawić parametry komendy puste. "
-            return "ArgumentError", msg
+            return False, msg
         current_time = current_time.replace(hour=int(args[1]), minute=int(args[2]), second=0, microsecond=0)
-    next_period = get_next_period(current_time)
-    lesson_details = get_lesson(math.floor(next_period[0]), next_period[1], message.author.roles)
-    if not lesson_details[0]:
-        return False, ":x: Nie znaleziono żadnych lekcji po godzinie " + \
-            f"{current_time.hour}:{current_time.minute} dla Twojej grupy."
-    if next_period[2]:
-        if round(next_period[0]) != next_period[0]:
-            next_break_time = timetable[math.floor(next_period[0])].split("-")[1].split(":")
-            next_period = get_next_period(current_time
-                                          .replace(hour=int(next_break_time[0]), minute=int(next_break_time[1])))
-            lesson_details = get_lesson(math.floor(next_period[0]), next_period[1], message.author.roles)
-        next_period_time = timetable[lesson_details[2]].split("-")[0]
-        group = lesson_details[1]
-        if group != "":
-            group += " "
-        msg = f"{Emoji.info} Następna lekcja {group}to **{lesson_details[0][0]}** o godzinie __{next_period_time}__."
-    else:
-        if (current_time + datetime.timedelta(days=1)).weekday() == next_period[3]:
-            when = "jutro"
+
+    def process(time: datetime.datetime) -> (bool, str):
+        next_period = get_next_period(time)
+        lesson_details = get_lesson(math.floor(next_period[0]), next_period[1], message.author.roles)
+        if not lesson_details:
+            return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}."
+        if next_period[2]:
+            # Currently lesson
+            if math.ceil(next_period[0]) != next_period[0]:
+                lesson_end_time = f"{current_time.strftime('%x')} {timetable[math.floor(next_period[0])].split('-')[1]}"
+                # Get the next lesson after the end of this one, recursive call
+                return process(datetime.datetime.strptime(lesson_end_time, "%x %H:%M"))
+            next_period_time = timetable[lesson_details[2]].split("-")[0]
+            group = lesson_details[1]
+            if group != "":
+                group += " "
+            return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_details[0][0]}** " \
+                         f"o godzinie __{next_period_time}__.", lesson_details[0][1]
         else:
-            when = "w poniedziałek"
-        next_period_time = timetable[lesson_details[2]].split("-")[0]
-        msg = f"{Emoji.info} Następna lekcja{lesson_details[1]} to **{lesson_details[0][0]}** " \
-              f"{when} o godzinie __{next_period_time}__."
-    link = lesson_details[0][1]
-    embed = discord.Embed(title="Następna lekcja", description=msg)
+            if (current_time + datetime.timedelta(days=1)).weekday() == weekday_tables.index(next_period[1]):
+                when = "jutro"
+            else:
+                when = "w poniedziałek"
+            next_period_time = timetable[lesson_details[2]].split("-")[0]
+            return True, f"{Emoji.info} Następna lekcja{lesson_details[1]} to **{lesson_details[0][0]}** " \
+                         f"{when} o godzinie __{next_period_time}__.", lesson_details[0][1]
+
+    success, *msg = process(current_time)
+    if not success:
+        return False, msg
+    description, link = msg
+    embed = discord.Embed(title="Następna lekcja", description=description)
     embed.add_field(name="Link do lekcji", value=f"[meet.google.com](https://meet.google.com/{link}?authuser=0&hs=179)")
     embed.set_footer(text="Użyj komendy {p}nl, aby pokazać tą wiadomość.".format(p=prefix))
     return True, embed
@@ -854,8 +856,8 @@ def get_next_break(message):
         except IndexError:
             args.append(0)
         except (TypeError, ValueError):
-            msg = "Należy napisać po komendzie '" + prefix + "nb' godzinę i ewentualnie minutę oddzieloną spacją, " \
-                                                             "lub zostawić parametry komendy puste. "
+            msg = f"{Emoji.warning} Należy napisać po komendzie `{prefix}nb` godzinę " \
+                  f"i ewentualnie minutę oddzieloną spacją, lub zostawić parametry komendy puste. "
             return False, msg
         next_period = get_next_period(current_time.replace(hour=int(args[1]), minute=int(args[2])))
     if next_period[2]:
@@ -924,7 +926,7 @@ def start_market_tracking(message):
 
 def stop_market_tracking(message) -> tuple[bool, str]:
     # noinspection SpellCheckingInspection
-    item_name = message.content.lstrip(prefix + 'odsledz ')
+    item_name = message.content.lstrip(f"{prefix}odsledz ")
     for item in tracked_market_items:
         if item.name.lower() == item_name.lower():
             if item.author_id == message.author.id or message.channel.permissions_for(message.author).administrator:
@@ -1086,15 +1088,15 @@ async def on_message(message) -> None:
     authors_group_roles = [role for role in ["Grupa 1", "Grupa 2"] if role in author_role_names]
     if len(authors_group_roles) == 0:
         await message.channel.send(
-            f""":warning: **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej 
-            ani do grupy drugiej.\nUstaw sobie grupę, do której należysz reagując na wiadomość w kanale \
-            {client.get_channel(773135499627593738).mention} numerem odpowiedniej grupy.**
-            Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.""")
+            f":warning: **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej "
+            f"ani do grupy drugiej.\nUstaw sobie grupę, do której należysz reagując na wiadomość w kanale "
+            f"{client.get_channel(773135499627593738).mention} numerem odpowiedniej grupy.**\n"
+            f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
-    if message.channel.id in [ChannelID.bot_testing, ChannelID.bot_logs]:
+    if message.channel.id in [ChannelID.bot_testing, ChannelID.bot_logs] and msg_first_word in ["exec", "restart"]:
         if message.author != client.get_user(member_ids[7]):
             author_name = message.author.name if message.author.nick is None else message.author.nick
-            attempt_debug_message(f"Ha ha! Nice try, {author_name}")
+            await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
         if msg_first_word == "exec":
             code = message.content.replace('!', '', 1)[5:]
@@ -1105,7 +1107,7 @@ async def on_message(message) -> None:
                 exec_result = f"{type(e).__name__}: {e}"
             if exec_result is not None:
                 attempt_debug_message(">", exec_result)
-        elif msg_first_word == "restart":
+        else:
             await message.channel.send("Restarting bot...")
             track_time_changes.stop()
             track_api_updates.stop()
