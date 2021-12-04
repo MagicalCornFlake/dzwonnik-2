@@ -269,7 +269,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     if query_time is None:
         # Default time to check is current time
         query_time = datetime.datetime.now()
-    attempt_debug_message(f"Updating bot status ({query_time:%H:%M})...")
+    attempt_debug_message(f"Updating bot status ({query_time:%H:%M}) ...")
     if query_time.weekday() > 4:  # 0, 1, 2, 3, 4: Monday to Friday; > 4 means weekend
         attempt_debug_message("... it's currently the weekend.")
         new_status_msg = "weekend!"
@@ -782,7 +782,7 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
 
 
 def get_next_period(given_time: datetime.datetime) -> (float, list[list[str or int]], bool):
-    attempt_debug_message(f"\nGetting next period for {given_time:%x %X} ...")
+    attempt_debug_message(f"Getting next period for {given_time:%x %X} ...")
     current_day_index: int = given_time.weekday()
 
     if current_day_index < 5:
@@ -1116,7 +1116,7 @@ async def on_message(message: discord.Message) -> None:
             try:
                 exec_result = exec(code)
             except Exception as e:
-                exec_result = f"{type(e).__name__}: {e}"
+                exec_result = ' '.join(traceback.format_exception(type(e), e, e.__traceback__))
             if exec_result is not None:
                 attempt_debug_message(">", exec_result)
             return
@@ -1141,7 +1141,7 @@ async def on_message(message: discord.Message) -> None:
     try:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:
-        attempt_debug_message(''.join(traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)))
+        attempt_debug_message(traceback.format_exception(e))
         await message.reply(f"<@{member_ids[7]}> Exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
@@ -1158,10 +1158,14 @@ def debug(*debug_message) -> None:
     attempt_debug_message(*debug_message, True)
 
 
-def attempt_debug_message(*debug_message, force=False) -> None:
+def attempt_debug_message(*debug_message, time: datetime.datetime = None, force=False) -> None:
     if not enable_debug_messages and not force:
         return
-    debug_message_string = ' '.join(map(str, debug_message))
+    if time is None:
+        time = datetime.datetime.now()
+    timestamp = f"{time:%Y-%m-%d @ %H:%M:%S.%f}: "
+    message = ' '.join(map(str, debug_message)).replace("\n", "\n" + " " * len(timestamp))
+    debug_message_string = f"{timestamp}{message}"
     print(debug_message_string)
     log_loop = asyncio.get_event_loop()
     log_loop.create_task(send_debug_message(debug_message_string))
