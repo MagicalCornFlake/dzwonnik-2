@@ -57,7 +57,6 @@ async def on_ready() -> None:
     global my_server
     guilds = {guild.id: guild.name for guild in client.guilds}
     attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
-    attempt_debug_message("Test message")
     my_server = client.get_guild(766346477874053130)  # 1D The Supreme server
 
     # Sets status message on bot start
