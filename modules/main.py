@@ -1141,7 +1141,7 @@ async def on_message(message: discord.Message) -> None:
     try:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:
-        attempt_debug_message(traceback.format_exception(e))
+        attempt_debug_message(traceback.format_exception(type(e), e, e.__traceback__))
         await message.reply(f"<@{member_ids[7]}> Exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
