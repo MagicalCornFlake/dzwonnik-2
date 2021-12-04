@@ -711,9 +711,8 @@ def get_help_message(message) -> (bool, discord.Embed):
     for command_name in command_descriptions:
         cmd_description = command_descriptions[command_name]
         try:
-            embed.add_field(name=command_name, value=cmd_description.format(p=prefix), inline=False)
-        except AttributeError:
-            attempt_debug_message('Caught AttributeError in get_help_message_embed()', force=True)
+            cmd_description = cmd_description.format(p=prefix)
+        finally:
             embed.add_field(name=command_name, value=cmd_description, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}help lub mnie @oznacz, aby pokazać tą wiadomość.")
     return True, embed
@@ -762,7 +761,7 @@ def get_lesson_plan(message) -> (bool, str or discord.Embed):
 
 
 def get_next_period(given_time: datetime.datetime) -> (float, list[list[str, str, int]], bool):
-    # attempt_debug_message(f"\nGetting next period for {given_time:%x %X}...")
+    attempt_debug_message(f"\nGetting next period for {given_time:%x %X}...")
     current_day = given_time.weekday()
     loop_table = weekday_tables[current_day]
     for lesson in loop_table:
@@ -770,14 +769,14 @@ def get_next_period(given_time: datetime.datetime) -> (float, list[list[str, str
         times = timetable[lesson_period].split("-")
         lesson_start_time = datetime.datetime.strptime(f"{given_time.strftime('%x')} {times[0]}", "%x %H:%M")
         if given_time < lesson_start_time or current_day > 4:
-            # attempt_debug_message(f"... this is the break before period {lesson_period}.")
+            attempt_debug_message(f"... this is the break before period {lesson_period}.")
             return lesson_period, loop_table, True
         if given_time < lesson_start_time + datetime.timedelta(minutes=45):
-            # attempt_debug_message(f"... this is period {lesson_period}.")
+            attempt_debug_message(f"... this is period {lesson_period}.")
             return lesson_period + 0.5, loop_table, True
     next_school_day = weekday_tables.index(loop_table) + 1
     loop_table = weekday_tables[next_school_day]
-    # attempt_debug_message("... there are no more lessons today.")
+    attempt_debug_message("... there are no more lessons today.")
     return loop_table[0][-1], loop_table, False
 
 
@@ -901,7 +900,7 @@ def start_market_tracking(message):
         max_price = int(float(max_price) * 100)
     except ValueError:
         # noinspection SpellCheckingInspection
-        return False, f":warning: Należy wpisać po nazwie przedmiotu cenę minimalną oraz cenę maksymalną. " \
+        return False, f"{Emoji.warning} Należy wpisać po nazwie przedmiotu cenę minimalną oraz cenę maksymalną. " \
                       f"Przykład: `{prefix}sledz Operation Broken Fang Case min=1 max=3`."
     else:
         item_name = args[0].rstrip()
@@ -915,13 +914,13 @@ def start_market_tracking(message):
             if item in tracked_market_items:
                 for item in tracked_market_items:
                     if item.name.lower() == item_name.lower():
-                        return False, f":warning: Przedmiot *{item.name}* jest już śledzony przez " + \
+                        return False, f"{Emoji.warning} Przedmiot *{item.name}* jest już śledzony przez " + \
                                (f"użytkownika <@{item.author_id}>." if item.author_id != author_id else "Ciebie.")
             tracked_market_items.append(item)
             save_data_file()
-            return False, f":white_check_mark: Stworzono zlecenie śledzenia przedmiotu *{item_name}* w przedziale " \
+            return False, f"{Emoji.check} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w przedziale " \
                           f"`{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n" + \
-                   get_market_price(item_name, result_override=result)[1]
+                get_market_price(item_name, result_override=result)[1]
 
 
 def stop_market_tracking(message) -> tuple[bool, str]:
@@ -1145,6 +1144,15 @@ async def send_debug_message(debug_message) -> None:
 
 
 def start_bot() -> bool:
+    """
+    Logs in to the Discord bot, and starts its functionality.
+    This method is blocking - once the bot is connected, it will run until it's disconnected.
+
+    Returns:
+        - restart_on_exit (boolean): tells the calling method if the bot should be restarted once it's stopped.
+    """
+    # Update each imported module before starting the bot.
+    # The point of restarting the bot is to update the code without having to manually stop and start the script.
     for module in (steam_api, web_api, lucky_numbers_api, file_management):
         importlib.reload(module)
     try:
@@ -1152,18 +1160,36 @@ def start_bot() -> bool:
         read_data_file('data.json')
         event_loop = asyncio.get_event_loop()
         try:
-            event_loop.run_until_complete(client.login(os.environ["BOT_TOKEN"]))
+            token = os.environ["BOT_TOKEN"]
         except KeyError:
             print("\n'BOT_TOKEN' OS environment variable not found. Program exiting.\n")
+            # Do not restart bot
             return False
+        else:
+            # No problems finding OS variable containing bot token. Can login successfully.
+            event_loop.run_until_complete(client.login(token))
+
         try:
+            # Blocking call:
+            # The program will stay on this line until the bot is disconnected.
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
+            # Raised when the program is forcefully closed (eg. Ctrl+F2 in PyCharm).
             print("\nProgram manually closed by user.\nGoodbye!\n")
-            return restart_on_exit
+            # Do not restart, since the closure of the bot was specifically requested by the user.
+            return False
+        else:
+            # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
+            pass
     finally:
+        # Execute this no matter the circumstances, ensures data file is always up-to-date.
+        # The file is saved before the start_bot() method returns any value.
+        # Do not send a debug message since the bot is already offline.
         save_data_file(should_send_debug_messages=False)
         print("Successfully saved data file 'data.json' (program exiting).\n")
+    # By default, when the program is exited gracefully (see above), it is later restarted in run.pyw.
+    # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
+    # and the bot is not restarted.
     return restart_on_exit
 
 

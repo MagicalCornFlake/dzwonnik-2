@@ -11,11 +11,17 @@ def read_env_files() -> bool:
             continue
         env_name = filename.rstrip('.env')
         if env_name in os.environ:
-            print(f"Environment variable '{env_name}' is already set.")
+            print(f"\nEnvironment variable '{env_name}' is already set, ignoring the .env file.")
             continue
+        else:
+            print("\nGlobal environment variable not found. Setting it in the program's local memory.")
+            # for var in os.environ:
+            #     print(var)
         return_value = True
         with open(filename, 'r') as file:
             env_value = file.read()
             os.environ[env_name] = env_value
             print(f"Set environment variable value '{env_name}' to '{env_value}'.")
+    # Newline for readability
+    print()
     return return_value
