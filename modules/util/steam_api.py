@@ -1,6 +1,4 @@
-"""
-Functionality for accessing the Steam Community web API
-"""
+"""Functionality for accessing the Steam Community web API"""
 import requests
 import time
 import urllib.parse
@@ -58,8 +56,7 @@ def get_currency_id(currency: str):
 
 # Define custom exceptions
 class NoSuchItemException(Exception):
-    """
-    Raised when there is no item with the given name on the Steam Community Market
+    """Raised when there is no item with the given name on the Steam Community Market
 
     Attributes:
         query -- the item that was searched for

@@ -1,6 +1,4 @@
-"""
-Functionality for reading the .env files in the program root directory.
-"""
+"""Functionality for reading the .env files in the program root directory."""
 import os
 
 

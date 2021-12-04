@@ -1,6 +1,4 @@
-"""
-Functionality for getting the lucky numbers from the SU ILO website
-"""
+"""Functionality for getting the lucky numbers from the SU ILO website"""
 from . import web_api
 
 
