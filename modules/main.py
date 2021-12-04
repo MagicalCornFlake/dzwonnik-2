@@ -56,7 +56,7 @@ class Emoji:
 async def on_ready() -> None:
     global my_server
     guilds = {guild.id: guild.name for guild in client.guilds}
-    attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds)
+    attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
     my_server = client.get_guild(766346477874053130)  # 1D The Supreme server
 
     # Sets status message on bot start
@@ -115,7 +115,7 @@ class HomeworkEvent:
             self.id = event_container[-1].id + 1
         except (IndexError, TypeError):
             self.id = 1
-        attempt_debug_message("Assigning ID", self.id, f"to event '{self.title}'")
+        # attempt_debug_message("Assigning ID", self.id, f"to event '{self.title}'")
         # attempt_debug_message("Sorting", self.id_string, "into container...")
         for comparison_event in event_container:
             new_event_time = datetime.datetime.strptime(self.deadline, "%d.%m.%Y")
@@ -126,7 +126,7 @@ class HomeworkEvent:
                 # Inserts event id in the place of the one it's being compared to, so every event
                 # after this event (including the comparison one) is pushed one spot ahead in the list
                 event_container.insert(event_container.index(comparison_event), self)
-                attempt_debug_message("Placed", self.id_string, "before", comparison_event.id_string)
+                # attempt_debug_message("Placed", self.id_string, "before", comparison_event.id_string)
                 return
             # The new event should not be placed before the one it is currently being compared to, continue evaluating
         # At this point the algorithm was unable to place the event before any others, so it shall be put at the end
@@ -388,7 +388,7 @@ async def track_api_updates() -> None:
     await asyncio.sleep(3)
     data = lucky_numbers_api.get_lucky_numbers()
     if data != lucky_numbers_api.cached_data:
-        attempt_debug_message(f"New data detected!\nOld data: {lucky_numbers_api.cached_data}\nNew data: {data}")
+        attempt_debug_message(f"New data!\nOld data: {lucky_numbers_api.cached_data}\nNew data: {data}", force=True)
         lucky_numbers_api.cached_data = data
         channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
         await channel.send(embed=get_lucky_numbers_embed(data))
@@ -713,7 +713,7 @@ def get_help_message(message) -> (bool, discord.Embed):
         try:
             embed.add_field(name=command_name, value=cmd_description.format(p=prefix), inline=False)
         except AttributeError:
-            attempt_debug_message('Caught AttributeError in get_help_message_embed()')
+            attempt_debug_message('Caught AttributeError in get_help_message_embed()', force=True)
             embed.add_field(name=command_name, value=cmd_description, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}help lub mnie @oznacz, aby pokazać tą wiadomość.")
     return True, embed
@@ -762,7 +762,7 @@ def get_lesson_plan(message) -> (bool, str or discord.Embed):
 
 
 def get_next_period(given_time: datetime.datetime) -> (float, list[list[str, str, int]], bool):
-    attempt_debug_message(f"\nGetting next period for {given_time:%x %X}...")
+    # attempt_debug_message(f"\nGetting next period for {given_time:%x %X}...")
     current_day = given_time.weekday()
     loop_table = weekday_tables[current_day]
     for lesson in loop_table:
@@ -770,14 +770,14 @@ def get_next_period(given_time: datetime.datetime) -> (float, list[list[str, str
         times = timetable[lesson_period].split("-")
         lesson_start_time = datetime.datetime.strptime(f"{given_time.strftime('%x')} {times[0]}", "%x %H:%M")
         if given_time < lesson_start_time or current_day > 4:
-            attempt_debug_message(f"... this is the break before period {lesson_period}.")
+            # attempt_debug_message(f"... this is the break before period {lesson_period}.")
             return lesson_period, loop_table, True
         if given_time < lesson_start_time + datetime.timedelta(minutes=45):
-            attempt_debug_message(f"... this is period {lesson_period}.")
+            # attempt_debug_message(f"... this is period {lesson_period}.")
             return lesson_period + 0.5, loop_table, True
     next_school_day = weekday_tables.index(loop_table) + 1
     loop_table = weekday_tables[next_school_day]
-    attempt_debug_message("... there are no more lessons today.")
+    # attempt_debug_message("... there are no more lessons today.")
     return loop_table[0][-1], loop_table, False
 
 
@@ -785,10 +785,9 @@ def get_next_period(given_time: datetime.datetime) -> (float, list[list[str, str
 def get_lesson(query_period, loop_table, roles) -> list:
     desired_roles = ["grupa_0"] + [role_ids[str(role)] for role in roles if str(role) in role_ids]
     for lesson_id, lesson_group, lesson_period in loop_table:
-        if lesson_period >= query_period:
-            if lesson_group in desired_roles:
-                return [lesson_names[lesson_id], group_names[lesson_group], lesson_period]
-    attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}")
+        if lesson_period >= query_period and lesson_group in desired_roles:
+            return [lesson_names[lesson_id], group_names[lesson_group], lesson_period]
+    attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}", force=True)
     return []
 
 
@@ -958,40 +957,6 @@ def get_lucky_numbers(_) -> tuple[bool, any]:
         return False, get_web_api_error_message(e)
     else:
         return True, get_lucky_numbers_embed(data)
-
-
-def update_debug_variable(message) -> None:
-    args = message.content.split(' ')
-
-    def reject_input(info=None):
-        debug_message = f"Invalid arguments received for update_debug_variable method!\nArguments: {args}"
-        if info is not None:
-            debug_message += f"\nException info: {info}"
-        attempt_debug_message(debug_message, force=True)
-
-    if len(args) == 1:
-        try:
-            attempt_debug_message(f"Value of {args[0]}: {globals()[args[0]]}", force=True)
-        except Exception as e:
-            reject_input(e)
-        finally:
-            return
-
-    if len(args) != 3 or args[1] != '=' or (args[2] != 'True' and args[2] != 'False'):
-        reject_input()
-        return
-    var_new_value = args[2] == "True"
-    try:
-        globals()[args[0]]
-    except Exception as e:
-        reject_input(e)
-        return
-    else:
-        if globals()[args[0]] == var_new_value:
-            attempt_debug_message(f"Error! Variable {args[0]} already has value {var_new_value}.")
-        else:
-            globals()[args[0]] = var_new_value
-            attempt_debug_message(f"Successfully updated variable {args[0]} to {var_new_value}.", force=True)
 
 
 # noinspection SpellCheckingInspection
@@ -1186,7 +1151,11 @@ def start_bot() -> bool:
         file_management.read_env_files()
         read_data_file('data.json')
         event_loop = asyncio.get_event_loop()
-        event_loop.run_until_complete(client.login(os.environ["BOT_TOKEN"]))
+        try:
+            event_loop.run_until_complete(client.login(os.environ["BOT_TOKEN"]))
+        except KeyError:
+            print("\n'BOT_TOKEN' OS environment variable not found. Program exiting.\n")
+            return False
         try:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
