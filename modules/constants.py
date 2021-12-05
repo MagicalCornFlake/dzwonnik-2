@@ -2,7 +2,7 @@
 
 
 __all__ = ["my_server_id", "ChannelID", "RoleID", "Emoji",
-           "Weekday", "weekday_names", "role_ids", "group_names", "member_ids"]
+           "Weekday", "weekday_names", "role_codes", "group_names", "member_ids"]
 
 
 my_server_id: int = 766346477874053130
@@ -51,17 +51,16 @@ weekday_names = [
     "poniedziałek"  # the program looks at Monday as the next school day.
 ]
 
-
-# Which Discord role correlates to what group ID
-role_ids = {
-    "everyone": "grupa_0",
-    "Grupa 1": "grupa_1",
-    "Grupa 2": "grupa_2",
-    "Religia": "grupa_rel",
-    "Język Hiszpański": "grupa_es",
-    "Język Francuski": "grupa_fr",
-    "Język Niemiecki (Podstawa)": "grupa_de1",
-    "Język Niemiecki (Rozszerzenie)": "grupa_de2"
+# What group code correlates to which Discord role
+role_codes = {
+    "grupa_0": "everyone",
+    "grupa_1": "Grupa 1",
+    "grupa_2": "Grupa 2",
+    "grupa_rel": "Religia",
+    "grupa_es": "Język Hiszpański",
+    "grupa_fr": "Język Francuski",
+    "grupa_de1": "Język Niemiecki (Podstawa)",
+    "grupa_de2": "Język Niemiecki (Rozszerzenie)"
 }
 
 # Dictionary with text to use when sending messages, eg. 'lekcja dla grupy drugiej'

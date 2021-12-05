@@ -151,33 +151,33 @@ class TrackedItem:
 
 
 # noinspection SpellCheckingInspection
-lesson_names = {
-    "rel": ["religia", "lookup/h2g6dftul7"],
-    "gw": ["godzina wychowawcza", "lookup/ezg3aoqlpe"],
-    "mat": ["matematyka", ""],
-    "ang-1": ["język angielski", "lookup/bpwq26lzht"],
-    "inf": ["informatyka", "lookup/f7mwatesda"],
-    "edb": ["edukacja dla bezpieczeństwa", "lookup/daw4tvxftt"],
-    "chem": ["chemia", "lookup/ccydofjmsy"],
-    "geo": ["geografia", "lookup/dzuekigxx3"],
-    "wos": ["wiedza o społeczeństwie", "lookup/flikhkjfkr"],
-    "fiz": ["fizyka", "lookup/exacwjtr67"],
-    "ang-kw": ["język angielski z p. Kwiatkowską", "lookup/bgz74rwodu"],
-    "pol": ["język polski", "lookup/fthvbikyap"],
-    "ang-2": ["język angielski", "lookup/fbrsxfud26"],
-    "tok": ["theory of knowledge", "lookup/dpvw6r3mg7"],
-    "wf": ["wychowanie fizyczne", "lookup/gb75o2kzx4"],
-    "bio": ["biologia", "lookup/bhaw4bkiwa"],
-    "dram": ["drama", "lookup/dzhxxxfabz"],
-    "plas-1": ["plastyka", ""],
-    "plas-2": ["plastyka", ""],
-    "fr": ["język francuski", "xwa-ahgy-wns"],
-    "es": ["język hiszpański", "fpv-tduz-ptc"],
-    "de-1": ["język niemiecki", "otb-miyx-xfw"],
-    "de-2": ["język niemiecki", "lookup/ggm2fxojv6"],
-    "his": ["historia", "lookup/e5elwpevj5"],
-    "chem-ks": ["zajęcia indywidualne z chemii", "lookup/ajgdbjndtv"],
-    "separator": ["\u200b", " "]
+lesson_details: dict[str, dict[str, str]] = {
+    "ang-1": {"name": "język angielski", "link": "lookup/bpwq26lzht"},
+    "ang-2": {"name": "język angielski", "link": "lookup/fbrsxfud26"},
+    "ang-kw": {"name": "język angielski z p. Kwiatkowską", "link": "lookup/bgz74rwodu"},
+    "bio": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
+    "chem": {"name": "chemia", "link": "lookup/ccydofjmsy"},
+    "chem-ks": {"name": "zajęcia indywidualne z chemii", "link": "lookup/ajgdbjndtv"},
+    "de-1": {"name": "język niemiecki", "link": "otb-miyx-xfw"},
+    "de-2": {"name": "język niemiecki", "link": "lookup/ggm2fxojv6"},
+    "dram": {"name": "drama", "link": "lookup/dzhxxxfabz"},
+    "edb": {"name": "edukacja dla bezpieczeństwa", "link": "lookup/daw4tvxftt"},
+    "es": {"name": "język hiszpański", "link": "fpv-tduz-ptc"},
+    "fiz": {"name": "fizyka", "link": "lookup/exacwjtr67"},
+    "fr": {"name": "język francuski", "link": "xwa-ahgy-wns"},
+    "geo": {"name": "geografia", "link": "lookup/dzuekigxx3"},
+    "gw": {"name": "godzina wychowawcza", "link": "lookup/ezg3aoqlpe"},
+    "his": {"name": "historia", "link": "lookup/e5elwpevj5"},
+    "inf": {"name": "informatyka", "link": "lookup/f7mwatesda"},
+    "mat": {"name": "matematyka", "link": ""},
+    "plas-1": {"name": "plastyka", "link": ""},
+    "plas-2": {"name": "plastyka", "link": ""},
+    "przed": {"name": "przedsiębiorczość", "link": ""},
+    "pol": {"name": "język polski", "link": "lookup/fthvbikyap"},
+    "rel": {"name": "religia", "link": "lookup/h2g6dftul7"},
+    "tok": {"name": "theory of knowledge", "link": "lookup/dpvw6r3mg7"},
+    "wf": {"name": "wychowanie fizyczne", "link": "lookup/gb75o2kzx4"},
+    "wos": {"name": "wiedza o społeczeństwie", "link": "lookup/flikhkjfkr"}
 }
 prefix = '!'  # Prefix used before commands
 enable_debug_messages = True
@@ -202,8 +202,8 @@ def read_data_file(filename="data.json") -> None:
     if not os.path.isfile(filename):
         with open(filename, 'w') as file:
             default_settings = {
-                # lesson_names is updated later anyway, so we can leave it empty.
-                "lesson_names": {},
+                # lesson_details is updated later anyway, so we can leave it empty.
+                "lesson_details": {},
                 "homework_events": {},
                 "tracked_market_items": [],
                 "lucky_numbers": lucky_numbers_api.cached_data
@@ -211,8 +211,9 @@ def read_data_file(filename="data.json") -> None:
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r', encoding="utf-8") as file:
         data = json.load(file)
-    # We have defined lesson_names above, but this replaces any values that are different than the default
-    lesson_names.update(data["lesson_names"])
+    # We have defined lesson_details above, but this replaces any values that are different than the default
+    if "lesson_details" in data:
+        lesson_details.update(data["lesson_details"])
     # homework_events.clear()  # To ensure there aren't any old instances, not 100% needed though
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = HomeworkEventContainer()
@@ -247,7 +248,7 @@ def save_data_file(filename="data.json", should_send_debug_messages=True) -> Non
     serialised_tracked_market_items = [item.serialised for item in tracked_market_items]
     # Creates a parent dictionary to save all data that needs to be saved
     data_to_be_saved = {
-        "lesson_names": lesson_names,
+        "lesson_details": lesson_details,
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
         "lucky_numbers": lucky_numbers_api.cached_data
@@ -279,17 +280,17 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             watch_roles = [RoleID.gr1, RoleID.gr2]
             msgs: dict[str, str] = {}
             for role_id in watch_roles:
-                lesson_info = get_lesson(lesson_period, lessons, [my_server.get_role(role_id)])
-                if not lesson_info:
+                lesson = get_lesson(lesson_period, lessons, [my_server.get_role(role_id)])
+                if not lesson:
                     continue
-                lesson, group_name, period = lesson_info
-                msgs[group_name] = f"{lesson} do {timetable[period].split('-')[1]}"
+                lesson_info, group_code, period = lesson
+                msgs[group_code] = f"{lesson_info['name']} do {timetable[period].split('-')[1]}"
 
-            def get_lesson_msg(group: str) -> str:
-                lesson_msg = msgs[group]
-                return lesson_msg if group == "grupa_0" else f"{role_ids[group]}: {lesson_msg}"
+            def map_lesson_msg(group_id: str) -> str:
+                lesson_msg = msgs[group_id]
+                return lesson_msg if group_id == "grupa_0" else f"{role_codes[group_id]}: {lesson_msg}"
 
-            new_status_msg = f"{' / '.join([get_lesson_msg(group_name) for group_name in msgs])}"
+            new_status_msg = f"{' / '.join([map_lesson_msg(group_id) for group_id in msgs])}"
     else:
         # After the last lesson for the given day
         if query_time.weekday() < Weekday.friday:
@@ -305,10 +306,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
 async def remind_about_homework_event(event, tense) -> None:
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
-    for role in role_ids:
-        if role_ids[role] == event.group:
-            mention_role = discord.utils.get(my_server.roles, name=role)
-            if role != "everyone":
+    for role in role_codes:
+        if role == event.group:
+            mention_role = discord.utils.get(my_server.roles, name=role_codes[role])
+            if role != "grupa_0":
                 mention_text = my_server.get_role(mention_role.id).mention
             break
     target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.nauka)
@@ -385,9 +386,9 @@ async def track_api_updates() -> None:
         price = int(''.join([char if char in "0123456789" else '' for char in price]))
         if item.min_price < price < item.max_price:
             continue
-        channel = client.get_channel(ChannelID.bot_testing)
-        await channel.send(f":moneybag: Uwaga, <@{item.author_id}>! "
-                           f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
+        target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.admini)
+        await target_channel.send(f":moneybag: Uwaga, <@{item.author_id}>! "
+                                  f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
         tracked_market_items.remove(item)
         save_data_file()
     await asyncio.sleep(3)
@@ -395,8 +396,8 @@ async def track_api_updates() -> None:
     if data != lucky_numbers_api.cached_data:
         attempt_debug_message(f"New lucky numbers data!\nOld data: {lucky_numbers_api.cached_data}\nNew data: {data}")
         lucky_numbers_api.cached_data = data
-        channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
-        await channel.send(embed=get_lucky_numbers()[1])
+        target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
+        await target_channel.send(embed=get_lucky_numbers()[1])
         save_data_file()
 
 
@@ -534,24 +535,24 @@ def create_homework_event(message: discord.Message) -> (bool, str):
     for word in args[4:]:
         title += " " + word
     author = message.author.id
-    # Removes redundant characters from the third argument in order to have just the numbers (role id)
-    try:
-        role_id = int(args[2].translate({ord(char): None for char in "<@&>"}))
-        group_name = str(message.guild.get_role(role_id))
-    except ValueError:
-        if args[2] == "@everyone":
-            group_name = "everyone"
-        else:
+    if args[2] == "@everyone":
+        group_id = "grupa_0"
+        group_text = ""
+    else:
+        # Removes redundant characters from the third argument in order to have just the numbers (role id)
+        group_id = int(args[2].lstrip("<&").rstrip(">"))
+        try:
+            message.guild.get_role(group_id)
+        except ValueError:
             return False, ":warning: Trzecim argumentem komendy musi być oznaczenie grupy, dla której jest zadanie."
-    group_id = role_ids[group_name]
-    group_text = ' ' * (group_id != 'grupa_0') + group_names[group_id]
+        group_text = group_names[group_id] + " "
 
     new_event = HomeworkEvent(title, group_id, author, args[1] + " 17")
     if new_event.serialised in homework_events:
         return False, f":warning: Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)
     save_data_file()
-    return False, f":white_check_mark: Stworzono zadanie na __{args[1]}__ z tytułem: `{title}`{group_text} " + \
+    return False, f":white_check_mark: Stworzono zadanie na __{args[1]}__ z tytułem: `{title}` {group_text}" + \
                   "z powiadomieniem na dzień przed o **17:00.**"
 
 
@@ -580,8 +581,7 @@ def get_homework_events(message: discord.Message, should_display_event_ids=False
 
     # Adds an embed field for each event
     for homework_event in homework_events:
-        group_role_name = list(
-            role_ids.keys())[list(role_ids.values()).index(homework_event.group)]
+        group_role_name = role_codes[homework_event.group]
         role_mention = "@everyone"  # Defaults to setting @everyone as the group the homework event is for
         if group_role_name != "everyone":
             # Adjusts the mention string if the homework event is not for everyone
@@ -627,24 +627,23 @@ def update_meet_link(message: discord.Message) -> (bool, str):
         return False, ":warning: Niestety nie posiadasz uprawnień do korzystania z tej komendy."
     args = message.content.split(" ")
     if len(args) != 1:
-        if args[1] in lesson_names:
+        if args[1] in lesson_details:
             if len(args) == 2:
-                lesson = lesson_names[args[1]][0]
-                link = lesson_names[args[1]][1]
+                lesson, link = lesson_details[args[1]].values()
                 return False, f"{Emoji.info} Link do Meeta dla lekcji " + \
                     f"'__{lesson}__' to <https://meet.google.com/{link}?authuser=0&hs=179>."
             else:
                 link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
                 link_is_lookup = len(args[2]) == 17 and args[2].startsWith("lookup/")
                 if link_is_dash_format or link_is_lookup:  # User-given link is valid
-                    old_link = lesson_names[args[1]][1]
-                    lesson_names[args[1]][1] = args[2]
+                    old_link = lesson_details[args[1]]["link"]
+                    lesson_details[args[1]]["link"] = args[2]
                     save_data_file()
                     return False, f":white_check_mark: Zmieniono link dla lekcji " \
-                                  f"'__{lesson_names[args[1]][0]}__' z `{old_link}` na **{args[2]}**."
+                                  f"'__{lesson_details[args[1]]['name']}__' z `{old_link}` na **{args[2]}**."
     msg = f"""Należy napisać po komendzie `{prefix}meet` kod lekcji, aby zobaczyć jaki jest ustawiony \
     link do Meeta dla tej lekcji, albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"""
-    for code, [name, link] in lesson_names.items():
+    for code, [name, link] in lesson_details.items():
         msg += f"\n# {code} [{name}]({link})"
     # noinspection SpellCheckingInspection
     msg += "```\n:warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
@@ -700,23 +699,24 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
         loop_table = weekday_tables[current_day]
         periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
         lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
-        lesson_plan = [lessons_per_period, current_day, periods]
-        embed = discord.Embed(
-            title="Plan lekcji", description="Plan lekcji na **{d}** ({c} lekcji) jest następujący: ".format(
-                d=weekday_names[lesson_plan[1]], c=len(periods)))
-        for period in lesson_plan[2]:
+        desc = f"Plan lekcji na **{weekday_names[current_day]}** ({len(periods)} lekcji) jest następujący:"
+        embed = discord.Embed(title="Plan lekcji", description=desc)
+        for period in periods:
             text = ""
-            for lesson in lesson_plan[0][period - lesson_plan[2][0]]:
-                if lesson[0] == "chem-ks" and (not sender_is_admin):
+            for code, group, _ in lessons_per_period[period - periods[0]]:
+                if code == "chem-ks" and (not sender_is_admin):
                     continue
-                text += "[{p}](https://meet.google.com/{k}?authuser=0&hs=179) ".format(
-                    p=lesson_names[lesson[0]][0], k=lesson_names[lesson[0]][1])
-                if lesson[1] != "grupa_0":
-                    text += "({g})".format(g=group_names[lesson[1]])
-                if lesson != lesson_plan[0][period - lesson_plan[2][0]][-1]:
+                name, link = lesson_details[code].values()
+                if link:
+                    text += f"[{name}](https://meet.google.com/'{link}?authuser=0&hs=179) "
+                else:
+                    text += f"[{name}](http://guzek.uk/util/meet-link-not-found) "
+                if group != "grupa_0":
+                    text += f"({group_names[group]})"
+                if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
                     text += "\n"
-            embed.add_field(name="Lekcja {p} ({t})".format(p=period, t=timetable[period]), value=text, inline=False)
-        embed.set_footer(text="Użyj komendy {p}plan, aby pokazać tą wiadomość.".format(p=prefix))
+            embed.add_field(name=f"Lekcja {period} ({timetable[period]})", value=text, inline=False)
+        embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
         table_embed_cache[current_day + 5 * int(sender_is_admin)] = embed
     return True, table_embed_cache[current_day + 5 * sender_is_admin]
 
@@ -758,19 +758,19 @@ def get_next_period(given_time: datetime.datetime) -> (float, list[list[str or i
     return False, first_period, loop_table
 
 
-def get_lesson(query_period, loop_table, roles) -> tuple:
-    """Get the lesson details for a given period, day and user roles.
+def get_lesson(query_period, loop_table, user_roles) -> tuple:
+    """Get the lesson details for a given period, day and user user_roles.
     Arguments:
         query_period -- the period number to look for.
         loop_table -- the table containing the lessons for that day.
-        roles -- the roles that the lesson is defined to be intended for.
+        user_roles -- the user_roles that the lesson is defined to be intended for.
 
-    Returns a tuple containing the name of the lesson, the name of the group and the period number.
+    Returns a tuple containing the lesson details, the code of the group and the period number.
     """
-    desired_roles = ["grupa_0"] + [role_ids[str(role)] for role in roles if str(role) in role_ids]
-    for lesson_id, lesson_group, lesson_period in loop_table:
-        if lesson_period >= query_period and lesson_group in desired_roles:
-            return lesson_names[lesson_id], group_names[lesson_group], lesson_period
+    desired_roles = ["grupa_0"] + [str(role) for role in user_roles if str(role) in role_codes.values()]
+    for lesson_id, group_code, lesson_period in loop_table:
+        if lesson_period >= query_period and group_code in desired_roles:
+            return lesson_details[lesson_id], group_code, lesson_period
     attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}", force=True)
     return ()
 
@@ -810,30 +810,25 @@ def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
 
     def process(time: datetime.datetime) -> (bool, str):
         next_lesson_is_today, lesson_period, lessons = get_next_period(time)
-        lesson_details = get_lesson(math.floor(lesson_period), lessons, message.author.roles)
-        if not lesson_details:
+        lesson: tuple = get_lesson(math.floor(lesson_period), lessons, message.author.roles)
+        if not lesson:
             return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}."
+        lesson_info, group_code, period = lesson
         if next_lesson_is_today:
-            # Currently lesson
             if math.ceil(lesson_period) != lesson_period:
+                # Currently lesson
                 lesson_end = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
                 lesson_end_time: datetime.datetime = datetime.datetime.strptime(lesson_end, "%x %H:%M")
                 # Get the next lesson after the end of this one, recursive call
                 return process(lesson_end_time)
-            next_period_time = timetable[lesson_details[2]].split("-")[0]
-            group = lesson_details[1]
-            if group != "":
-                group += " "
-            return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_details[0][0]}** " \
-                         f"o godzinie __{next_period_time}__.", lesson_details[0][1]
+            # Currently break
+            when = " "
         else:
-            if current_time.weekday() + 1 == time.weekday() or current_time.weekday() == Weekday.sunday:
-                when = "jutro"
-            else:
-                when = "w poniedziałek"
-            next_period_time = timetable[lesson_details[2]].split("-")[0]
-            return True, f"{Emoji.info} Następna lekcja{lesson_details[1]} to **{lesson_details[0][0]}** " \
-                         f"{when} o godzinie __{next_period_time}__.", lesson_details[0][1]
+            when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
+        next_period_time = timetable[period].split("-")[0]
+        group = group_names[group_code] + " " * (group_code != "grupa_0")
+        return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_info['name']}**" \
+                     f"{when} o godzinie __{next_period_time}__.", lesson_info['link']
 
     success, *msg = process(current_time)
     if not success:
@@ -842,7 +837,7 @@ def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
     description, link = msg
     embed = discord.Embed(title=f"Następna lekcja ({current_time:%H:%M})", description=description)
     embed.add_field(name="Link do lekcji", value=f"[meet.google.com](https://meet.google.com/{link}?authuser=0&hs=179)")
-    embed.set_footer(text="Użyj komendy {p}nl, aby pokazać tą wiadomość.".format(p=prefix))
+    embed.set_footer(text=f"Użyj komendy {prefix}nl, aby pokazać tą wiadomość.")
     return True, embed
 
 
@@ -1047,7 +1042,7 @@ async def on_message(message: discord.Message) -> None:
         message.content = "!help " + message.content
     for reply in automatic_bot_replies:
         if reply.lower().startswith(message.content) and len(message.content) >= 3:
-            await message.channel.send(automatic_bot_replies[reply])
+            await message.reply(automatic_bot_replies[reply], mention_author=False)
             return
     author_role_names = [str(role) for role in message.author.roles]
     if message.author == client.user or "Bot" in author_role_names or not message.content.startswith(prefix):
@@ -1073,8 +1068,10 @@ async def on_message(message: discord.Message) -> None:
                 exec_result = locals()['temp']
             except Exception as e:
                 exec_result = ' '.join(traceback.format_exception(type(e), e, e.__traceback__))
-            if exec_result is not None:
-                message.channel.send(f"```py\nreturn > {exec_result}\n```")
+            if exec_result is None:
+                await message.channel.send("Code executed.")
+            else:
+                await message.channel.send(f"Code executed:\n```py\n>>> {expression}\n{exec_result}\n```")
             return
 
         if msg_first_word == admin_commands[1]:
@@ -1097,14 +1094,11 @@ async def on_message(message: discord.Message) -> None:
     try:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:
-        attempt_debug_message(traceback.format_exception(type(e), e, e.__traceback__))
+        attempt_debug_message(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         await message.reply(f"<@{member_ids[7]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
-    if reply_is_embed:
-        reply_msg = await message.reply(embed=reply)
-    else:
-        reply_msg = await message.reply(reply)
+    reply_msg = await message.reply(**{"embed" if reply_is_embed else "content": reply})
 
     if msg_first_word == "zadania":
         await wait_for_zadania_reaction(message, reply_msg)
