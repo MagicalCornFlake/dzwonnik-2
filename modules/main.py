@@ -12,7 +12,6 @@ import traceback
 # Third-party imports
 import discord
 import discord.ext.tasks
-import pytz
 
 # Local application imports
 if __name__ == "__main__":
@@ -270,19 +269,27 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     if query_time is None:
         # Default time to check is current time
         query_time = today
-    attempt_debug_message(f"Updating bot status ({query_time:%H:%M}) ...", time=today)
+    attempt_debug_message(f"Updating bot status ...", time=today)
     next_period_is_today, next_period, lessons = get_next_period(query_time)
     if next_period_is_today:
         if next_period == math.ceil(next_period):  # Currently break time
             new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
         else:  # Currently lesson
             lesson_period = math.floor(next_period)
-            lesson_group1 = get_lesson(lesson_period, lessons, [my_server.get_role(RoleID.gr1)])
-            lesson_group2 = get_lesson(lesson_period, lessons, [my_server.get_role(RoleID.gr2)])
-            lesson = lesson_group1[0][0]
-            if lesson_group1 != lesson_group2:  # If both groups have different lessons
-                lesson += "/" + lesson_group2[0][0]
-            new_status_msg = f"{lesson} do {timetable[lesson_group1[2]].split('-')[1]}"
+            watch_roles = [RoleID.gr1, RoleID.gr2]
+            msgs: dict[str, str] = {}
+            for role_id in watch_roles:
+                lesson_info = get_lesson(lesson_period, lessons, [my_server.get_role(role_id)])
+                if not lesson_info:
+                    continue
+                lesson, group_name, period = lesson_info
+                msgs[group_name] = f"{lesson} do {timetable[period].split('-')[1]}"
+
+            def get_lesson_msg(group: str) -> str:
+                lesson_msg = msgs[group]
+                return lesson_msg if group == "grupa_0" else f"{role_ids[group]}: {lesson_msg}"
+
+            new_status_msg = f"{' / '.join([get_lesson_msg(group_name) for group_name in msgs])}"
     else:
         # After the last lesson for the given day
         if query_time.weekday() < Weekday.friday:
@@ -1136,7 +1143,6 @@ def start_bot() -> bool:
         importlib.reload(module)
     try:
         file_management.read_env_files()
-        os.environ['TZ'] = "Europe/Warsaw"
         read_data_file('data.json')
         event_loop = asyncio.get_event_loop()
         try:
