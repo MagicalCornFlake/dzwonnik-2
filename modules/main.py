@@ -21,7 +21,7 @@ if __name__ == "__main__":
 else:
     file_management = importlib.import_module('modules.file_management')
     constants = importlib.import_module('modules.constants')
-    # Import definitions to the global namespace
+    # Import constant definitions to the global namespace
     globals().update({k: getattr(constants, k) for k in constants.__dict__["__all__"]})
     web_api = importlib.import_module('modules.util.web_api')
     steam_api = importlib.import_module('modules.util.steam_api')
