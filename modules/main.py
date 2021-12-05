@@ -42,6 +42,8 @@ async def on_ready() -> None:
     attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
     my_server = client.get_guild(766346477874053130)  # 1D The Supreme server
 
+    attempt_debug_message("Hello, world")
+
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
     await client.change_presence(activity=status)
