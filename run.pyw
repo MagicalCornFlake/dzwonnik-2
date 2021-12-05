@@ -1,3 +1,6 @@
+# Mark this file as a script
+#!/usr/bin/env python3
+
 from modules import main
 
 restart_bot = main.start_bot()
