@@ -11,7 +11,8 @@ import traceback
 
 # Third-party imports
 import discord
-from discord.ext import tasks
+import discord.ext.tasks
+import pytz
 
 # Local application imports
 if __name__ == "__main__":
@@ -38,9 +39,11 @@ my_server = client.get_guild(766346477874053130)  # 2D The Supreme server
 @client.event
 async def on_ready() -> None:
     global my_server
+
+    now = datetime.datetime.now()
     guilds = {guild.id: guild.name for guild in client.guilds}
-    attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
-    my_server = client.get_guild(766346477874053130)  # 1D The Supreme server
+    attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True, time=now)
+    my_server = client.get_guild(my_server_id)
 
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
@@ -99,8 +102,6 @@ class HomeworkEvent:
             self.id = event_container[-1].id + 1
         except (IndexError, TypeError):
             self.id = 1
-        # attempt_debug_message("Assigning ID", self.id, f"to event '{self.title}'")
-        # attempt_debug_message("Sorting", self.id_string, "into container...")
         for comparison_event in event_container:
             new_event_time = datetime.datetime.strptime(self.deadline, "%d.%m.%Y")
             old_event_time = datetime.datetime.strptime(comparison_event.deadline, "%d.%m.%Y")
@@ -110,12 +111,10 @@ class HomeworkEvent:
                 # Inserts event id in the place of the one it's being compared to, so every event
                 # after this event (including the comparison one) is pushed one spot ahead in the list
                 event_container.insert(event_container.index(comparison_event), self)
-                # attempt_debug_message("Placed", self.id_string, "before", comparison_event.id_string)
                 return
             # The new event should not be placed before the one it is currently being compared to, continue evaluating
         # At this point the algorithm was unable to place the event before any others, so it shall be put at the end
         event_container.append(self)
-        # attempt_debug_message("Placed", self.id_string, "at the end of container")
 
 
 class HomeworkEventContainer(list):
@@ -204,10 +203,11 @@ def read_data_file(filename="data.json") -> None:
     if not os.path.isfile(filename):
         with open(filename, 'w') as file:
             default_settings = {
+                # lesson_names is updated later anyway, so we can leave it empty.
                 "lesson_names": {},
                 "homework_events": {},
                 "tracked_market_items": [],
-                "lucky_numbers": {}
+                "lucky_numbers": lucky_numbers_api.cached_data
             }
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r', encoding="utf-8") as file:
@@ -266,29 +266,32 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     Arguments:
         query_time -- the time to get the status for.
     """
+    today = datetime.datetime.now()
     if query_time is None:
         # Default time to check is current time
-        query_time = datetime.datetime.now()
-    attempt_debug_message(f"Updating bot status ({query_time:%H:%M}) ...")
-    if query_time.weekday() > 4:  # 0, 1, 2, 3, 4: Monday to Friday; > 4 means weekend
-        attempt_debug_message("... it's currently the weekend.")
-        new_status_msg = "weekend!"
-    else:
-        # Currently weekday
-        next_period = get_next_period(query_time)
-        next_period_is_today = next_period[2]
-        if not next_period_is_today:
-            new_status_msg = "koniec lekcji!"
-        elif round(next_period[0]) == next_period[0]:  # Currently break time
-            new_status_msg = "przerwa do " + timetable[math.floor(next_period[0])].split("-")[0]
+        query_time = today
+    attempt_debug_message(f"Updating bot status ({query_time:%H:%M}) ...", time=today)
+    next_period_is_today, next_period, lessons = get_next_period(query_time)
+    if next_period_is_today:
+        if next_period == math.ceil(next_period):  # Currently break time
+            new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
         else:  # Currently lesson
-            lesson_period = math.floor(next_period[0])
-            lesson_group1 = get_lesson(lesson_period, next_period[1], [my_server.get_role(RoleID.gr1)])
-            lesson_group2 = get_lesson(lesson_period, next_period[1], [my_server.get_role(RoleID.gr2)])
+            lesson_period = math.floor(next_period)
+            lesson_group1 = get_lesson(lesson_period, lessons, [my_server.get_role(RoleID.gr1)])
+            lesson_group2 = get_lesson(lesson_period, lessons, [my_server.get_role(RoleID.gr2)])
             lesson = lesson_group1[0][0]
             if lesson_group1 != lesson_group2:  # If both groups have different lessons
                 lesson += "/" + lesson_group2[0][0]
             new_status_msg = f"{lesson} do {timetable[lesson_group1[2]].split('-')[1]}"
+    else:
+        # After the last lesson for the given day
+        if query_time.weekday() < Weekday.friday:
+            # Mon-Thu
+            new_status_msg = "koniec lekcji!"
+        else:
+            # Fri-Sun
+            attempt_debug_message(f"... it's currently the weekend.")
+            new_status_msg = "weekend!"
     return new_status_msg
 
 
@@ -338,12 +341,12 @@ async def remind_about_homework_event(event, tense) -> None:
     save_data_file()  # Updates data.json so that if the bot is restarted the event's parameters are saved
 
 
-@tasks.loop(seconds=1)
+@discord.ext.tasks.loop(seconds=1)
 async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's time + 1 day
     # Checks if current time is in list of key times
-    if f"{current_time:%H:%M}" in watch_times:
+    if f"{current_time:%H:%M}" in watch_times or enable_debug_messages and current_time.second == 0:
         # Check is successful, bot updates Discord status
         status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
         await client.change_presence(activity=status)
@@ -365,7 +368,7 @@ async def track_time_changes() -> None:
         await remind_about_homework_event(event, tense)
 
 
-@tasks.loop(minutes=1)
+@discord.ext.tasks.loop(minutes=1)
 async def track_api_updates() -> None:
     for item in tracked_market_items:
         await asyncio.sleep(3)
@@ -383,7 +386,7 @@ async def track_api_updates() -> None:
     await asyncio.sleep(3)
     data = lucky_numbers_api.get_lucky_numbers()
     if data != lucky_numbers_api.cached_data:
-        attempt_debug_message(f"New data!\nOld data: {lucky_numbers_api.cached_data}\nNew data: {data}", force=True)
+        attempt_debug_message(f"New lucky numbers data!\nOld data: {lucky_numbers_api.cached_data}\nNew data: {data}")
         lucky_numbers_api.cached_data = data
         channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
         await channel.send(embed=get_lucky_numbers()[1])
@@ -500,80 +503,9 @@ weekday_tables = [
     lessons_monday
 ]
 
-# Which Discord role correlates to what group ID
-role_ids = {
-    "everyone": "grupa_0",
-    "Grupa 1": "grupa_1",
-    "Grupa 2": "grupa_2",
-    "Religia": "grupa_rel",
-    "Język Hiszpański": "grupa_es",
-    "Język Francuski": "grupa_fr",
-    "Język Niemiecki (Podstawa)": "grupa_de1",
-    "Język Niemiecki (Rozszerzenie)": "grupa_de2"
-}
-
-# Dictionary with text to use when sending messages, eg. 'lekcja dla grupy drugiej'
-group_names = {
-    "grupa_0": "",
-    "grupa_1": "dla grupy pierwszej",
-    "grupa_2": "dla grupy drugiej",
-    "grupa_rel": "dla grupy religijnej",
-    "grupa_es": "dla grupy hiszpańskiej",
-    "grupa_fr": "dla grupy francuskiej",
-    "grupa_de1": "dla grupy niemieckiej z podstawą",
-    "grupa_de2": "dla grupy niemieckiej z rozszerzeniem",
-    "ks": "dla Krzysztofa Szatki"
-}
-
-# Table to keep results of calling get_lesson_plan_embed() method so that we don't have to calculate the result
+# Table to keep results of calling get_lesson_plan() method so that we don't have to calculate the result
 # each time, since the it's always going to be the same for a given day
 table_embed_cache = {}
-
-weekday_names = [
-    "poniedziałek",
-    "wtorek",
-    "środa",
-    "czwartek",
-    "piątek",
-    "poniedziałek",  # When get_next_lesson() is called on Saturday or Sunday,
-    "poniedziałek"   # the program looks at Monday as the next school day.
-]
-
-
-# noinspection SpellCheckingInspection
-member_ids = [
-    693443232415088650,  # 01 Zofia Cybul
-    695209819715403818,  # 02 Aleksandra Cywińska
-    690174699459706947,  # 03 Ida Durbacz
-    770552880791814146,  # 04 Pola Filipkowska
-    773113923485827103,  # 05 Hanna Frej
-    626494841865633792,  # 06 Adam Górecki
-    622560689893933066,  # 07 Anna Grodnicka
-    274995992456069131,  # 08 Konrad Guzek
-    775676246566502400,  # 09 Aleksandra Izydorczyk
-    690174919874576385,  # 10 Emilia Kiełkowska
-    690171714025553924,  # 11 Maja Kierzkowska
-    566344296001830923,  # 12 Zofia Kokot
-    689859486172971082,  # 13 Stanisław Krakowian
-    690171664062873721,  # 14 Daria Luszawska
-    690275577835290684,  # 15 Martyna Marszałkowska
-    770183107348529183,  # 16 Lena Masal
-    692691918986936320,  # 17 Kalina Maziarczyk
-    769604750898757662,  # 18 Mateusz Miodyński
-    "Amelia Sapota",     # 19 Amelia Sapota
-    770183024339714068,  # 20 Zofia Smołka
-    770552880791814146,  # 21 Aleksandra Sobczyk
-    626490320401596437,  # 22 Klara Sokół
-    366955740260335646,  # 23 Krzysztof Szatka
-    772888760340971531,  # 24 Iga Śmietańska
-    635244325344772119,  # 25 Wojciech Tutajewicz
-    770630571457380373,  # 26 Magdalena Wacławczyk
-    694831920013639732,  # 27 Oliwia Wężyk
-    715163616474693662,  # 28 Natalia Wcisło
-    585427549216047104,  # 29 Paweł Żuchowicz
-    712656114247794700,  # 20 Katarzyna Klos
-    910219602552840202,  # 31 Patrycja Tustanowska
-]
 
 
 def create_homework_event(message: discord.Message) -> (bool, str):
@@ -726,7 +658,7 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
     args = message.content.split(" ")
     if len(args) == 1:
         today = datetime.datetime.now().weekday()
-        current_day = today if today < 5 else 0
+        current_day = today if today < Weekday.saturday else 0
     else:
         current_day = -1
         try:
@@ -747,6 +679,7 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
                         # The input is a valid weekday name.
                         current_day = i
                         break
+                # 'current_day' will have the default value of -1 if the above for loop didn't find any matches
                 if current_day == -1:
                     # The input is not a valid weekday name.
                     # ValueError can't be used since it has already been caught
@@ -782,10 +715,18 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
 
 
 def get_next_period(given_time: datetime.datetime) -> (float, list[list[str or int]], bool):
-    attempt_debug_message(f"Getting next period for {given_time:%x %X} ...")
+    """Get the information about the next period for a given time.
+
+    Arguments:
+        given_time -- the start time to base the search off of.
+
+    Returns a tuple consisting of a boolean indicating if that day is today, the period number,
+    and the list containing the lessons for that day.
+    """
+    attempt_debug_message(f"Getting next period for {given_time:%x %X} ...", time=given_time)
     current_day_index: int = given_time.weekday()
 
-    if current_day_index < 5:
+    if current_day_index < Weekday.saturday:
         loop_table = weekday_tables[current_day_index]
         # Looks for any lesson that begins or ends after the specified time.
         for lesson in loop_table:
@@ -794,31 +735,37 @@ def get_next_period(given_time: datetime.datetime) -> (float, list[list[str or i
             lesson_start_time = datetime.datetime.strptime(f"{given_time.strftime('%x')} {times[0]}", "%x %H:%M")
             if given_time < lesson_start_time:
                 attempt_debug_message(f"... this is the break before period {lesson_period}.")
-                return lesson_period, loop_table, True
+                return True, lesson_period, loop_table
             if given_time < lesson_start_time + datetime.timedelta(minutes=45):
                 attempt_debug_message(f"... this is period {lesson_period}.")
-                return lesson_period + 0.5, loop_table, True
+                return True, lesson_period + 0.5, loop_table
         # Could not find any such lesson.
         next_school_day = current_day_index + 1
     else:
-        # Monday the following week.
-        next_school_day = 0
+        next_school_day = Weekday.monday
 
     # If it's currently weekend or after the last lesson on Friday
     loop_table = weekday_tables[next_school_day]
-    attempt_debug_message("... there are no more lessons today.")
+    attempt_debug_message(f"... there are no more lessons today. Next school day: {next_school_day}")
     first_period = loop_table[0][-1]
-    return first_period, loop_table, False
+    return False, first_period, loop_table
 
 
-# Returns the lesson details for a given period, day and user roles
-def get_lesson(query_period, loop_table, roles) -> list:
+def get_lesson(query_period, loop_table, roles) -> tuple:
+    """Get the lesson details for a given period, day and user roles.
+    Arguments:
+        query_period -- the period number to look for.
+        loop_table -- the table containing the lessons for that day.
+        roles -- the roles that the lesson is defined to be intended for.
+
+    Returns a tuple containing the name of the lesson, the name of the group and the period number.
+    """
     desired_roles = ["grupa_0"] + [role_ids[str(role)] for role in roles if str(role) in role_ids]
     for lesson_id, lesson_group, lesson_period in loop_table:
         if lesson_period >= query_period and lesson_group in desired_roles:
-            return [lesson_names[lesson_id], group_names[lesson_group], lesson_period]
+            return lesson_names[lesson_id], group_names[lesson_group], lesson_period
     attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}", force=True)
-    return []
+    return ()
 
 
 def get_datetime_from_input(message: discord.Message, calling_command: str) -> (bool, str or datetime.datetime):
@@ -855,14 +802,14 @@ def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
     current_time: datetime.datetime = result
 
     def process(time: datetime.datetime) -> (bool, str):
-        next_period = get_next_period(time)
-        lesson_details = get_lesson(math.floor(next_period[0]), next_period[1], message.author.roles)
+        next_lesson_is_today, lesson_period, lessons = get_next_period(time)
+        lesson_details = get_lesson(math.floor(lesson_period), lessons, message.author.roles)
         if not lesson_details:
             return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}."
-        if next_period[2]:
+        if next_lesson_is_today:
             # Currently lesson
-            if math.ceil(next_period[0]) != next_period[0]:
-                lesson_end_time = f"{current_time.strftime('%x')} {timetable[math.floor(next_period[0])].split('-')[1]}"
+            if math.ceil(lesson_period) != lesson_period:
+                lesson_end_time = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
                 # Get the next lesson after the end of this one, recursive call
                 return process(datetime.datetime.strptime(lesson_end_time, "%x %H:%M"))
             next_period_time = timetable[lesson_details[2]].split("-")[0]
@@ -872,7 +819,7 @@ def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
             return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_details[0][0]}** " \
                          f"o godzinie __{next_period_time}__.", lesson_details[0][1]
         else:
-            if (current_time + datetime.timedelta(days=1)).weekday() == weekday_tables.index(next_period[1]):
+            if current_time.weekday() + 1 == time.weekday() or current_time.weekday() == Weekday.sunday:
                 when = "jutro"
             else:
                 when = "w poniedziałek"
@@ -898,9 +845,9 @@ def get_next_break(message: discord.Message) -> (bool, str):
         return False, result
     current_time: datetime.datetime = result
 
-    next_period = get_next_period(current_time)
-    if next_period[2]:
-        next_break_time = timetable[math.floor(next_period[0])].split("-")[1]
+    next_period_is_today, lesson_period = get_next_period(current_time)[:2]
+    if next_period_is_today:
+        next_break_time = timetable[math.floor(lesson_period)].split("-")[1]
         msg = f"{Emoji.info} Następna przerwa jest o godzinie __{next_break_time}__."
     else:
         msg = f"{Emoji.info} Już jest po lekcjach!"
@@ -1155,7 +1102,7 @@ async def on_message(message: discord.Message) -> None:
 
 
 def debug(*debug_message) -> None:
-    attempt_debug_message(*debug_message, True)
+    attempt_debug_message(*debug_message, force=True)
 
 
 def attempt_debug_message(*debug_message, time: datetime.datetime = None, force=False) -> None:
@@ -1188,6 +1135,7 @@ def start_bot() -> bool:
         importlib.reload(module)
     try:
         file_management.read_env_files()
+        os.environ['TZ'] = "Europe/Warsaw"
         read_data_file('data.json')
         event_loop = asyncio.get_event_loop()
         try:
