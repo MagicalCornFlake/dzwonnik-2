@@ -353,7 +353,7 @@ async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's time + 1 day
     # Checks if current time is in list of key times
-    if f"{current_time:%H:%M}" in watch_times or enable_debug_messages and current_time.second == 0:
+    if (f"{current_time:%H:%M}" in watch_times or enable_debug_messages) and current_time.second == 0:
         # Check is successful, bot updates Discord status
         status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
         await client.change_presence(activity=status)
@@ -1066,14 +1066,15 @@ async def on_message(message: discord.Message) -> None:
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
         if msg_first_word == admin_commands[0]:
-            code = message.content.replace('!', '', 1)[5:]
-            attempt_debug_message("Executing code:", code)
+            expression = message.content.lstrip(f"{prefix}exec ")
+            attempt_debug_message("Executing code:", expression)
             try:
-                exec_result = exec(code)
+                exec(f"""locals()['temp'] = {expression}""")
+                exec_result = locals()['temp']
             except Exception as e:
                 exec_result = ' '.join(traceback.format_exception(type(e), e, e.__traceback__))
             if exec_result is not None:
-                attempt_debug_message(">", exec_result)
+                message.channel.send(f"```py\nreturn > {exec_result}\n```")
             return
 
         if msg_first_word == admin_commands[1]:
