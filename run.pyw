@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Above line marks file as script
 
 from modules import main
 
