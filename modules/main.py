@@ -723,7 +723,7 @@ def get_next_period(given_time: datetime.datetime) -> (float, list[list[str or i
     Returns a tuple consisting of a boolean indicating if that day is today, the period number,
     and the list containing the lessons for that day.
     """
-    attempt_debug_message(f"Getting next period for {given_time:%x %X} ...", time=given_time)
+    attempt_debug_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...", time=given_time)
     current_day_index: int = given_time.weekday()
 
     if current_day_index < Weekday.saturday:
@@ -809,9 +809,10 @@ def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
         if next_lesson_is_today:
             # Currently lesson
             if math.ceil(lesson_period) != lesson_period:
-                lesson_end_time = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
+                lesson_end = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
+                lesson_end_time: datetime.datetime = datetime.datetime.strptime(lesson_end, "%x %H:%M")
                 # Get the next lesson after the end of this one, recursive call
-                return process(datetime.datetime.strptime(lesson_end_time, "%x %H:%M"))
+                return process(lesson_end_time)
             next_period_time = timetable[lesson_details[2]].split("-")[0]
             group = lesson_details[1]
             if group != "":
