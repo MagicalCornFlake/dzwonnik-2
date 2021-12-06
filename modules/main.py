@@ -354,7 +354,7 @@ async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's time + 1 day
     # Checks if current time is in list of key times
-    if (f"{current_time:%H:%M}" in watch_times or enable_debug_messages) and current_time.second == 0:
+    if f"{current_time:%H:%M}" in watch_times and current_time.second == 0:
         # Check is successful, bot updates Discord status
         status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
         await client.change_presence(activity=status)
@@ -634,8 +634,9 @@ def update_meet_link(message: discord.Message) -> (bool, str):
                     f"'__{lesson}__' to <https://meet.google.com/{link}?authuser=0&hs=179>."
             else:
                 link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
-                link_is_lookup = len(args[2]) == 17 and args[2].startsWith("lookup/")
-                if link_is_dash_format or link_is_lookup:  # User-given link is valid
+                link_is_lookup_format = len(args[2]) == 17 and args[2].startsWith("lookup/")
+                if link_is_dash_format or link_is_lookup_format:
+                    # User-given link is valid
                     old_link = lesson_details[args[1]]["link"]
                     lesson_details[args[1]]["link"] = args[2]
                     save_data_file()
@@ -643,8 +644,8 @@ def update_meet_link(message: discord.Message) -> (bool, str):
                                   f"'__{lesson_details[args[1]]['name']}__' z `{old_link}` na **{args[2]}**."
     msg = f"""Należy napisać po komendzie `{prefix}meet` kod lekcji, aby zobaczyć jaki jest ustawiony \
     link do Meeta dla tej lekcji, albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"""
-    for code, [name, link] in lesson_details.items():
-        msg += f"\n# {code} [{name}]({link})"
+    for code, info_dict in lesson_details.items():
+        msg += f"\n# {code} [{info_dict['name']}]({info_dict['link']})"
     # noinspection SpellCheckingInspection
     msg += "```\n:warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
     return False, msg
@@ -710,7 +711,7 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
                 if link:
                     text += f"[{name}](https://meet.google.com/'{link}?authuser=0&hs=179) "
                 else:
-                    text += f"[{name}](http://guzek.uk/util/meet-link-not-found) "
+                    text += f"[{name}](http://guzek.uk/error/404?lang=pl-PL&source=discord) "
                 if group != "grupa_0":
                     text += f"({group_names[group]})"
                 if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
