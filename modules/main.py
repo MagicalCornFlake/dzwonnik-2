@@ -516,7 +516,7 @@ weekday_tables = [
 table_embed_cache = {}
 
 
-def create_homework_event(message: discord.Message) -> (bool, str):
+def create_homework_event(message: discord.Message) -> tuple[bool, str]:
     args = message.content.split(" ")
     # Args is asserted to have at least 4 elements
     if args[1] == "del":
@@ -570,7 +570,7 @@ def delete_homework_event(event_id: int) -> str:
     raise ValueError
 
 
-def get_homework_events(message: discord.Message, should_display_event_ids=False) -> (bool, str or discord.Embed):
+def get_homework_events(message: discord.Message, should_display_event_ids=False) -> tuple[bool, str or discord.Embed]:
     read_data_file()
     amount_of_homeworks = len(homework_events)
     if amount_of_homeworks > 0:
@@ -612,7 +612,7 @@ def get_homework_events(message: discord.Message, should_display_event_ids=False
     return True, embed
 
 
-def process_homework_events_alias(message: discord.Message) -> (bool, str or discord.Embed):
+def process_homework_events_alias(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     args = message.content.split(" ")
     if len(args) == 1:
         return get_homework_events(message)
@@ -622,7 +622,7 @@ def process_homework_events_alias(message: discord.Message) -> (bool, str or dis
     return create_homework_event(message)
 
 
-def update_meet_link(message: discord.Message) -> (bool, str):
+def update_meet_link(message: discord.Message) -> tuple[bool, str]:
     if not message.channel.permissions_for(message.author).administrator:
         return False, ":warning: Niestety nie posiadasz uprawnień do korzystania z tej komendy."
     args = message.content.split(" ")
@@ -651,7 +651,7 @@ def update_meet_link(message: discord.Message) -> (bool, str):
     return False, msg
 
 
-def get_help_message(_message: discord.Message) -> (bool, discord.Embed):
+def get_help_message(_message: discord.Message) -> tuple[bool, discord.Embed]:
     embed = discord.Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
     for command_name, command_description in command_descriptions.items():
         if command_description is None:
@@ -661,7 +661,7 @@ def get_help_message(_message: discord.Message) -> (bool, discord.Embed):
     return True, embed
 
 
-def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
+def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     args = message.content.split(" ")
     if len(args) == 1:
         today = datetime.datetime.now().weekday()
@@ -722,7 +722,7 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
     return True, table_embed_cache[current_day + 5 * sender_is_admin]
 
 
-def get_next_period(given_time: datetime.datetime) -> (float, list[list[str or int]], bool):
+def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[list[str or int]]]:
     """Get the information about the next period for a given time.
 
     Arguments:
@@ -776,7 +776,7 @@ def get_lesson(query_period, loop_table, user_roles) -> tuple:
     return ()
 
 
-def get_datetime_from_input(message: discord.Message, calling_command: str) -> (bool, str or datetime.datetime):
+def get_datetime_from_input(message: discord.Message, calling_command: str) -> tuple[bool, str or datetime.datetime]:
     args = message.content.split(" ")
     current_time = datetime.datetime.now()
     if len(args) > 1:
@@ -803,17 +803,17 @@ def get_datetime_from_input(message: discord.Message, calling_command: str) -> (
 
 
 # Returns the message to send when the user asks for the next lesson
-def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
+def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     success, result = get_datetime_from_input(message, 'nl')
     if not success:
         return False, result
     current_time: datetime.datetime = result
 
-    def process(time: datetime.datetime) -> (bool, str):
+    def process(time: datetime.datetime) -> tuple[bool, str, str]:
         next_lesson_is_today, lesson_period, lessons = get_next_period(time)
         lesson: tuple = get_lesson(math.floor(lesson_period), lessons, message.author.roles)
         if not lesson:
-            return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}."
+            return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}.", ""
         lesson_info, group_code, period = lesson
         if next_lesson_is_today:
             if math.ceil(lesson_period) != lesson_period:
@@ -831,19 +831,18 @@ def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
         return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_info['name']}**" \
                      f"{when} o godzinie __{next_period_time}__.", lesson_info['link']
 
-    success, *msg = process(current_time)
+    success, msg, link = process(current_time)
     if not success:
-        return False, msg[0]
+        return False, msg
 
-    description, link = msg
-    embed = discord.Embed(title=f"Następna lekcja ({current_time:%H:%M})", description=description)
+    embed = discord.Embed(title=f"Następna lekcja ({current_time:%H:%M})", description=msg)
     embed.add_field(name="Link do lekcji", value=f"[meet.google.com](https://meet.google.com/{link}?authuser=0&hs=179)")
     embed.set_footer(text=f"Użyj komendy {prefix}nl, aby pokazać tą wiadomość.")
     return True, embed
 
 
 # Calculates the time of the next break
-def get_next_break(message: discord.Message) -> (bool, str):
+def get_next_break(message: discord.Message) -> tuple[bool, str]:
     success, result = get_datetime_from_input(message, 'nb')
     if not success:
         return False, result
@@ -870,7 +869,7 @@ def get_web_api_error_message(e: Exception) -> str:
 
 
 # Returns the message to send when the user asks for the price of an item on the Steam Community Market
-def get_market_price(message: discord.Message, result_override=None) -> (bool, str):
+def get_market_price(message: discord.Message, result_override=None) -> tuple[bool, str]:
     args: str = message.content.lstrip(f"{prefix}cena ").split(" waluta=") if result_override is None else [message]
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
@@ -914,7 +913,7 @@ def start_market_tracking(message: discord.Message):
                 get_market_price(item_name, result_override=result)[1]
 
 
-def stop_market_tracking(message: discord.Message) -> (bool, str):
+def stop_market_tracking(message: discord.Message) -> tuple[bool, str]:
     # noinspection SpellCheckingInspection
     item_name = message.content.lstrip(f"{prefix}odsledz ")
     for item in tracked_market_items:
@@ -927,14 +926,15 @@ def stop_market_tracking(message: discord.Message) -> (bool, str):
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."
 
 
-def get_lucky_numbers(*_message: tuple[discord.Message]) -> (bool, discord.Embed):
+def get_lucky_numbers(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed]:
     data = lucky_numbers_api.cached_data
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:
-        member_text = f"<@{member_ids[n - 1]}>" if n <= len(member_ids) else f"*Nie ma numerku {n} w naszej klasie.*"
+        member_text = f"<@{member_ids[n - 1]}>" if n <= len(member_ids) \
+            else f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*"
         embed.add_field(name=n, value=member_text, inline=False)
-    embed.add_field(name="\u200B", value="\u200B", inline=False)
+    # embed.add_field(name="\u200B", value="\u200B", inline=False)
     excluded_classes = ", ".join(data["excludedClasses"]) if len(data["excludedClasses"]) > 0 else "-"
     embed.add_field(name="Wykluczone klasy", value=excluded_classes, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}numerki, aby pokazać tą wiadomość.")
@@ -1133,6 +1133,7 @@ def start_bot() -> bool:
 
     Returns a boolean that indicates if the bot should be restarted.
     """
+    save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
     for module in (steam_api, web_api, lucky_numbers_api, file_management):
@@ -1145,6 +1146,7 @@ def start_bot() -> bool:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
             print("\n'BOT_TOKEN' OS environment variable not found. Program exiting.\n")
+            save_on_exit = False
             # Do not restart bot
             return False
         else:
@@ -1165,11 +1167,12 @@ def start_bot() -> bool:
             pass
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
-        # The file is saved before the start_bot() method returns any value.
-        # Do not send a debug message since the bot is already offline.
-        save_data_file(should_send_debug_messages=False)
-        print("Successfully saved data file 'data.json' (program exiting).\n")
-    # By default, when the program is exited gracefully (see above), it is later restarted in run.pyw.
+        if save_on_exit:
+            # The file is saved before the start_bot() method returns any value.
+            # Do not send a debug message since the bot is already offline.
+            save_data_file(should_send_debug_messages=False)
+            print("Successfully saved data file 'data.json' (program exiting).\n")
+    # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
     return restart_on_exit

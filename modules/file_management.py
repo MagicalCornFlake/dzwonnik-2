@@ -3,6 +3,7 @@ import os
 
 
 def read_env_files() -> bool:
+    print("Searching for .env files...")
     return_value = False
     for filename in os.listdir():
         if not filename.endswith('.env'):
