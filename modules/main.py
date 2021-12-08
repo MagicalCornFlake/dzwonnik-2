@@ -516,7 +516,7 @@ weekday_tables = [
 table_embed_cache = {}
 
 
-def create_homework_event(message: discord.Message) -> (bool, str):
+def create_homework_event(message: discord.Message) -> tuple(bool, str):
     args = message.content.split(" ")
     # Args is asserted to have at least 4 elements
     if args[1] == "del":
@@ -570,7 +570,7 @@ def delete_homework_event(event_id: int) -> str:
     raise ValueError
 
 
-def get_homework_events(message: discord.Message, should_display_event_ids=False) -> (bool, str or discord.Embed):
+def get_homework_events(message: discord.Message, should_display_event_ids=False) -> tuple(bool, str or discord.Embed):
     read_data_file()
     amount_of_homeworks = len(homework_events)
     if amount_of_homeworks > 0:
@@ -612,7 +612,7 @@ def get_homework_events(message: discord.Message, should_display_event_ids=False
     return True, embed
 
 
-def process_homework_events_alias(message: discord.Message) -> (bool, str or discord.Embed):
+def process_homework_events_alias(message: discord.Message) -> tuple(bool, str or discord.Embed):
     args = message.content.split(" ")
     if len(args) == 1:
         return get_homework_events(message)
@@ -622,7 +622,7 @@ def process_homework_events_alias(message: discord.Message) -> (bool, str or dis
     return create_homework_event(message)
 
 
-def update_meet_link(message: discord.Message) -> (bool, str):
+def update_meet_link(message: discord.Message) -> tuple(bool, str):
     if not message.channel.permissions_for(message.author).administrator:
         return False, ":warning: Niestety nie posiadasz uprawnień do korzystania z tej komendy."
     args = message.content.split(" ")
@@ -651,7 +651,7 @@ def update_meet_link(message: discord.Message) -> (bool, str):
     return False, msg
 
 
-def get_help_message(_message: discord.Message) -> (bool, discord.Embed):
+def get_help_message(_message: discord.Message) -> tuple(bool, discord.Embed):
     embed = discord.Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
     for command_name, command_description in command_descriptions.items():
         if command_description is None:
@@ -661,7 +661,7 @@ def get_help_message(_message: discord.Message) -> (bool, discord.Embed):
     return True, embed
 
 
-def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
+def get_lesson_plan(message: discord.Message) -> tuple(bool, str or discord.Embed):
     args = message.content.split(" ")
     if len(args) == 1:
         today = datetime.datetime.now().weekday()
@@ -722,7 +722,7 @@ def get_lesson_plan(message: discord.Message) -> (bool, str or discord.Embed):
     return True, table_embed_cache[current_day + 5 * sender_is_admin]
 
 
-def get_next_period(given_time: datetime.datetime) -> (float, list[list[str or int]], bool):
+def get_next_period(given_time: datetime.datetime) -> tuple(float, list[list[str or int]], bool):
     """Get the information about the next period for a given time.
 
     Arguments:
@@ -776,7 +776,7 @@ def get_lesson(query_period, loop_table, user_roles) -> tuple:
     return ()
 
 
-def get_datetime_from_input(message: discord.Message, calling_command: str) -> (bool, str or datetime.datetime):
+def get_datetime_from_input(message: discord.Message, calling_command: str) -> tuple(bool, str or datetime.datetime):
     args = message.content.split(" ")
     current_time = datetime.datetime.now()
     if len(args) > 1:
@@ -803,13 +803,13 @@ def get_datetime_from_input(message: discord.Message, calling_command: str) -> (
 
 
 # Returns the message to send when the user asks for the next lesson
-def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
+def get_next_lesson(message: discord.Message) -> tuple(bool, str or discord.Embed):
     success, result = get_datetime_from_input(message, 'nl')
     if not success:
         return False, result
     current_time: datetime.datetime = result
 
-    def process(time: datetime.datetime) -> (bool, str):
+    def process(time: datetime.datetime) -> tuple(bool, str):
         next_lesson_is_today, lesson_period, lessons = get_next_period(time)
         lesson: tuple = get_lesson(math.floor(lesson_period), lessons, message.author.roles)
         if not lesson:
@@ -843,7 +843,7 @@ def get_next_lesson(message: discord.Message) -> (bool, str or discord.Embed):
 
 
 # Calculates the time of the next break
-def get_next_break(message: discord.Message) -> (bool, str):
+def get_next_break(message: discord.Message) -> tuple(bool, str):
     success, result = get_datetime_from_input(message, 'nb')
     if not success:
         return False, result
@@ -870,7 +870,7 @@ def get_web_api_error_message(e: Exception) -> str:
 
 
 # Returns the message to send when the user asks for the price of an item on the Steam Community Market
-def get_market_price(message: discord.Message, result_override=None) -> (bool, str):
+def get_market_price(message: discord.Message, result_override=None) -> tuple(bool, str):
     args: str = message.content.lstrip(f"{prefix}cena ").split(" waluta=") if result_override is None else [message]
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
@@ -914,7 +914,7 @@ def start_market_tracking(message: discord.Message):
                 get_market_price(item_name, result_override=result)[1]
 
 
-def stop_market_tracking(message: discord.Message) -> (bool, str):
+def stop_market_tracking(message: discord.Message) -> tuple(bool, str):
     # noinspection SpellCheckingInspection
     item_name = message.content.lstrip(f"{prefix}odsledz ")
     for item in tracked_market_items:
@@ -927,7 +927,7 @@ def stop_market_tracking(message: discord.Message) -> (bool, str):
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."
 
 
-def get_lucky_numbers(*_message: tuple[discord.Message]) -> (bool, discord.Embed):
+def get_lucky_numbers(*_message: tuple[discord.Message]) -> tuple(bool, discord.Embed):
     data = lucky_numbers_api.cached_data
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
