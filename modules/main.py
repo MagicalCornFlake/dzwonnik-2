@@ -759,7 +759,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, loop_table
 
 
-def get_lesson(query_period, loop_table, user_roles) -> tuple:
+def get_lesson(query_period: int, loop_table: list, user_roles: list[str]) -> tuple:
     """Get the lesson details for a given period, day and user user_roles.
     Arguments:
         query_period -- the period number to look for.
@@ -769,6 +769,7 @@ def get_lesson(query_period, loop_table, user_roles) -> tuple:
     Returns a tuple containing the lesson details, the code of the group and the period number.
     """
     desired_roles = ["grupa_0"] + [str(role) for role in user_roles if str(role) in role_codes.values()]
+    attempt_debug_message("Looking for lesson with roles:", desired_roles)
     for lesson_id, group_code, lesson_period in loop_table:
         if lesson_period >= query_period and group_code in desired_roles:
             return lesson_details[lesson_id], group_code, lesson_period
