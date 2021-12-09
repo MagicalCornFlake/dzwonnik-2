@@ -773,7 +773,7 @@ def get_lesson(query_period: int, loop_table: list, user_roles: list) -> tuple:
     Returns a tuple containing the lesson details, the code of the group and the period number.
     """
     desired_roles = ["grupa_0"] + [str(role) for role in user_roles]
-    attempt_debug_message("Roles:", user_roles)
+    attempt_debug_message("Raw roles:", user_roles)
     attempt_debug_message("Looking for lesson with roles:", desired_roles)
     for lesson_id, group_code, lesson_period in loop_table:
         if lesson_period >= query_period and group_code in desired_roles or role_codes[group_code] in desired_roles:
