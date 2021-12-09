@@ -284,7 +284,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             watch_roles = ["grupa_1", "grupa_2"]
             msgs: dict[str, str] = {}
             for role_code in watch_roles:
-                lesson = get_lesson(lesson_period, lessons, role_code)
+                lesson = get_lesson(lesson_period, lessons, [role_code])
                 if not lesson:
                     continue
                 lesson_info, group_code, period = lesson
@@ -772,7 +772,7 @@ def get_lesson(query_period: int, loop_table: list, user_roles: list) -> tuple:
 
     Returns a tuple containing the lesson details, the code of the group and the period number.
     """
-    desired_roles = ["grupa_0"] + [str(role) for role in user_roles]
+    desired_roles = ["grupa_0"] + [str(role) for role in user_roles if role in role_codes or str(role) in role_codes.values()]
     attempt_debug_message("Raw roles:", user_roles)
     attempt_debug_message("Looking for lesson with roles:", desired_roles)
     for lesson_id, group_code, lesson_period in loop_table:
