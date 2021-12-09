@@ -271,6 +271,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     Arguments:
         query_time -- the time to get the status for.
     """
+    global current_period
     today = datetime.datetime.now()
     if query_time is None:
         # Default time to check is current time
@@ -278,13 +279,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     attempt_debug_message(f"Updating bot status ...", time=today)
     next_period_is_today, next_period, lessons = get_next_period(query_time)
     if next_period_is_today:
-        if next_period == math.ceil(next_period):  
+        current_period = math.floor(next_period)
+        if current_period == next_period:
             # Currently break time
             new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
-        else:  
+        else:
             # Currently lesson
-            global current_period   
-            current_period = math.floor(next_period)
             watch_roles = ["grupa_1", "grupa_2"]
             msgs: dict[str, str] = {}
             for role_code in watch_roles:
@@ -294,9 +294,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     continue
                 lesson_info, group_code = lesson[:2]
                 msgs[group_code] = lesson_info['name']
-            new_status_msg = f"{'/'.join([msgs[group_id] for group_id in msgs])} do {timetable[current_period].split('-')[1]}" 
+            lesson_text = "/".join([msgs[group_id] for group_id in msgs])
+            lesson_end_time = timetable[current_period].split('-')[1]
+            new_status_msg = f"{lesson_text} do {lesson_end_time}"
     else:
         # After the last lesson for the given day
+        current_period = -1
         if query_time.weekday() < Weekday.friday:
             # Mon-Thu
             new_status_msg = "koniec lekcji!"
@@ -304,6 +307,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             # Fri-Sun
             attempt_debug_message(f"... it's currently the weekend.")
             new_status_msg = "weekend!"
+    attempt_debug_message(f"... new status message is '{new_status_msg}'.")
     return new_status_msg
 
 
@@ -1098,7 +1102,10 @@ async def on_message(message: discord.Message) -> None:
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
         if msg_first_word == admin_commands[0]:
-            expression = message.content.lstrip(f"{prefix}exec ")
+            if not message.content.startswith(prefix + "exec"):
+                await message.channel.send("Type an expression or command to execute.")
+                return
+            expression = message.content[len(prefix + "exec"):]
             attempt_debug_message("Executing code:", expression)
             try:
                 exec(f"""locals()['temp'] = {expression}""")
