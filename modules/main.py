@@ -189,6 +189,7 @@ use_bot_testing = False
 homework_events = HomeworkEventContainer()
 tracked_market_items = []
 restart_on_exit = True
+current_period: int = 0
 
 
 def force_exit_program(dialog_box_message: str, dialog_box_title: str = "Dzwonnik 2 - Critical error") -> None:
@@ -277,19 +278,23 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     attempt_debug_message(f"Updating bot status ...", time=today)
     next_period_is_today, next_period, lessons = get_next_period(query_time)
     if next_period_is_today:
-        if next_period == math.ceil(next_period):  # Currently break time
+        if next_period == math.ceil(next_period):  
+            # Currently break time
             new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
-        else:  # Currently lesson
-            lesson_period = math.floor(next_period)
+        else:  
+            # Currently lesson
+            global current_period   
+            current_period = math.floor(next_period)
             watch_roles = ["grupa_1", "grupa_2"]
             msgs: dict[str, str] = {}
             for role_code in watch_roles:
-                lesson = get_lesson(lesson_period, lessons, [role_code])
+                lesson = get_lesson_info(current_period, lessons, [role_code])
                 if not lesson:
+                    # No lesson for that group
                     continue
-                lesson_info, group_code, period = lesson
+                lesson_info, group_code = lesson[:2]
                 msgs[group_code] = lesson_info['name']
-            new_status_msg = f"{'/'.join([msgs[group_id] for group_id in msgs])} do {timetable[period].split('-')[1]}" 
+            new_status_msg = f"{'/'.join([msgs[group_id] for group_id in msgs])} do {timetable[current_period].split('-')[1]}" 
     else:
         # After the last lesson for the given day
         if query_time.weekday() < Weekday.friday:
@@ -715,7 +720,8 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                     text += f"({group_names[group]})"
                 if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
                     text += "\n"
-            embed.add_field(name=f"Lekcja {period} ({timetable[period]})", value=text, inline=False)
+            lesson_text = f"Lekcja {period} ({timetable[period]}){' <── TERAZ' if period == current_period else ''}"
+            embed.add_field(name=lesson_text, value=text, inline=False)
         embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
         table_embed_cache[current_day + 5 * int(sender_is_admin)] = embed
     return True, table_embed_cache[current_day + 5 * sender_is_admin]
@@ -758,7 +764,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, loop_table
 
 
-def get_lesson(query_period: int, loop_table: list, user_roles: list) -> tuple:
+def get_lesson_info(query_period: int, loop_table: list, user_roles: list) -> tuple:
     """Get the lesson details for a given period, day and user user_roles.
     Arguments:
         query_period -- the period number to look for.
@@ -812,7 +818,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
 
     def process(time: datetime.datetime) -> tuple[bool, str, str]:
         next_lesson_is_today, lesson_period, lessons = get_next_period(time)
-        lesson: tuple = get_lesson(math.floor(lesson_period), lessons, message.author.roles)
+        lesson: tuple = get_lesson_info(math.floor(lesson_period), lessons, message.author.roles)
         if not lesson:
             return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}.", ""
         lesson_info, group_code, period = lesson
