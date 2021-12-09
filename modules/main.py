@@ -776,7 +776,7 @@ def get_lesson(query_period: int, loop_table: list, user_roles: list) -> tuple:
     attempt_debug_message("Looking for lesson with roles:", desired_roles)
     for lesson_id, group_code, lesson_period in loop_table:
         if lesson_period >= query_period and group_code in desired_roles or role_codes[group_code] in desired_roles:
-            attempt_debug_message("Found lesson", lesson_details[lesson_id]["name"])
+            attempt_debug_message(f"Found lesson '{lesson_details[lesson_id]['name']}'")
             return lesson_details[lesson_id], group_code, lesson_period
     attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}", force=True)
     return ()
@@ -827,6 +827,8 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
                 lesson_end = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
                 lesson_end_time: datetime.datetime = datetime.datetime.strptime(lesson_end, "%x %H:%M")
                 # Get the next lesson after the end of this one, recursive call
+                attempt_debug_message(f"Wrong lesson period: {lesson_period}")
+                attempt_debug_message(f"Continue looking for lessons after {lesson_end}")
                 return process(lesson_end_time)
             # Currently break
             when = " "
