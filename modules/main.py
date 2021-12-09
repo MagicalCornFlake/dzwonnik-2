@@ -1118,7 +1118,8 @@ async def on_message(message: discord.Message) -> None:
             if exec_result is None:
                 await message.channel.send("Code executed.")
             else:
-                await message.channel.send(f"Code executed:\n```py\n>>> {expression}\n{exec_result}\n```")
+                expr = expression.replace("\n", "\n>>> ")
+                await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{exec_result}\n```")
             return
 
         if msg_first_word == admin_commands[1]:
