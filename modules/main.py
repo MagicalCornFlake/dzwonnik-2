@@ -861,9 +861,20 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
 
 
     if next_period_is_today:
+
+        def conjugate_minutes(num: int):
+            if num == 1:
+                return f"1 minutę"
+            last_digit: int = int(str(num)[-1])
+            if 1 < last_digit < 5 and num not in [12, 13, 14]:
+                return f"{num} minuty"
+            else: 
+                return f"{num} minut"
+            
+
         break_start_time, break_start_datetime = get_time(math.floor(lesson_period), True)
         break_countdown = break_start_datetime - current_time
-        msg = f"{Emoji.info} Następna przerwa jest za {break_countdown.seconds // 60} minut o __{break_start_time}"
+        msg = f"{Emoji.info} Następna przerwa jest za {conjugate_minutes(break_countdown.seconds // 60)} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         attempt_debug_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
