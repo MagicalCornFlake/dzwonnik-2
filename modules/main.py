@@ -723,7 +723,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
         is_current_lesson = current_day == today and period == current_period 
         embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value=text, inline=False)
         embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
-        return True, embed
+    return True, embed
 
 
 def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[list[str or int]]]:
