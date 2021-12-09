@@ -720,8 +720,8 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                     text += f"({group_names[group]})"
                 if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
                     text += "\n"
-            lesson_text = f"Lekcja {period} ({timetable[period]}){' <── TERAZ' if period == current_period else ''}"
-            embed.add_field(name=lesson_text, value=text, inline=False)
+            txt = f"Lekcja {period} ({timetable[period]})"
+            embed.add_field(name=txt if period != current_period else f"*{txt}    <── TERAZ*", value=text, inline=False)
         embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
         table_embed_cache[current_day + 5 * int(sender_is_admin)] = embed
     return True, table_embed_cache[current_day + 5 * sender_is_admin]
