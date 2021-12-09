@@ -863,15 +863,15 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     if next_period_is_today:
         break_start_time, break_start_datetime = get_time(math.floor(lesson_period), True)
         break_countdown = break_start_datetime - current_time
-        msg = f"{Emoji.info} Następna przerwa jest o godzinie __{break_start_time}__ za {break_countdown.seconds // 60} minut"
+        msg = f"{Emoji.info} Następna przerwa jest za {break_countdown.seconds // 60} minut o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         attempt_debug_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
             break_end_time, break_end_datetime = get_time(int(next_period), False)
             break_length = break_end_datetime - break_start_datetime
-            msg += f" i trwa do {break_end_time} ({break_length.seconds // 60} min)."
+            msg += f"—{break_end_time}__ ({break_length.seconds // 60} min)."
         else:
-            msg += " i jest to ostatnia przerwa."
+            msg += "__ i jest to ostatnia przerwa."
     else:
         msg = f"{Emoji.info} Już jest po lekcjach!"
     return False, msg
