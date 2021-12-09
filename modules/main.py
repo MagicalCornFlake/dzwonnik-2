@@ -288,13 +288,9 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 if not lesson:
                     continue
                 lesson_info, group_code, period = lesson
-                msgs[group_code] = f"{lesson_info['name']} do {timetable[period].split('-')[1]}"
+                msgs[group_code] = {lesson_info['name']}
 
-            def map_lesson_msg(group_id: str) -> str:
-                lesson_msg = msgs[group_id]
-                return lesson_msg if group_id == "grupa_0" else f"{role_codes[group_id]}: {lesson_msg}"
-
-            new_status_msg = f"{' / '.join([map_lesson_msg(group_id) for group_id in msgs])}"
+            new_status_msg = f"{' / '.join([msgs(group_id) for group_id in msgs])} do {timetable[period].split('-')[1]}" 
     else:
         # After the last lesson for the given day
         if query_time.weekday() < Weekday.friday:
