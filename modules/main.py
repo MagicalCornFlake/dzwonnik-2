@@ -1102,13 +1102,16 @@ async def on_message(message: discord.Message) -> None:
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
         if msg_first_word == admin_commands[0]:
-            if not message.content.startswith(prefix + "exec"):
+            if not message.content.startswith(prefix + "exec "):
                 await message.channel.send("Type an expression or command to execute.")
                 return
-            expression = message.content[len(prefix + "exec"):]
+            expression = message.content[len(prefix + "exec "):]
             attempt_debug_message("Executing code:", expression)
             try:
-                exec(f"""locals()['temp'] = {expression}""")
+                try:
+                    exec(f"""locals()['temp'] = {expression}""")
+                except SyntaxError:
+                    exec(expression.replace("return", "locals()['temp'] ="))
                 exec_result = locals()['temp']
             except Exception as e:
                 exec_result = ' '.join(traceback.format_exception(type(e), e, e.__traceback__))
