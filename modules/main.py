@@ -53,15 +53,16 @@ async def on_ready() -> None:
     track_api_updates.start()
 
     # Checks if the bot was just restarted
-    test_channel = client.get_channel(ChannelID.bot_testing)
-    try:
-        last_test_message = await test_channel.fetch_message(test_channel.last_message_id)
-    except discord.errors.NotFound:
-        attempt_debug_message("Could not find last message in bot-testing channel. It was probably deleted.")
-    else:
-        if last_test_message is not None and last_test_message.author == client.user:
-            if last_test_message.content == "Restarting bot...":
-                await last_test_message.edit(content="Restarted bot!")
+    for channel_id in [ChannelID.bot_testing, ChannelID.bot_logs]:
+        channel = client.get_channel(channel_id)
+        try:
+            last_test_message = await channel.fetch_message(channel.last_message_id)
+        except discord.errors.NotFound:
+            attempt_debug_message(f"Could not find last message in channel {channel}. It was probably deleted.")
+        else:
+            if last_test_message is not None and last_test_message.author == client.user:
+                if last_test_message.content == "Restarting bot...":
+                    await last_test_message.edit(content="Restarted bot!")
 
 
 class HomeworkEvent:
