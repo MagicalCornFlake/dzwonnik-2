@@ -775,7 +775,7 @@ def get_lesson(query_period: int, loop_table: list, user_roles: list) -> tuple:
     desired_roles = ["grupa_0"] + [str(role) for role in user_roles if role in role_codes or str(role) in role_codes.values()]
     attempt_debug_message("Looking for lesson with roles:", desired_roles)
     for lesson_id, group_code, lesson_period in loop_table:
-        if lesson_period >= query_period and group_code in desired_roles or role_codes[group_code] in desired_roles:
+        if lesson_period >= query_period and (group_code in desired_roles or role_codes[group_code] in desired_roles):
             attempt_debug_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}")
             return lesson_details[lesson_id], group_code, lesson_period
     attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}", force=True)
