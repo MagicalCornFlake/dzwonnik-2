@@ -289,7 +289,6 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     continue
                 lesson_info, group_code, period = lesson
                 msgs[group_code] = lesson_info['name']
-            attempt_debug_message("Lesson msgs:", msgs)
             new_status_msg = f"{'/'.join([msgs[group_id] for group_id in msgs])} do {timetable[period].split('-')[1]}" 
     else:
         # After the last lesson for the given day
@@ -1118,7 +1117,7 @@ def attempt_debug_message(*debug_message, time: datetime.datetime = None, force=
         return
     if time is None:
         time = datetime.datetime.now()
-    timestamp = f"{time:%Y-%m-%d @ %H:%M:%S.%f}: "
+    timestamp = f"{time:%Y-%m-%d @ %H:%M:%S}: "
     message = ' '.join(map(str, debug_message)).replace("\n", "\n" + " " * len(timestamp))
     debug_message_string = f"{timestamp}{message}"
     print(debug_message_string)
