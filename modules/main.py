@@ -817,6 +817,25 @@ def get_datetime_from_input(message: discord.Message, calling_command: str) -> t
     return True, current_time
 
 
+
+def get_time(period: int, base_time: datetime.datetime, get_period_end_time: bool) -> tuple[str, datetime.datetime]:
+    time = timetable[period].split("-")[get_period_end_time]
+    hour, minute = time.split(":")
+    date_time = base_time.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
+    return time, date_time
+
+
+def conjugate_seconds_to_minutes(seconds: int) -> str:
+    num = math.ceil(seconds / 60)
+    if num == 1:
+        return f"1 minutę"
+    last_digit: int = int(str(num)[-1])
+    if 1 < last_digit < 5 and num not in [12, 13, 14]:
+        return f"{num} minuty"
+    else:
+        return f"{num} minut"
+
+
 # Returns the message to send when the user asks for the next lesson
 def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     success, result = get_datetime_from_input(message, 'nl')
@@ -833,15 +852,17 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         if next_lesson_is_today:
             if math.ceil(lesson_period) != lesson_period:
                 # Currently lesson
-                lesson_end = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
-                lesson_end_time: datetime.datetime = datetime.datetime.strptime(lesson_end, "%x %H:%M")
+                # lesson_end = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
+                # lesson_end_time: datetime.datetime = datetime.datetime.strptime(lesson_end, "%x %H:%M")
+                lesson_end_time, lesson_end_datetime = get_time(math.floor(lesson_period), current_time, True)
                 # Get the next lesson after the end of this one, recursive call
                 attempt_debug_message(f"Currently lesson {lesson_period} ...")
-                attempt_debug_message(f"Continue looking for lessons after {lesson_end} ...")
-                return process(lesson_end_time)
+                attempt_debug_message(f"Continue looking for lessons after {lesson_end_time} ...")
+                return process(lesson_end_datetime)
             # Currently break
             when = " "
-            countdown = f" (za {conjugate_seconds_to_minutes((time - current_time).seconds)})"
+            lesson_start_time, lesson_start_datetime = get_time(math.floor(lesson_period), current_time, False)
+            countdown = f" (za {conjugate_seconds_to_minutes((lesson_start_datetime - current_time).seconds)})"
         else:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
@@ -860,17 +881,6 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
     return True, embed
 
 
-def conjugate_seconds_to_minutes(seconds: int) -> str:
-    num = math.ceil(seconds / 60)
-    if num == 1:
-        return f"1 minutę"
-    last_digit: int = int(str(num)[-1])
-    if 1 < last_digit < 5 and num not in [12, 13, 14]:
-        return f"{num} minuty"
-    else:
-        return f"{num} minut"
-
-
 # Calculates the time of the next break
 def get_next_break(message: discord.Message) -> tuple[bool, str]:
     success, result = get_datetime_from_input(message, 'nb')
@@ -879,12 +889,6 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     current_time: datetime.datetime = result
 
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
-
-    def get_time(period: int, get_start_time: bool) -> tuple[str, datetime.datetime]:
-        time = timetable[period].split("-")[get_start_time]
-        hour, minute = time.split(":")
-        date_time = current_time.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
-        return time, date_time
 
     if next_period_is_today:
         break_start_time, break_start_datetime = get_time(math.floor(lesson_period), True)
