@@ -667,16 +667,16 @@ def get_help_message(_message: discord.Message) -> tuple[bool, discord.Embed]:
 
 def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     args = message.content.split(" ")
+    today = datetime.datetime.now().weekday()
     if len(args) == 1:
-        today = datetime.datetime.now().weekday()
-        current_day = today if today < Weekday.saturday else 0
+        current_day = today if today < Weekday.saturday else Weekday.monday
     else:
         current_day = -1
         try:
             # This 'try' clause raises RuntimeError if the input is invalid for whatever reason
             try:
                 # Check if the input is a number
-                if not 1 <= int(args[1]) <= 5:
+                if not Weekday.monday <= int(args[1]) <= Weekday.friday:
                     # It is, but of invalid format
                     raise RuntimeError(f"{args[1]} is not a number between 1 and 5.")
                 else:
@@ -700,31 +700,30 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
     sender_is_admin = message.channel.permissions_for(message.author).administrator
-    if current_day + 5 * sender_is_admin not in table_embed_cache:
-        loop_table = weekday_tables[current_day]
-        periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
-        lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
-        desc = f"Plan lekcji na **{weekday_names[current_day]}** ({len(periods)} lekcji) jest następujący:"
-        embed = discord.Embed(title="Plan lekcji", description=desc)
-        for period in periods:
-            text = ""
-            for code, group, _ in lessons_per_period[period - periods[0]]:
-                if code == "chem-ks" and (not sender_is_admin):
-                    continue
-                name, link = lesson_details[code].values()
-                if link:
-                    text += f"[{name}](https://meet.google.com/'{link}?authuser=0&hs=179) "
-                else:
-                    text += f"[{name}](http://guzek.uk/error/404?lang=pl-PL&source=discord) "
-                if group != "grupa_0":
-                    text += f"({group_names[group]})"
-                if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
-                    text += "\n"
-            txt = f"Lekcja {period} ({timetable[period]})"
-            embed.add_field(name=txt if period != current_period else f"*{txt}    <── TERAZ*", value=text, inline=False)
+    loop_table = weekday_tables[current_day]
+    periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
+    lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
+    desc = f"Plan lekcji na **{weekday_names[current_day]}** ({len(periods)} lekcji) jest następujący:"
+    embed = discord.Embed(title="Plan lekcji", description=desc)
+    for period in periods:
+        text = ""
+        for code, group, _ in lessons_per_period[period - periods[0]]:
+            if code == "chem-ks" and (not sender_is_admin):
+                continue
+            name, link = lesson_details[code].values()
+            if link:
+                text += f"[{name}](https://meet.google.com/'{link}?authuser=0&hs=179) "
+            else:
+                text += f"[{name}](http://guzek.uk/error/404?lang=pl-PL&source=discord) "
+            if group != "grupa_0":
+                text += f"({group_names[group]})"
+            if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
+                text += "\n"
+        txt = f"Lekcja {period} ({timetable[period]})"
+        is_current_lesson = current_day == today and period == current_period 
+        embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value=text, inline=False)
         embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
-        table_embed_cache[current_day + 5 * int(sender_is_admin)] = embed
-    return True, table_embed_cache[current_day + 5 * sender_is_admin]
+        return True, embed
 
 
 def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[list[str or int]]]:
