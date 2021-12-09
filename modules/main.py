@@ -58,12 +58,15 @@ async def on_ready() -> None:
         try:
             last_test_message = await channel.fetch_message(channel.last_message_id)
         except discord.errors.NotFound:
-            attempt_debug_message(f"Could not find last message in channel {channel}. It was probably deleted.")
+            attempt_debug_message(f"Could not find last message in channel {channel.name}. It was probably deleted.")
         else:
-            if last_test_message is not None and last_test_message.author == client.user:
+            if last_test_message is None:
+                attempt_debug_message(f"Last message in channel {channel.name} is None.")
+            elif last_test_message.author == client.user:
                 if last_test_message.content == "Restarting bot...":
                     await last_test_message.edit(content="Restarted bot!")
-
+            else:
+                attempt_debug_message(f"Last message in channel {channel.name} was not sent by me.")
 
 class HomeworkEvent:
     def __init__(self, title, group, author_id, deadline, reminder_date=None, reminder_is_active=True):
@@ -278,10 +281,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
         else:  # Currently lesson
             lesson_period = math.floor(next_period)
-            watch_roles = [RoleID.gr1, RoleID.gr2]
+            watch_roles = ["grupa_1", "grupa_2"]
             msgs: dict[str, str] = {}
-            for role_id in watch_roles:
-                lesson = get_lesson(lesson_period, lessons, [my_server.get_role(role_id)])
+            for role_code in watch_roles:
+                lesson = get_lesson(lesson_period, lessons, role_code)
                 if not lesson:
                     continue
                 lesson_info, group_code, period = lesson
@@ -760,7 +763,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, loop_table
 
 
-def get_lesson(query_period: int, loop_table: list, user_roles: list[str]) -> tuple:
+def get_lesson(query_period: int, loop_table: list, user_roles: list) -> tuple:
     """Get the lesson details for a given period, day and user user_roles.
     Arguments:
         query_period -- the period number to look for.
@@ -770,10 +773,10 @@ def get_lesson(query_period: int, loop_table: list, user_roles: list[str]) -> tu
     Returns a tuple containing the lesson details, the code of the group and the period number.
     """
     attempt_debug_message("Roles:", user_roles, "\nType of roles:", type(user_roles))
-    desired_roles = ["grupa_0"] + [role_codes[str(role)] for role in user_roles if str(role) in role_codes.values()]
+    desired_roles = ["grupa_0"] + [str(role) for role in user_roles if str(role) in role_codes.keys() + role_codes.values()]
     attempt_debug_message("Looking for lesson with roles:", desired_roles)
     for lesson_id, group_code, lesson_period in loop_table:
-        if lesson_period >= query_period and group_code in desired_roles:
+        if lesson_period >= query_period and group_code in desired_roles or role_codes[group_code] in desired_roles:
             return lesson_details[lesson_id], group_code, lesson_period
     attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}", force=True)
     return ()
