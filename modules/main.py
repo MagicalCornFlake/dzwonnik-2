@@ -68,6 +68,7 @@ async def on_ready() -> None:
             else:
                 attempt_debug_message(f"Last message in channel {channel.name} was not sent by me.")
 
+
 class HomeworkEvent:
     def __init__(self, title, group, author_id, deadline, reminder_date=None, reminder_is_active=True):
         self.id = None
@@ -767,7 +768,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, loop_table
 
 
-def get_lesson_info(query_period: int, loop_table: list, user_roles: list) -> tuple:
+def get_lesson_info(query_period: int, loop_table: list, roles: list) -> tuple:
     """Get the lesson details for a given period, day and user user_roles.
     Arguments:
         query_period -- the period number to look for.
@@ -776,10 +777,10 @@ def get_lesson_info(query_period: int, loop_table: list, user_roles: list) -> tu
 
     Returns a tuple containing the lesson details, the code of the group and the period number.
     """
-    desired_roles = ["grupa_0"] + [str(role) for role in user_roles if role in role_codes or str(role) in role_codes.values()]
-    attempt_debug_message("Looking for lesson with roles:", desired_roles)
+    target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
+    attempt_debug_message("Looking for lesson with roles:", target_roles)
     for lesson_id, group_code, lesson_period in loop_table:
-        if lesson_period >= query_period and (group_code in desired_roles or role_codes[group_code] in desired_roles):
+        if lesson_period >= query_period and (group_code in target_roles or role_codes[group_code] in target_roles):
             attempt_debug_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}.")
             return lesson_details[lesson_id], group_code, lesson_period
     attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}.", force=True)
@@ -831,17 +832,19 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
                 lesson_end = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
                 lesson_end_time: datetime.datetime = datetime.datetime.strptime(lesson_end, "%x %H:%M")
                 # Get the next lesson after the end of this one, recursive call
-                attempt_debug_message(f"Wrong lesson period: {lesson_period}")
-                attempt_debug_message(f"Continue looking for lessons after {lesson_end}")
+                attempt_debug_message(f"Currently lesson {lesson_period} ...")
+                attempt_debug_message(f"Continue looking for lessons after {lesson_end} ...")
                 return process(lesson_end_time)
             # Currently break
             when = " "
+            countdown = f" (za {conjugate_seconds_to_minutes((time - current_time).seconds)})"
         else:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
+            countdown = ""
         next_period_time = timetable[period].split("-")[0]
         group = group_names[group_code] + " " * (group_code != "grupa_0")
         return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_info['name']}**" \
-                     f"{when} o godzinie __{next_period_time}__.", lesson_info['link']
+                     f"{when} o godzinie __{next_period_time}__{countdown}.", lesson_info['link']
 
     success, msg, link = process(current_time)
     if not success:
@@ -851,6 +854,17 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
     embed.add_field(name="Link do lekcji", value=f"[meet.google.com](https://meet.google.com/{link}?authuser=0&hs=179)")
     embed.set_footer(text=f"Użyj komendy {prefix}nl, aby pokazać tą wiadomość.")
     return True, embed
+
+
+def conjugate_seconds_to_minutes(seconds: int) -> str:
+    num = math.ceil(seconds / 60)
+    if num == 1:
+        return f"1 minutę"
+    last_digit: int = int(str(num)[-1])
+    if 1 < last_digit < 5 and num not in [12, 13, 14]:
+        return f"{num} minuty"
+    else:
+        return f"{num} minut"
 
 
 # Calculates the time of the next break
@@ -865,25 +879,14 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     def get_time(period: int, get_start_time: bool) -> tuple[str, datetime.datetime]:
         time = timetable[period].split("-")[get_start_time]
         hour, minute = time.split(":")
-        datetime = current_time.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
-        return time, datetime
-
+        date_time = current_time.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
+        return time, date_time
 
     if next_period_is_today:
-
-        def conjugate_minutes(num: int):
-            if num == 1:
-                return f"1 minutę"
-            last_digit: int = int(str(num)[-1])
-            if 1 < last_digit < 5 and num not in [12, 13, 14]:
-                return f"{num} minuty"
-            else: 
-                return f"{num} minut"
-            
-
         break_start_time, break_start_datetime = get_time(math.floor(lesson_period), True)
         break_countdown = break_start_datetime - current_time
-        msg = f"{Emoji.info} Następna przerwa jest za {conjugate_minutes(break_countdown.seconds // 60)} o __{break_start_time}"
+        minutes = conjugate_seconds_to_minutes(break_countdown.seconds)
+        msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         attempt_debug_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
@@ -1111,7 +1114,7 @@ async def on_message(message: discord.Message) -> None:
                 try:
                     exec(f"""locals()['temp'] = {expression}""")
                 except SyntaxError:
-                    exec(expression.replace("return", "locals()['temp'] ="))
+                    exec(expression.replace("return ", "locals()['temp'] = "))
                 exec_result = locals()['temp']
             except Exception as e:
                 exec_result = ' '.join(traceback.format_exception(type(e), e, e.__traceback__))
