@@ -771,9 +771,9 @@ def get_lesson(query_period: int, loop_table: list, user_roles: list) -> tuple:
     attempt_debug_message("Looking for lesson with roles:", desired_roles)
     for lesson_id, group_code, lesson_period in loop_table:
         if lesson_period >= query_period and (group_code in desired_roles or role_codes[group_code] in desired_roles):
-            attempt_debug_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}")
+            attempt_debug_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}.")
             return lesson_details[lesson_id], group_code, lesson_period
-    attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}", force=True)
+    attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}.", force=True)
     return ()
 
 
@@ -852,9 +852,26 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     current_time: datetime.datetime = result
 
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
+
+    def get_time(period: int, get_start_time: bool) -> tuple[str, datetime.datetime]:
+        time = timetable[period].split("-")[get_start_time]
+        hour, minute = time.split(":")
+        datetime = current_time.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
+        return time, datetime
+
+
     if next_period_is_today:
-        next_break_time = timetable[math.floor(lesson_period)].split("-")[1]
-        msg = f"{Emoji.info} Następna przerwa jest o godzinie __{next_break_time}__."
+        break_start_time, break_start_datetime = get_time(math.floor(lesson_period), True)
+        break_countdown = break_start_datetime - current_time
+        msg = f"{Emoji.info} Następna przerwa jest o godzinie __{break_start_time}__ za {break_countdown}"
+        more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
+        attempt_debug_message("More lessons today:", more_lessons_today)
+        if more_lessons_today:
+            break_end_time, break_end_datetime = get_time(int(next_period), False)
+            break_length = break_end_datetime - break_start_datetime
+            msg += f" i trwa {break_length} minut (do {break_end_time})."
+        else:
+            msg += " i jest to ostatnia przerwa."
     else:
         msg = f"{Emoji.info} Już jest po lekcjach!"
     return False, msg
