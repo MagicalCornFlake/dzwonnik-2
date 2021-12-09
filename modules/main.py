@@ -817,7 +817,6 @@ def get_datetime_from_input(message: discord.Message, calling_command: str) -> t
     return True, current_time
 
 
-
 def get_time(period: int, base_time: datetime.datetime, get_period_end_time: bool) -> tuple[str, datetime.datetime]:
     time = timetable[period].split("-")[get_period_end_time]
     hour, minute = time.split(":")
@@ -852,8 +851,6 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         if next_lesson_is_today:
             if math.ceil(lesson_period) != lesson_period:
                 # Currently lesson
-                # lesson_end = f"{current_time.strftime('%x')} {timetable[math.floor(lesson_period)].split('-')[1]}"
-                # lesson_end_time: datetime.datetime = datetime.datetime.strptime(lesson_end, "%x %H:%M")
                 lesson_end_time, lesson_end_datetime = get_time(math.floor(lesson_period), current_time, True)
                 # Get the next lesson after the end of this one, recursive call
                 attempt_debug_message(f"Currently lesson {lesson_period} ...")
@@ -891,14 +888,14 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
 
     if next_period_is_today:
-        break_start_time, break_start_datetime = get_time(math.floor(lesson_period), True)
+        break_start_time, break_start_datetime = get_time(math.floor(lesson_period), current_time, True)
         break_countdown = break_start_datetime - current_time
         minutes = conjugate_seconds_to_minutes(break_countdown.seconds)
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         attempt_debug_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
-            break_end_time, break_end_datetime = get_time(int(next_period), False)
+            break_end_time, break_end_datetime = get_time(int(next_period), break_start_datetime, False)
             break_length = break_end_datetime - break_start_datetime
             msg += f"—{break_end_time}__ ({break_length.seconds // 60} min)."
         else:
