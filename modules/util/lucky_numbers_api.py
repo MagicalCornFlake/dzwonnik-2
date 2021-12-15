@@ -2,17 +2,25 @@
 import datetime
 from . import web_api
 
+# Data JSON structure:
+# {
+#     "date": "dd/mm/YYYY",
+#     "luckyNumbers": [0, 0],
+#     "excludedClasses": ["X", "Y"]
+# }
 cached_data: dict[str, str or list[int or str]] = {}
 max_cache_age = 1  # Days
 
 def get_lucky_numbers() -> dict[str, str or list[int or str]]:
+    """Updates the cache if it is outdated then returns it."""
+    current_date = datetime.datetime.now()
     try:
         last_cache_date = datetime.datetime.strptime(cached_data['date'], "%d/%m/%Y")
-        current_date = datetime.datetime.now()
         if (current_date - last_cache_date).days > max_cache_age:
             raise ValueError()
     except (KeyError, ValueError):
         # If the cache is empty or too old
+        print(f"{current_date:%Y-%m-%d @ %H:%M:%S}: Updating cache.")
         update_cache()
     return cached_data
 
@@ -23,12 +31,6 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
     Returns the old cache so that it can be compared with the new one.
     """
     url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
-    # JSON structure:
-    # {
-    #     "date": "dd/mm/YYYY",
-    #     "luckyNumbers": [0, 0],
-    #     "excludedClasses": ["X", "Y"]
-    # }
     global cached_data
     old_cache = cached_data
     cached_data = web_api.make_request(url)
