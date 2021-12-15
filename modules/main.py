@@ -1123,13 +1123,13 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            print(f"\nProgram manually closed by user ('{msg_first_word}' command).")
+            print(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
             global restart_on_exit
             restart_on_exit = False
-
         track_time_changes.stop()
         track_api_updates.stop()
         await client.close()
+        
     if msg_first_word not in command_descriptions:
         return
     # await message.delete()
@@ -1189,7 +1189,8 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            print("\nCRITICAL ERROR!\n'BOT_TOKEN' OS environment variable not found. Program exiting.")
+            print("\n    --- CRITICAL ERROR! ---")
+            print("'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
             return False
@@ -1204,12 +1205,12 @@ def start_bot() -> bool:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (eg. Ctrl+F2 in PyCharm).
-            print("\nProgram manually closed by user (KeyboardInterrupt exception).")
+            print("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
             # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
-            pass
+            print("\n    --- Bot execution terminated sucessfuly. ---")
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
