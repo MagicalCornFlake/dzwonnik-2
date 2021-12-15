@@ -193,15 +193,6 @@ restart_on_exit = True
 current_period: int = 0
 
 
-def force_exit_program(dialog_box_message: str, dialog_box_title: str = "Dzwonnik 2 - Critical error") -> None:
-    import sys
-    from tkinter import Tk, messagebox
-    window = Tk()
-    window.wm_withdraw()
-    messagebox.showerror(title=dialog_box_title, message=dialog_box_message)
-    sys.exit("Program force-closed due to user error.")
-
-
 def read_data_file(filename="data.json") -> None:
     global homework_events
     # Reads data file and updates settings
@@ -1132,7 +1123,7 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            print(f"\nProgram manually closed by user ('{msg_first_word}' command).\nGoodbye!\n")
+            print(f"\nProgram manually closed by user ('{msg_first_word}' command).")
             global restart_on_exit
             restart_on_exit = False
 
@@ -1163,7 +1154,7 @@ def debug(*debug_message) -> None:
 
 
 def attempt_debug_message(*debug_message, time: datetime.datetime = None, force=False) -> None:
-    if not enable_debug_messages and not force:
+    if not (enable_debug_messages or force):
         return
     if time is None:
         time = datetime.datetime.now()
@@ -1198,7 +1189,7 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            print("\n'BOT_TOKEN' OS environment variable not found. Program exiting.\n")
+            print("\nCRITICAL ERROR!\n'BOT_TOKEN' OS environment variable not found. Program exiting.\n")
             save_on_exit = False
             # Do not restart bot
             return False
@@ -1213,7 +1204,7 @@ def start_bot() -> bool:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (eg. Ctrl+F2 in PyCharm).
-            print("\nProgram manually closed by user.\nGoodbye!\n")
+            print("\nProgram manually closed by user (KeyboardInterrupt exception).")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
