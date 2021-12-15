@@ -1189,7 +1189,7 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            print("\nCRITICAL ERROR!\n'BOT_TOKEN' OS environment variable not found. Program exiting.\n")
+            print("\nCRITICAL ERROR!\n'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
             return False
@@ -1216,7 +1216,7 @@ def start_bot() -> bool:
             # The file is saved before the start_bot() method returns any value.
             # Do not send a debug message since the bot is already offline.
             save_data_file(should_send_debug_messages=False)
-            print("Successfully saved data file 'data.json' (program exiting).\n")
+            print("Successfully saved data file 'data.json'. Program exiting.")
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
