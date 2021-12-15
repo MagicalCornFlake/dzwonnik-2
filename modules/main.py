@@ -1136,8 +1136,8 @@ async def on_message(message: discord.Message) -> None:
             global restart_on_exit
             restart_on_exit = False
 
-        track_time_changes.stop()
-        track_api_updates.stop()
+        await track_time_changes.stop()
+        await track_api_updates.stop()
         await client.close()
     if msg_first_word not in command_descriptions:
         return
