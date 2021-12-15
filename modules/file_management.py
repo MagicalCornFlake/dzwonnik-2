@@ -29,5 +29,5 @@ def read_env_files() -> bool:
             os.environ[env_name] = env_value
             print(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
     # Newline for readability
-    print("    --- Finished processing environment variable files ---\n")
+    print("    --- Finished processing environment variable files. ---\n")
     return return_value

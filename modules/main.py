@@ -1129,7 +1129,7 @@ async def on_message(message: discord.Message) -> None:
         track_time_changes.stop()
         track_api_updates.stop()
         await client.close()
-        
+
     if msg_first_word not in command_descriptions:
         return
     # await message.delete()
@@ -1210,7 +1210,7 @@ def start_bot() -> bool:
             return False
         else:
             # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
-            print("\n    --- Bot execution terminated sucessfuly. ---")
+            print("\n    --- Bot execution terminated successfully. ---")
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
