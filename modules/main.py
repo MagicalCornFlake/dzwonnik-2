@@ -401,10 +401,8 @@ async def track_api_updates() -> None:
         tracked_market_items.remove(item)
         save_data_file()
     await asyncio.sleep(3)
-    data = lucky_numbers_api.get_lucky_numbers()
-    if data != lucky_numbers_api.cached_data:
-        attempt_debug_message(f"New lucky numbers data!\nOld data: {lucky_numbers_api.cached_data}\nNew data: {data}")
-        lucky_numbers_api.cached_data = data
+    if lucky_numbers_api.update_cache():
+        attempt_debug_message(f"New lucky numbers data!")
         target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
         await target_channel.send(embed=get_lucky_numbers()[1])
         save_data_file()
@@ -975,7 +973,7 @@ def stop_market_tracking(message: discord.Message) -> tuple[bool, str]:
 
 
 def get_lucky_numbers(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed]:
-    data = lucky_numbers_api.cached_data
+    data = lucky_numbers_api.get_lucky_numbers()
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:
@@ -983,7 +981,7 @@ def get_lucky_numbers(*_message: tuple[discord.Message]) -> tuple[bool, discord.
             else f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*"
         embed.add_field(name=n, value=member_text, inline=False)
     # embed.add_field(name="\u200B", value="\u200B", inline=False)
-    excluded_classes = ", ".join(data["excludedClasses"]) if len(data["excludedClasses"]) > 0 else "-"
+    excluded_classes = ", ".join(data["excludedClasses"]) if len(data["excludedClasses"]) > 0 else "*Brak*"
     embed.add_field(name="Wykluczone klasy", value=excluded_classes, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}numerki, aby pokazać tą wiadomość.")
     return True, embed
