@@ -16,7 +16,7 @@ def read_env_files() -> bool:
     print("Searching for .env files...")
     return_value = False
     for filename in os.listdir():
-        files_in_pwd.apend(filename)
+        files_in_pwd.append(filename)
         if not filename.endswith('.env'):
             continue
         env_name = filename.rstrip('.env')
