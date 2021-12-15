@@ -3,7 +3,8 @@
 
 from modules import main
 
-restart_bot = main.start_bot()
-while restart_bot:
+while True:
     main.importlib.reload(main)
-    restart_bot = main.start_bot()
+    if not main.start_bot():
+        # start_bot() returns a boolean indicating whether or not the bot should be restarted
+        break

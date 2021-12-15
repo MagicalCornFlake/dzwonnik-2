@@ -361,7 +361,7 @@ async def remind_about_homework_event(event, tense) -> None:
 @discord.ext.tasks.loop(seconds=1)
 async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's time + 1 day
+    tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's date + 1 day
     # Checks if current time is in list of key times
     if f"{current_time:%H:%M}" in watch_times and current_time.second == 0:
         # Check is successful, bot updates Discord status
@@ -1136,8 +1136,8 @@ async def on_message(message: discord.Message) -> None:
             global restart_on_exit
             restart_on_exit = False
 
-        await track_time_changes.stop()
-        await track_api_updates.stop()
+        track_time_changes.stop()
+        track_api_updates.stop()
         await client.close()
     if msg_first_word not in command_descriptions:
         return
@@ -1205,7 +1205,8 @@ def start_bot() -> bool:
         else:
             # No problems finding OS variable containing bot token. Can login successfully.
             event_loop.run_until_complete(client.login(token))
-
+        # Bot has been logged in, continue with attempt to connect
+        file_management.clear_log_files()
         try:
             # Blocking call:
             # The program will stay on this line until the bot is disconnected.

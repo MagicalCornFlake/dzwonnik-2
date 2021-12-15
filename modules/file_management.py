@@ -2,10 +2,21 @@
 import os
 
 
+files_in_pwd = []
+
+
+def clear_log_files() -> None:
+    for filename in files_in_pwd:
+        if filename.endswith('.log'):
+            with open(filename, 'w') as file:
+                file.write("Started bot log.\n")
+
+
 def read_env_files() -> bool:
     print("Searching for .env files...")
     return_value = False
     for filename in os.listdir():
+        files_in_pwd.apend(filename)
         if not filename.endswith('.env'):
             continue
         env_name = filename.rstrip('.env')
