@@ -29,7 +29,7 @@ def read_env_files() -> bool:
             #     print(var)
         return_value = True
         with open(filename, 'r') as file:
-            env_value = file.read()
+            env_value = file.read().rstrip('\n\r')
             os.environ[env_name] = env_value
             print(f"Set environment variable value '{env_name}' to '{env_value}'.")
     # Newline for readability
