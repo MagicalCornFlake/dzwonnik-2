@@ -398,7 +398,7 @@ async def track_api_updates() -> None:
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         log_message(f"Error! Received an invalid response from the web request (cache update). Exception trace:\n" + ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
-        if old_cache:
+        if old_cache != lucky_numbers_api.cached_data:
             log_message(f"New lucky numbers data!")
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             await target_channel.send(embed=get_lucky_numbers_embed()[1])
@@ -1117,7 +1117,7 @@ async def on_message(message: discord.Message) -> None:
                     exec(f"""locals()['temp'] = {expression}""")
                 except SyntaxError:
                     exec(expression.replace("return ", "locals()['temp'] = "))
-                exec_result = locals()['temp']
+                exec_result = locals()['temp'] if "temp" in locals() else "Return value not specified."
             except Exception as e:
                 exec_result = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
             if exec_result is None:

@@ -35,4 +35,4 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
     global cached_data
     old_cache = cached_data
     cached_data = web_api.make_request(url)
-    return old_cache if old_cache != cached_data else False
+    return old_cache
