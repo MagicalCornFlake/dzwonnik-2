@@ -9,13 +9,13 @@ def clear_log_files() -> None:
     for filename in files_in_pwd:
         if filename.endswith('.log'):
             with open(filename, 'w') as file:
-                file.write(f"{datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP")
+                file.write(f"{datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP ")
                 file.write("Started bot log.\n")
 
 
 def save_log_file() -> None:
     with open("bot.log", 'r') as file:
-        log_start_time, log_contents = file.read().split(" END TIMESTAMP\n\r", maxsplit=1)
+        log_start_time, log_contents = file.read().split(" END TIMESTAMP ", maxsplit=1)
     with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n\r") + ".log", 'w') as file:
         file.write(log_contents)
 
