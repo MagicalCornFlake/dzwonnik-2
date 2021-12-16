@@ -1226,6 +1226,7 @@ def start_bot() -> bool:
             # Do not send a debug message since the bot is already offline.
             save_data_file(should_log=False)
             print("Successfully saved data file 'data.json'. Program exiting.")
+        file_management.save_log_file()
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
