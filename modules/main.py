@@ -40,7 +40,7 @@ async def on_ready() -> None:
     global my_server
 
     guilds = {guild.id: guild.name for guild in client.guilds}
-    attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
+    log_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
     my_server = client.get_guild(my_server_id)
 
     # Sets status message on bot start
@@ -57,15 +57,15 @@ async def on_ready() -> None:
         try:
             last_test_message = await channel.fetch_message(channel.last_message_id)
         except discord.errors.NotFound:
-            attempt_debug_message(f"Could not find last message in channel {channel.name}. It was probably deleted.")
+            log_message(f"Could not find last message in channel {channel.name}. It was probably deleted.")
         else:
             if last_test_message is None:
-                attempt_debug_message(f"Last message in channel {channel.name} is None.")
+                log_message(f"Last message in channel {channel.name} is None.")
             elif last_test_message.author == client.user:
                 if last_test_message.content == "Restarting bot...":
                     await last_test_message.edit(content="Restarted bot!")
             else:
-                attempt_debug_message(f"Last message in channel {channel.name} was not sent by me.")
+                log_message(f"Last message in channel {channel.name} was not sent by me.")
 
 
 class HomeworkEvent:
@@ -128,7 +128,7 @@ class HomeworkEventContainer(list):
     def remove_disjunction(self, reference_container):
         for event in self:
             if event.serialised not in reference_container.serialised:
-                attempt_debug_message(f"Removing obsolete event '{event.title}' from container")
+                log_message(f"Removing obsolete event '{event.title}' from container")
                 self.remove(event)
 
 
@@ -184,7 +184,7 @@ lesson_details: dict[str, dict[str, str]] = {
     "wos": {"name": "wiedza o społeczeństwie", "link": "lookup/flikhkjfkr"}
 }
 prefix = '!'  # Prefix used before commands
-enable_debug_messages = True
+enable_log_messages = True
 use_bot_testing = False
 homework_events = HomeworkEventContainer()
 tracked_market_items = []
@@ -230,15 +230,15 @@ def read_data_file(filename="data.json") -> None:
     lucky_numbers_api.cached_data = data["lucky_numbers"]
 
 
-def save_data_file(filename="data.json", should_send_debug_messages=True) -> None:
+def save_data_file(filename="data.json", should_log=True) -> None:
     """Saves the settings stored in the program's memory to the file provided.
 
     Arguments:
         filename -- the name of the file relative to the program root directory to write to (default 'data.json').
-        should_send_debug_messages -- whether or not the save should be logged in the Discord Log and in the console.
+        should_log -- whether or not the save should be logged in the Discord Log and in the console.
     """
-    if should_send_debug_messages:
-        attempt_debug_message("Saving data file", filename)
+    if should_log:
+        log_message("Saving data file", filename)
     # Creates containers with the data to be saved in .json format
     serialised_homework_events = {event.id_string: event.serialised for event in homework_events}
     serialised_tracked_market_items = [item.serialised for item in tracked_market_items]
@@ -253,8 +253,8 @@ def save_data_file(filename="data.json", should_send_debug_messages=True) -> Non
     # Replaces file content with new data
     with open(filename, 'w') as file:
         json.dump(data_to_be_saved, file, indent=2)
-    if should_send_debug_messages:
-        attempt_debug_message(f"Successfully saved data file '{filename}'.")
+    if should_log:
+        log_message(f"Successfully saved data file '{filename}'.")
 
 
 def get_new_status_msg(query_time: datetime.datetime = None) -> str:
@@ -266,7 +266,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     if query_time is None:
         # Default time to check is current time
         query_time = datetime.datetime.now()
-    attempt_debug_message(f"Updating bot status ...")
+    log_message(f"Updating bot status ...")
     next_period_is_today, next_period, lessons = get_next_period(query_time)
     if next_period_is_today:
         current_period = math.floor(next_period)
@@ -295,9 +295,9 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             new_status_msg = "koniec lekcji!"
         else:
             # Fri-Sun
-            attempt_debug_message(f"... it's currently the weekend.")
+            log_message(f"... it's currently the weekend.")
             new_status_msg = "weekend!"
-    attempt_debug_message(f"... new status message is '{new_status_msg}'.")
+    log_message(f"... new status message is '{new_status_msg}'.")
     return new_status_msg
 
 
@@ -391,7 +391,7 @@ async def track_api_updates() -> None:
         save_data_file()
     await asyncio.sleep(3)
     if lucky_numbers_api.update_cache():
-        attempt_debug_message(f"New lucky numbers data!")
+        log_message(f"New lucky numbers data!")
         target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
         await target_channel.send(embed=get_lucky_numbers()[1])
         save_data_file()
@@ -692,7 +692,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                         # ValueError can't be used since it has already been caught
                         raise RuntimeError(f"invalid weekday name: {args[1]}")
         except RuntimeError as e:
-            attempt_debug_message(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
+            log_message(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
     sender_is_admin = message.channel.permissions_for(message.author).administrator
@@ -731,7 +731,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     Returns a tuple consisting of a boolean indicating if that day is today, the period number,
     and the list containing the lessons for that day.
     """
-    attempt_debug_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
+    log_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
 
     if current_day_index < Weekday.saturday:
@@ -742,10 +742,10 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
             times = timetable[lesson_period].split("-")
             lesson_start_time = datetime.datetime.strptime(f"{given_time.strftime('%x')} {times[0]}", "%x %H:%M")
             if given_time < lesson_start_time:
-                attempt_debug_message(f"... this is the break before period {lesson_period}.")
+                log_message(f"... this is the break before period {lesson_period}.")
                 return True, lesson_period, loop_table
             if given_time < lesson_start_time + datetime.timedelta(minutes=45):
-                attempt_debug_message(f"... this is period {lesson_period}.")
+                log_message(f"... this is period {lesson_period}.")
                 return True, lesson_period + 0.5, loop_table
         # Could not find any such lesson.
         next_school_day = current_day_index + 1
@@ -754,7 +754,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
 
     # If it's currently weekend or after the last lesson on Friday
     loop_table = weekday_tables[next_school_day]
-    attempt_debug_message(f"... there are no more lessons today. Next school day: {next_school_day}")
+    log_message(f"... there are no more lessons today. Next school day: {next_school_day}")
     first_period = loop_table[0][-1]
     return False, first_period, loop_table
 
@@ -769,12 +769,12 @@ def get_lesson_info(query_period: int, loop_table: list, roles: list) -> tuple:
     Returns a tuple containing the lesson details, the code of the group and the period number.
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
-    attempt_debug_message("Looking for lesson with roles:", target_roles)
+    log_message("Looking for lesson with roles:", target_roles)
     for lesson_id, group_code, lesson_period in loop_table:
         if lesson_period >= query_period and (group_code in target_roles or role_codes[group_code] in target_roles):
-            attempt_debug_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}.")
+            log_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}.")
             return lesson_details[lesson_id], group_code, lesson_period
-    attempt_debug_message(f"Did not find lesson for period {query_period} in loop table {loop_table}.", force=True)
+    log_message(f"Did not find lesson for period {query_period} in loop table {loop_table}.", force=True)
     return ()
 
 
@@ -840,8 +840,8 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
                 # Currently lesson
                 lesson_end_time, lesson_end_datetime = get_time(math.floor(lesson_period), current_time, True)
                 # Get the next lesson after the end of this one, recursive call
-                attempt_debug_message(f"Currently lesson {lesson_period} ...")
-                attempt_debug_message(f"Continue looking for lessons after {lesson_end_time} ...")
+                log_message(f"Currently lesson {lesson_period} ...")
+                log_message(f"Continue looking for lessons after {lesson_end_time} ...")
                 return process(lesson_end_datetime)
             # Currently break
             when = " "
@@ -880,7 +880,7 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
         minutes = conjugate_seconds_to_minutes(break_countdown.seconds)
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
-        attempt_debug_message("More lessons today:", more_lessons_today)
+        log_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
             break_end_time, break_end_datetime = get_time(int(next_period), break_start_datetime, False)
             break_length = break_end_datetime - break_start_datetime
@@ -1101,7 +1101,7 @@ async def on_message(message: discord.Message) -> None:
                 await message.channel.send("Type an expression or command to execute.")
                 return
             expression = message.content[len(prefix + "exec "):]
-            attempt_debug_message("Executing code:", expression)
+            log_message("Executing code:", expression)
             try:
                 try:
                     exec(f"""locals()['temp'] = {expression}""")
@@ -1132,12 +1132,12 @@ async def on_message(message: discord.Message) -> None:
         return
     # await message.delete()
 
-    attempt_debug_message(f"Received command: '{message.content}'", "from user:", message.author)
+    log_message(f"Received command: '{message.content}'", "from user:", message.author)
     command_method_to_call_when_executed = command_methods[msg_first_word]
     try:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:
-        attempt_debug_message(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        log_message(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         await message.reply(f"<@{member_ids[7]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
@@ -1147,24 +1147,26 @@ async def on_message(message: discord.Message) -> None:
         await wait_for_zadania_reaction(message, reply_msg)
 
 
-def debug(*debug_message) -> None:
-    attempt_debug_message(*debug_message, force=True)
+def log(*message) -> None:
+    """Shorthand for sending a message to the log channel and program output file regardless of log settings."""
+    log_message(*message, force=True)
 
 
-def attempt_debug_message(*debug_message, force=False) -> None:
-    if not (enable_debug_messages or force):
+def log_message(*raw_message, force=False) -> None:
+    """Determine whether or not the message should actually be logged, and if so, generate the string that should be sent."""
+    if not (enable_log_messages or force):
         return
     timestamp = f"{datetime.datetime.now():%Y-%m-%d @ %H:%M:%S}: "
-    message = ' '.join(map(str, debug_message)).replace("\n", "\n" + " " * len(timestamp))
-    debug_message_string = f"{timestamp}{message}"
-    print(debug_message_string)
+    # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning 
+    message = timestamp + ' '.join(map(str, raw_message)).replace("\n", "\n" + " " * len(timestamp))
+    print(message)
     log_loop = asyncio.get_event_loop()
-    log_loop.create_task(send_debug_message(debug_message_string))
+    log_loop.create_task(send_log_message(message))
 
 
-async def send_debug_message(debug_message) -> None:
+async def send_log_message(message) -> None:
     await client.wait_until_ready()
-    await client.get_channel(ChannelID.bot_logs).send(f"```py\n{debug_message}\n```")
+    await client.get_channel(ChannelID.bot_logs).send(f"```py\n{message}\n```")
 
 
 def start_bot() -> bool:
@@ -1212,7 +1214,7 @@ def start_bot() -> bool:
         if save_on_exit:
             # The file is saved before the start_bot() method returns any value.
             # Do not send a debug message since the bot is already offline.
-            save_data_file(should_send_debug_messages=False)
+            save_data_file(should_log=False)
             print("Successfully saved data file 'data.json'. Program exiting.")
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
@@ -1223,5 +1225,5 @@ def start_bot() -> bool:
 if __name__ == "__main__":
     print("Started bot from main file! Assuming this is debug behaviour.\n")
     use_bot_testing = True
-    enable_debug_messages = True
+    enable_log_messages = True
     start_bot()
