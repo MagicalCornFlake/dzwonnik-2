@@ -1,16 +1,6 @@
 """Functionality for accessing the Steam Community web API"""
-import requests
-import time
 import urllib.parse
 from . import web_api
-
-
-class SearchResult:
-    def __init__(self, success, lowest_price, volume, median_price):
-        self.success = success
-        self.lowest_price = lowest_price
-        self.volume = volume
-        self.median_price = median_price
 
 
 currency_ids = [
@@ -50,7 +40,7 @@ currency_ids = [
 
 
 def get_currency_id(currency: str):
-    # If the given currency name (e.g. EUR) is in the list of currencies, return its index otherwise return 6 (PLN)
+    """Returns the ID of a given currency if it's listed, otherwise return the ID for PLN (6)."""
     return (currency_ids.index(currency) + 1) if currency in currency_ids else 6
 
 
@@ -69,19 +59,38 @@ class NoSuchItemException(Exception):
         super().__init__(self.message)
 
 
-def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN'):
+# Data JSON structure:
+# {
+#     "success": bool,
+#     "lowest_price": "0,00curr",
+#     "volume": "00,000",
+#     "median_price": "0,00curr"
+# }
+
+def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN') -> dict[str, bool or str]:
+    """Makes a web query on the Steam Community Market API for the specified search term and returns a dictionary containing the JSON response.
+    
+    Arguments:
+        raw_query -- the string that is to be searched for on the API
+        app_id -- the ID of the game whose market contains the searched item (default 730 for CS:GO)
+        currency -- the common-use abbreviation for the currency that the results are to be returned in (default PLN for Polish Złotys)
+
+    Raises NoSuchItemException if the item was not found.
+    """
     steam_url = "https://www.steamcommunity.com/market/"
     currency_id = get_currency_id(currency)
     query_encoded = urllib.parse.quote(raw_query)
     # noinspection SpellCheckingInspection
     url = f"{steam_url}priceoverview/?appid={app_id}&currency={currency_id}&market_hash_name={query_encoded}"
+    # For example, the URL may look like:
+    # https://www.steamcommunity.com/market/priceoverview/?appid=730&currency=6&market_hash_name=Operation Broken Fang Case
     result = web_api.make_request(url)
     if not result["success"]:
         raise NoSuchItemException(raw_query)
     return result
 
 
-def get_item_price(item_data: dict):
+def get_item_price(item_data: dict[str, bool or str]) -> str:
     try:
         price = item_data['lowest_price']
     except KeyError:

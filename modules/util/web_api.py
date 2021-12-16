@@ -29,18 +29,22 @@ class InvalidResponseException(Exception):
         super().__init__(self.message)
 
 
-last_request_time = 0
-
+last_request_time: int = 0 
+max_request_cooldown: int = 1  # Must wait 1s since last request
 
 def make_request(url: str):
     """Make a web request.
 
     Arguments:
         url -- the url of the resource to request data from
+
+    Raises:
+        TooManyRequestsException if there was more than one request made per second
+        InvalidResponseException if the request timed out or if it returned an invalid response
     """
     global last_request_time
     current_time = time.time()
-    if current_time - last_request_time < 1:
+    if current_time - last_request_time < max_request_cooldown:
         raise TooManyRequestsException(int(current_time * 1000 - last_request_time * 1000))
     last_request_time = current_time
     try:
@@ -50,8 +54,3 @@ def make_request(url: str):
     if response.status_code not in [requests.codes.ok, 500]:
         raise InvalidResponseException(response.status_code)
     return response.json()
-
-
-if __name__ == "__main__":
-    print("Hello there!")
-    input("Press enter to continue... ")

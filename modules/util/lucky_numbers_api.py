@@ -8,6 +8,7 @@ from . import web_api
 #     "luckyNumbers": [0, 0],
 #     "excludedClasses": ["X", "Y"]
 # }
+
 cached_data: dict[str, str or list[int or str]] = {}
 max_cache_age = 1  # Days
 
