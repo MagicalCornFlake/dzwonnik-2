@@ -259,6 +259,7 @@ def save_data_file(filename="data.json", should_log=True) -> None:
 
 def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     """Determine the current lesson status message.
+    
     Arguments:
         query_time -- the time to get the status for.
     """
