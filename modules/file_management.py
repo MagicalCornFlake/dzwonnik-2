@@ -2,14 +2,10 @@
 import os
 from datetime import datetime
 
-files_in_pwd = []
 
-
-def clear_log_files() -> None:
-    for filename in files_in_pwd:
-        if filename.endswith('.log'):
-            with open(filename, 'w') as file:
-                file.write(f"{datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP Started bot log.\n")
+def clear_log_file(filename: str) -> None:
+    with open(filename, 'w') as file:
+        file.write(f"{datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP Started bot log.\n")
 
 
 def write_log(message: str) -> None:
@@ -22,13 +18,13 @@ def save_log_file() -> None:
         log_start_time, log_contents = file.read().split(" END TIMESTAMP ", maxsplit=1)
     with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n") + ".log", 'w') as file:
         file.write(log_contents)
+    clear_log_file("bot.log")
 
 
 def read_env_files() -> bool:
     write_log("\n    --- Processing environment variable (.env) files... ---")
     return_value = False
     for filename in os.listdir():
-        files_in_pwd.append(filename)
         if not filename.endswith('.env'):
             continue
         env_name = filename.rstrip('.env')

@@ -1185,6 +1185,8 @@ def start_bot() -> bool:
 
     Returns a boolean that indicates if the bot should be restarted.
     """
+    # Save the previous log on startup
+    file_management.save_log_file()
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
@@ -1206,8 +1208,6 @@ def start_bot() -> bool:
             # No problems finding OS variable containing bot token. Can login successfully.
             event_loop.run_until_complete(client.login(token))
         # Bot has been logged in, continue with attempt to connect
-        file_management.save_log_file()
-        file_management.clear_log_files()
         try:
             # Blocking call:
             # The program will stay on this line until the bot is disconnected.
