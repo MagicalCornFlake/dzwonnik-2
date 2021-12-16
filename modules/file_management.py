@@ -14,13 +14,13 @@ def clear_log_files() -> None:
 
 def write_log(message: str) -> None:
     with open("bot.log", 'a') as file:
-        file.write(message)
+        file.write(message + '\n')
 
 
 def save_log_file() -> None:
     with open("bot.log", 'r') as file:
         log_start_time, log_contents = file.read().split(" END TIMESTAMP ", maxsplit=1)
-    with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n\r") + ".log", 'w') as file:
+    with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n") + ".log", 'w') as file:
         file.write(log_contents)
 
 
@@ -37,7 +37,7 @@ def read_env_files() -> bool:
             continue
         return_value = True
         with open(filename, 'r') as file:
-            env_value = file.read().rstrip('\n\r')
+            env_value = file.read().rstrip('\n')
             os.environ[env_name] = env_value
             write_log(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
     # Newline for readability
