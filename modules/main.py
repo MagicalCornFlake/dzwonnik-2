@@ -39,9 +39,8 @@ my_server = client.get_guild(766346477874053130)  # 2D The Supreme server
 async def on_ready() -> None:
     global my_server
 
-    now = datetime.datetime.now()
     guilds = {guild.id: guild.name for guild in client.guilds}
-    attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True, time=now)
+    attempt_debug_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
     my_server = client.get_guild(my_server_id)
 
     # Sets status message on bot start
@@ -264,11 +263,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         query_time -- the time to get the status for.
     """
     global current_period
-    today = datetime.datetime.now()
     if query_time is None:
         # Default time to check is current time
-        query_time = today
-    attempt_debug_message(f"Updating bot status ...", time=today)
+        query_time = datetime.datetime.now()
+    attempt_debug_message(f"Updating bot status ...")
     next_period_is_today, next_period, lessons = get_next_period(query_time)
     if next_period_is_today:
         current_period = math.floor(next_period)
@@ -733,7 +731,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     Returns a tuple consisting of a boolean indicating if that day is today, the period number,
     and the list containing the lessons for that day.
     """
-    attempt_debug_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...", time=given_time)
+    attempt_debug_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
 
     if current_day_index < Weekday.saturday:
@@ -1153,12 +1151,10 @@ def debug(*debug_message) -> None:
     attempt_debug_message(*debug_message, force=True)
 
 
-def attempt_debug_message(*debug_message, time: datetime.datetime = None, force=False) -> None:
+def attempt_debug_message(*debug_message, force=False) -> None:
     if not (enable_debug_messages or force):
         return
-    if time is None:
-        time = datetime.datetime.now()
-    timestamp = f"{time:%Y-%m-%d @ %H:%M:%S}: "
+    timestamp = f"{datetime.datetime.now():%Y-%m-%d @ %H:%M:%S}: "
     message = ' '.join(map(str, debug_message)).replace("\n", "\n" + " " * len(timestamp))
     debug_message_string = f"{timestamp}{message}"
     print(debug_message_string)
