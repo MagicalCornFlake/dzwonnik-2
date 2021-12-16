@@ -393,7 +393,7 @@ async def track_api_updates() -> None:
     if lucky_numbers_api.update_cache():
         log_message(f"New lucky numbers data!")
         target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
-        await target_channel.send(embed=get_lucky_numbers()[1])
+        await target_channel.send(embed=get_lucky_numbers_embed()[1])
         save_data_file()
 
 
@@ -506,10 +506,6 @@ weekday_tables = [
     lessons_monday,
     lessons_monday
 ]
-
-# Table to keep results of calling get_lesson_plan() method so that we don't have to calculate the result
-# each time, since the it's always going to be the same for a given day
-table_embed_cache = {}
 
 
 def create_homework_event(message: discord.Message) -> tuple[bool, str]:
@@ -961,7 +957,7 @@ def stop_market_tracking(message: discord.Message) -> tuple[bool, str]:
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."
 
 
-def get_lucky_numbers(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed]:
+def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed]:
     data = lucky_numbers_api.get_lucky_numbers()
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
@@ -1044,8 +1040,8 @@ command_methods = {
     'cena': get_market_price,
     'sledz': start_market_tracking,
     'odsledz': stop_market_tracking,
-    'numerki': get_lucky_numbers,
-    'num': get_lucky_numbers
+    'numerki': get_lucky_numbers_embed,
+    'num': get_lucky_numbers_embed
 }
 
 # noinspection SpellCheckingInspection
