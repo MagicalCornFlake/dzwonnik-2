@@ -9,8 +9,12 @@ def clear_log_files() -> None:
     for filename in files_in_pwd:
         if filename.endswith('.log'):
             with open(filename, 'w') as file:
-                file.write(f"{datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP ")
-                file.write("Started bot log.\n")
+                file.write(f"{datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP Started bot log.\n")
+
+
+def write_log(message: str) -> None:
+    with open("bot.log", 'a') as file:
+        file.write(message)
 
 
 def save_log_file() -> None:
@@ -21,7 +25,7 @@ def save_log_file() -> None:
 
 
 def read_env_files() -> bool:
-    print("\n    --- Processing environment variable (.env) files... ---")
+    write_log("\n    --- Processing environment variable (.env) files... ---")
     return_value = False
     for filename in os.listdir():
         files_in_pwd.append(filename)
@@ -29,13 +33,13 @@ def read_env_files() -> bool:
             continue
         env_name = filename.rstrip('.env')
         if env_name in os.environ:
-            print(f"Environment variable '{env_name}' is already set, ignoring the .env file.")
+            write_log(f"Environment variable '{env_name}' is already set, ignoring the .env file.")
             continue
         return_value = True
         with open(filename, 'r') as file:
             env_value = file.read().rstrip('\n\r')
             os.environ[env_name] = env_value
-            print(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
+            write_log(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
     # Newline for readability
-    print("    --- Finished processing environment variable files. ---\n")
+    write_log("    --- Finished processing environment variable files. ---\n")
     return return_value

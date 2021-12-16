@@ -21,7 +21,6 @@ def get_lucky_numbers() -> dict[str, str or list[int or str]]:
             raise ValueError()
     except (KeyError, ValueError):
         # If the cache is empty or too old
-        print(f"{current_date:%Y-%m-%d @ %H:%M:%S}: Updating cache.")
         update_cache()
     return cached_data
 

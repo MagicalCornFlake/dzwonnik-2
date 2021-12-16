@@ -1131,7 +1131,7 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            print(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
+            file_management.write_log(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()
@@ -1169,7 +1169,7 @@ def log_message(*raw_message, force=False) -> None:
     timestamp = f"{datetime.datetime.now():%Y-%m-%d @ %H:%M:%S}: "
     # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning 
     message = timestamp + ' '.join(map(str, raw_message)).replace("\n", "\n" + " " * len(timestamp))
-    print(message)
+    file_management.write_log(message)
     log_loop = asyncio.get_event_loop()
     log_loop.create_task(send_log_message(message))
 
@@ -1197,8 +1197,8 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            print("\n    --- CRITICAL ERROR! ---")
-            print("'BOT_TOKEN' OS environment variable not found. Program exiting.")
+            file_management.write_log("\n    --- CRITICAL ERROR! ---")
+            file_management.write_log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
             return False
@@ -1214,19 +1214,19 @@ def start_bot() -> bool:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (eg. Ctrl+F2 in PyCharm).
-            print("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
+            file_management.write_log("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
             # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
-            print("\n    --- Bot execution terminated successfully. ---")
+            file_management.write_log("\n    --- Bot execution terminated successfully. ---")
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() method returns any value.
             # Do not send a debug message since the bot is already offline.
             save_data_file(should_log=False)
-            print("Successfully saved data file 'data.json'. Program exiting.")
+            file_management.write_log("Successfully saved data file 'data.json'. Program exiting.")
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
@@ -1234,7 +1234,7 @@ def start_bot() -> bool:
 
 
 if __name__ == "__main__":
-    print("Started bot from main file! Assuming this is debug behaviour.\n")
+    file_management.write_log("Started bot from main file! Assuming this is debug behaviour.\n")
     use_bot_testing = True
     enable_log_messages = True
     start_bot()
