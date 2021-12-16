@@ -1,5 +1,5 @@
 """Functionality for getting the lucky numbers from the SU ILO website"""
-import datetime
+from datetime import datetime
 from . import web_api
 
 # Data JSON structure:
@@ -14,9 +14,9 @@ max_cache_age = 1  # Days
 
 def get_lucky_numbers() -> dict[str, str or list[int or str]]:
     """Updates the cache if it is outdated then returns it."""
-    current_date = datetime.date.today()
+    current_date = datetime.now()
     try:
-        last_cache_date = datetime.datetime.strptime(cached_data['date'], "%d/%m/%Y")
+        last_cache_date = datetime.strptime(cached_data['date'], "%d/%m/%Y")
         if (current_date - last_cache_date).days > max_cache_age:
             raise ValueError()
     except (KeyError, ValueError):
