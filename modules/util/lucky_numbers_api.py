@@ -14,7 +14,7 @@ max_cache_age = 1  # Days
 
 def get_lucky_numbers() -> dict[str, str or list[int or str]]:
     """Updates the cache if it is outdated then returns it."""
-    current_date = datetime.date.now()
+    current_date = datetime.date.today()
     try:
         last_cache_date = datetime.datetime.strptime(cached_data['date'], "%d/%m/%Y")
         if (current_date - last_cache_date).days > max_cache_age:
