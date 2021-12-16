@@ -404,8 +404,6 @@ async def track_api_updates() -> None:
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             await target_channel.send(embed=get_lucky_numbers_embed()[1])
             save_data_file()
-        else:
-            log_message(f"Cache update returned:", old_cache)
 
 
 @track_api_updates.before_loop
