@@ -1117,7 +1117,7 @@ async def on_message(message: discord.Message) -> None:
                     exec(f"""locals()['temp'] = {expression}""")
                 except SyntaxError:
                     exec(expression.replace("return ", "locals()['temp'] = "))
-                exec_result = locals()['temp'] if "temp" in locals() else "Return value not specified."
+                exec_result = locals()['temp'] if "temp" in locals() else "Code executed (return value not specified)."
             except Exception as e:
                 exec_result = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
             if exec_result is None:
