@@ -390,11 +390,21 @@ async def track_api_updates() -> None:
         tracked_market_items.remove(item)
         save_data_file()
     await asyncio.sleep(3)
-    if lucky_numbers_api.update_cache():
-        log_message(f"New lucky numbers data!")
-        target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
-        await target_channel.send(embed=get_lucky_numbers_embed()[1])
-        save_data_file()
+    # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
+    try:
+        old_cache = lucky_numbers_api.update_cache()
+    except web_api.InvalidResponseException as e:
+        # Ping @Konrad
+        await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
+        log_message(f"Error! Received an invalid response from the web request (cache update). Exception trace:\n" + ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+    else:
+        if old_cache:
+            log_message(f"New lucky numbers data!")
+            target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
+            await target_channel.send(embed=get_lucky_numbers_embed()[1])
+            save_data_file()
+        else:
+            log_message(f"Cache update returned:", old_cache)
 
 
 @track_api_updates.before_loop
@@ -892,7 +902,7 @@ def get_web_api_error_message(e: Exception) -> str:
     if type(e) is web_api.InvalidResponseException:
         return f"Nastąpił błąd w połączeniu: {e.status_code}"
     if type(e) is web_api.TooManyRequestsException:
-        return f"Musisz poczekać jeszcze {3-e.time_since_last_request:.2f}s."
+        return f"Musisz poczekać jeszcze {web_api.max_request_cooldown - e.time_since_last_request:.2f}s."
     if type(e) is steam_api.NoSuchItemException:
         return f":x: Nie znaleziono przedmiotu `{e.query}`. Spróbuj ponownie i upewnij się, że nazwa się zgadza."
     else:
@@ -958,7 +968,11 @@ def stop_market_tracking(message: discord.Message) -> tuple[bool, str]:
 
 
 def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed]:
-    data = lucky_numbers_api.get_lucky_numbers()
+    try:
+        data = lucky_numbers_api.get_lucky_numbers()
+    except Exception as e:
+        log_message(f"Error! Received an invalid response from the web request. Exception trace:\n" + ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        return False, get_web_api_error_message(e)
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:
@@ -1105,7 +1119,7 @@ async def on_message(message: discord.Message) -> None:
                     exec(expression.replace("return ", "locals()['temp'] = "))
                 exec_result = locals()['temp']
             except Exception as e:
-                exec_result = ' '.join(traceback.format_exception(type(e), e, e.__traceback__))
+                exec_result = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
             if exec_result is None:
                 await message.channel.send("Code executed.")
             else:
