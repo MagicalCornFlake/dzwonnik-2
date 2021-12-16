@@ -1206,6 +1206,7 @@ def start_bot() -> bool:
             # No problems finding OS variable containing bot token. Can login successfully.
             event_loop.run_until_complete(client.login(token))
         # Bot has been logged in, continue with attempt to connect
+        file_management.save_log_file()
         file_management.clear_log_files()
         try:
             # Blocking call:
@@ -1226,7 +1227,6 @@ def start_bot() -> bool:
             # Do not send a debug message since the bot is already offline.
             save_data_file(should_log=False)
             print("Successfully saved data file 'data.json'. Program exiting.")
-        file_management.save_log_file()
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
