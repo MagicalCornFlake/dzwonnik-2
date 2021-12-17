@@ -1,4 +1,4 @@
-"""Definitions for constant values that are used repeatedly in the program"""
+"""Definitions for constant values that are used repeatedly in the program."""
 
 
 __all__ = ["my_server_id", "ChannelID", "RoleID", "Emoji",

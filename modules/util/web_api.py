@@ -1,4 +1,4 @@
-"""Utility methods for all web APIs"""
+"""Utility methods for all web APIs."""
 import requests
 import time
 

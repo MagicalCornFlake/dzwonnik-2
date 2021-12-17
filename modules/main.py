@@ -1,4 +1,4 @@
-"""Dzwonnik 2, a Discord bot, by Konrad Guzek"""
+"""Dzwonnik 2, a Discord bot, by Konrad Guzek."""
 
 # Standard library imports
 import asyncio
