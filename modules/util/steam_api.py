@@ -82,9 +82,7 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN') -> dict[s
     query_encoded = urllib.parse.quote(raw_query)
     # noinspection SpellCheckingInspection
     url = f"{steam_url}priceoverview/?appid={app_id}&currency={currency_id}&market_hash_name={query_encoded}"
-    # For example, the URL may look like:
-    # https://www.steamcommunity.com/market/priceoverview/?appid=730&currency=6&market_hash_name=Operation Broken Fang Case
-    result = web_api.make_request(url)
+    result = web_api.make_request(url).json()
     if not result["success"]:
         raise NoSuchItemException(raw_query)
     return result

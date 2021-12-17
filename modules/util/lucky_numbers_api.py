@@ -12,6 +12,7 @@ from . import web_api
 cached_data: dict[str, str or list[int or str]] = {}
 max_cache_age = 1  # Days
 
+
 def get_lucky_numbers() -> dict[str, str or list[int or str]]:
     """Updates the cache if it is outdated then returns it."""
     current_date = datetime.now()
@@ -33,5 +34,5 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
     url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
     global cached_data
     old_cache = cached_data
-    cached_data = web_api.make_request(url)
+    cached_data = web_api.make_request(url).json()
     return old_cache

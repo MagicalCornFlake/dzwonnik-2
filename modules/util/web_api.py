@@ -32,7 +32,8 @@ class InvalidResponseException(Exception):
 last_request_time: int = 0 
 max_request_cooldown: int = 1  # Must wait 1s since last request
 
-def make_request(url: str):
+
+def make_request(url: str) -> requests.Response:
     """Make a web request.
 
     Arguments:
@@ -53,4 +54,4 @@ def make_request(url: str):
         raise InvalidResponseException(408)
     if response.status_code not in [requests.codes.ok, 500]:
         raise InvalidResponseException(response.status_code)
-    return response.json()
+    return response
