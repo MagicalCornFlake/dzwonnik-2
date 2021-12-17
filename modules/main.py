@@ -280,8 +280,8 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             msgs: dict[str, str] = {}
             for role_code in watch_roles:
                 lesson = get_lesson_info(current_period, lessons, [role_code])
-                if not lesson:
-                    # No lesson for that group
+                if not lesson or lesson[-1] != current_period:
+                    # No lesson for that group on current period
                     continue
                 lesson_info, group_code = lesson[:2]
                 msgs[group_code] = lesson_info['name']
@@ -840,7 +840,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
 
     def process(time: datetime.datetime) -> tuple[bool, str, str]:
         next_lesson_is_today, lesson_period, lessons = get_next_period(time)
-        lesson: tuple = get_lesson_info(math.floor(lesson_period), lessons, message.author.roles)
+        lesson = get_lesson_info(math.floor(lesson_period), lessons, message.author.roles)
         if not lesson:
             return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}.", ""
         lesson_info, group_code, period = lesson
