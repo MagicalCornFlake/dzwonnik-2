@@ -286,6 +286,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 lesson_info, group_code = lesson[:2]
                 msgs[group_code] = lesson_info['name']
             lesson_text = "/".join([msgs[group_id] for group_id in msgs])
+            if len(msgs) == 1:
+                group_name = list(msgs.keys())[0]
+                if group_name != "grupa_0":
+                    lesson_text += " " + group_names[group_name]
             lesson_end_time = timetable[current_period].split('-')[1]
             new_status_msg = f"{lesson_text} do {lesson_end_time}"
     else:
@@ -764,7 +768,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, loop_table
 
 
-def get_lesson_info(query_period: int, loop_table: list, roles: list) -> tuple:
+def get_lesson_info(query_period: int, loop_table: list[list[str or int]], roles: list[str or discord.role]) -> tuple[dict[str, dict[str, str]], str, int]:
     """Get the lesson details for a given period, day and user user_roles.
     Arguments:
         query_period -- the period number to look for.
