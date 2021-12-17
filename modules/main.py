@@ -410,7 +410,8 @@ async def track_api_updates() -> None:
     except web_api.InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        log_message(f"Error! Received an invalid response from the web request (cache update). Exception trace:\n" + ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        log_message(f"Error! Received an invalid response from the web request (cache update). Exception trace:\n" +
+                    ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if old_cache != lucky_numbers_api.cached_data:
             log_message(f"New lucky numbers data!")
@@ -713,7 +714,6 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
             log_message(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
-    sender_is_admin = message.channel.permissions_for(message.author).administrator
     loop_table = weekday_tables[current_day]
     periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
     lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
@@ -775,7 +775,8 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, loop_table
 
 
-def get_lesson_info(query_period: int, loop_table: list[list[str or int]], roles: list[str or discord.role]) -> tuple[dict[str, dict[str, str]], str, int]:
+def get_lesson_info(query_period: int, loop_table: list[list[str, int]], roles: list[str, discord.role]) -> \
+        tuple[dict[str, str], str, int] or False:
     """Get the lesson details for a given period, day and user user_roles.
     Arguments:
         query_period -- the period number to look for.
@@ -791,7 +792,7 @@ def get_lesson_info(query_period: int, loop_table: list[list[str or int]], roles
             log_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}.")
             return lesson_details[lesson_id], group_code, lesson_period
     log_message(f"Did not find lesson for period {query_period} in loop table {loop_table}.", force=True)
-    return ()
+    return False
 
 
 def get_datetime_from_input(message: discord.Message, calling_command: str) -> tuple[bool, str or datetime.datetime]:
@@ -977,11 +978,12 @@ def stop_market_tracking(message: discord.Message) -> tuple[bool, str]:
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."
 
 
-def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed]:
+def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed or str]:
     try:
         data = lucky_numbers_api.get_lucky_numbers()
     except Exception as e:
-        log_message(f"Error! Received an invalid response from the web request. Exception trace:\n" + ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        log_message(f"Error! Received an invalid response from the web request. Exception trace:\n" +
+                    ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         return False, get_web_api_error_message(e)
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
@@ -1173,7 +1175,7 @@ def log(*message) -> None:
 
 
 def log_message(*raw_message, force=False) -> None:
-    """Determine whether or not the message should actually be logged, and if so, generate the string that should be sent."""
+    """Determine if the message should actually be logged, and if so, generate the string that should be sent."""
     if not (enable_log_messages or force):
         return
     timestamp = f"{datetime.datetime.now():%Y-%m-%d @ %H:%M:%S}: "
