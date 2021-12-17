@@ -60,7 +60,12 @@ role_codes = {
     "grupa_es": "Język Hiszpański",
     "grupa_fr": "Język Francuski",
     "grupa_de1": "Język Niemiecki (Podstawa)",
-    "grupa_de2": "Język Niemiecki (Rozszerzenie)"
+    "grupa_de2": "Język Niemiecki (Rozszerzenie)",
+    "grupa_bio": "Rozszerzenie z biologii",
+    "grupa_chem": "Rozszerzenie z chemii",
+    "grupa_his": "Rozszerzenie z historii",
+    "grupa_geo": "Rozszerzenie z geografii",
+    "grupa_fiz": "Rozszerzenie z fizyki"
 }
 
 # Dictionary with text to use when sending messages, eg. 'lekcja dla grupy drugiej'
@@ -73,7 +78,11 @@ group_names = {
     "grupa_fr": "dla grupy francuskiej",
     "grupa_de1": "dla grupy niemieckiej z podstawą",
     "grupa_de2": "dla grupy niemieckiej z rozszerzeniem",
-    "ks": "dla Krzysztofa Szatki"
+    "grupa_bio": "dla rozszerzenia z biologii",
+    "grupa_chem": "dla rozszerzenia z chemii",
+    "grupa_his": "dla rozszerzenia z historii",
+    "grupa_geo": "dla rozszerzenia z geografii",
+    "grupa_fiz": "dla rozszerzenia z fizyki"
 }
 
 

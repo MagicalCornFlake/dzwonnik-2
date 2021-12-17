@@ -160,20 +160,29 @@ lesson_details: dict[str, dict[str, str]] = {
     "ang-2": {"name": "język angielski", "link": "lookup/fbrsxfud26"},
     "ang-kw": {"name": "język angielski z p. Kwiatkowską", "link": "lookup/bgz74rwodu"},
     "bio": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
+    "bio-1": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
+    "bio-2": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
+    "bio-roz": {"name": "biologia rozszerzona", "link": ""},
     "chem": {"name": "chemia", "link": "lookup/ccydofjmsy"},
-    "chem-ks": {"name": "zajęcia indywidualne z chemii", "link": "lookup/ajgdbjndtv"},
+    "chem-1": {"name": "chemia", "link": "lookup/ccydofjmsy"},
+    "chem-2": {"name": "chemia", "link": "lookup/ccydofjmsy"},
+    "chem-roz": {"name": "chemia rozszerzona", "link": ""},
     "de-1": {"name": "język niemiecki", "link": "otb-miyx-xfw"},
     "de-2": {"name": "język niemiecki", "link": "lookup/ggm2fxojv6"},
     "dram": {"name": "drama", "link": "lookup/dzhxxxfabz"},
     "edb": {"name": "edukacja dla bezpieczeństwa", "link": "lookup/daw4tvxftt"},
     "es": {"name": "język hiszpański", "link": "fpv-tduz-ptc"},
     "fiz": {"name": "fizyka", "link": "lookup/exacwjtr67"},
+    "fiz-roz": {"name": "fizyka rozszerzona", "link": ""},
     "fr": {"name": "język francuski", "link": "xwa-ahgy-wns"},
     "geo": {"name": "geografia", "link": "lookup/dzuekigxx3"},
-    "gw": {"name": "godzina wychowawcza", "link": "lookup/ezg3aoqlpe"},
+    "geo-roz": {"name": "geografia rozszerzona", "link": ""},
+    "gw": {"name": "godzina wychowawcza", "link": ""},
     "his": {"name": "historia", "link": "lookup/e5elwpevj5"},
+    "his-roz": {"name": "historia rozszerzona", "link": ""},
     "inf": {"name": "informatyka", "link": "lookup/f7mwatesda"},
     "mat": {"name": "matematyka", "link": ""},
+    "mat-roz": {"name": "matematyka rozszerzona", "link": ""},
     "plas-1": {"name": "plastyka", "link": ""},
     "plas-2": {"name": "plastyka", "link": ""},
     "przed": {"name": "przedsiębiorczość", "link": ""},
@@ -713,8 +722,6 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
     for period in periods:
         text = ""
         for code, group, _ in lessons_per_period[period - periods[0]]:
-            if code == "chem-ks" and (not sender_is_admin):
-                continue
             name, link = lesson_details[code].values()
             if link:
                 text += f"[{name}](https://meet.google.com/'{link}?authuser=0&hs=179) "
