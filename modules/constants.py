@@ -57,15 +57,15 @@ role_codes = {
     "grupa_1": "Grupa 1",
     "grupa_2": "Grupa 2",
     "grupa_rel": "Religia",
-    "grupa_es": "Język Hiszpański",
-    "grupa_fr": "Język Francuski",
-    "grupa_de1": "Język Niemiecki (Podstawa)",
-    "grupa_de2": "Język Niemiecki (Rozszerzenie)",
-    "grupa_bio": "Rozszerzenie z biologii",
-    "grupa_chem": "Rozszerzenie z chemii",
-    "grupa_his": "Rozszerzenie z historii",
-    "grupa_geo": "Rozszerzenie z geografii",
-    "grupa_fiz": "Rozszerzenie z fizyki"
+    "grupa_2fp": "Język Francuski",
+    "grupa_2hp": "Język Hiszpański",
+    "grupa_2np": "Język Niemiecki (Podstawa)",
+    "grupa_2pn": "Język Niemiecki (Rozszerzenie)",
+    "grupa_RB": "Rozszerzenie z biologii",
+    "grupa_RCH": "Rozszerzenie z chemii",
+    "grupa_RH": "Rozszerzenie z historii",
+    "grupa_RG": "Rozszerzenie z geografii",
+    "grupa_RF": "Rozszerzenie z fizyki"
 }
 
 # Dictionary with text to use when sending messages, eg. 'lekcja dla grupy drugiej'
@@ -74,15 +74,15 @@ group_names = {
     "grupa_1": "dla grupy pierwszej",
     "grupa_2": "dla grupy drugiej",
     "grupa_rel": "dla grupy religijnej",
-    "grupa_es": "dla grupy hiszpańskiej",
-    "grupa_fr": "dla grupy francuskiej",
-    "grupa_de1": "dla grupy niemieckiej z podstawą",
-    "grupa_de2": "dla grupy niemieckiej z rozszerzeniem",
-    "grupa_bio": "dla rozszerzenia z biologii",
-    "grupa_chem": "dla rozszerzenia z chemii",
-    "grupa_his": "dla rozszerzenia z historii",
-    "grupa_geo": "dla rozszerzenia z geografii",
-    "grupa_fiz": "dla rozszerzenia z fizyki"
+    "grupa_2fp": "dla grupy francuskiej",
+    "grupa_2ep": "dla grupy hiszpańskiej",
+    "grupa_2np": "dla grupy niemieckiej z podstawą",
+    "grupa_2pn": "dla grupy niemieckiej z rozszerzeniem",
+    "grupa_RB": "dla rozszerzenia z biologii",
+    "grupa_RCH": "dla rozszerzenia z chemii",
+    "grupa_RH": "dla rozszerzenia z historii",
+    "grupa_RG": "dla rozszerzenia z geografii",
+    "grupa_RF": "dla rozszerzenia z fizyki"
 }
 
 
