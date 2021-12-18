@@ -100,6 +100,11 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
 
 
 def get_lesson_plan(class_id: str) -> dict[str, list[list[dict[str, str]]]]:
+    """Gets the lesson plan for a given class.
+
+    Arguments:
+        class_id -- a string representing the name of the class.
+    """
     link = get_plan_link(get_plan_id(class_id))
     html = web_api.make_request(link).content.decode('UTF-8')
     return parse_html(html)

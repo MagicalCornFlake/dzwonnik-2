@@ -988,8 +988,8 @@ def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, di
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:
-        member_text = f"<@{member_ids[n - 1]}>" if n <= len(member_ids) \
-            else f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*"
+        member_text = f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*" if n > len(member_ids) else \
+            f"<@{client.get_user(member_ids[n - 1])}>" if type(member_ids[n - 1]) is int else member_ids[n - 1]
         embed.add_field(name=n, value=member_text, inline=False)
     # embed.add_field(name="\u200B", value="\u200B", inline=False)
     excluded_classes = ", ".join(data["excludedClasses"]) if len(data["excludedClasses"]) > 0 else "*Brak*"
@@ -1114,7 +1114,7 @@ async def on_message(message: discord.Message) -> None:
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
     admin_commands = ["exec", "restart", "quit", "exit"]
     if message.channel.id in [ChannelID.bot_testing, ChannelID.bot_logs] and msg_first_word in admin_commands:
-        if message.author != client.get_user(member_ids[7]):
+        if message.author != client.get_user(member_ids[8 - 1]):
             author_name = message.author.name if message.author.nick is None else message.author.nick
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
@@ -1160,7 +1160,7 @@ async def on_message(message: discord.Message) -> None:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:
         log_message(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
-        await message.reply(f"<@{member_ids[7]}> An exception occurred while executing command `{message.content}`."
+        await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
     reply_msg = await message.reply(**{"embed" if reply_is_embed else "content": reply})
