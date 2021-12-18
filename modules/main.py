@@ -989,7 +989,7 @@ def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, di
     embed = discord.Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:
         member_text = f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*" if n > len(member_ids) else \
-            f"@{client.get_user(member_ids[n - 1])}" if type(member_ids[n - 1]) is int else member_ids[n - 1]
+            f"<@!{member_ids[n - 1]}>" if type(member_ids[n - 1]) is int else member_ids[n - 1]
         embed.add_field(name=n, value=member_text, inline=False)
     # embed.add_field(name="\u200B", value="\u200B", inline=False)
     excluded_classes = ", ".join(data["excludedClasses"]) if len(data["excludedClasses"]) > 0 else "*Brak*"
