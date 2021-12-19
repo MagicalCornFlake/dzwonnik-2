@@ -17,15 +17,17 @@ import discord.ext.tasks
 if __name__ == "__main__":
     import file_management
     from constants import *
-    from util import web_api, steam_api, lucky_numbers_api
+    from util import web_api, steam_api, plan_crawler, lucky_numbers_api
 else:
     file_management = importlib.import_module('modules.file_management')
     constants = importlib.import_module('modules.constants')
-    # Import constant definitions to the global namespace
-    globals().update({k: getattr(constants, k) for k in constants.__dict__["__all__"]})
     web_api = importlib.import_module('modules.util.web_api')
     steam_api = importlib.import_module('modules.util.steam_api')
+    plan_crawler = importlib.import_module('modules.util.plan_crawler')
     lucky_numbers_api = importlib.import_module('modules.util.lucky_numbers_api')
+
+    # Import constant definitions to the global namespace
+    globals().update({k: getattr(constants, k) for k in constants.__dict__["__all__"]})
 
 
 intents = discord.Intents.default()
@@ -775,7 +777,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, loop_table
 
 
-def get_lesson_info(query_period: int, loop_table: list[list[str, int]], roles: list[str, discord.role]) -> \
+def get_lesson_info(query_period: int, loop_table: list[list[str, int]], roles: list[str, discord.Role]) -> \
         tuple[dict[str, str], str, int] or False:
     """Get the lesson details for a given period, day and user user_roles.
     Arguments:
@@ -1202,7 +1204,7 @@ def start_bot() -> bool:
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (steam_api, web_api, lucky_numbers_api, file_management):
+    for module in (steam_api, web_api, plan_crawler, lucky_numbers_api, file_management):
         importlib.reload(module)
     try:
         file_management.read_env_files()
