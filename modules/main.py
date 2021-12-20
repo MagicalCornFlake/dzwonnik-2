@@ -1127,10 +1127,13 @@ async def on_message(message: discord.Message) -> None:
             expression = message.content[len(prefix + "exec "):]
             log_message("Executing code:", expression)
             try:
-                try:
-                    exec(f"""locals()['temp'] = {expression}""")
-                except SyntaxError:
+                if "return " in expression:
                     exec(expression.replace("return ", "locals()['temp'] = "))
+                else:
+                    try:
+                        exec(f"""locals()['temp'] = {expression}""")
+                    except SyntaxError:
+                        exec(expression)
                 exec_result = locals()['temp'] if "temp" in locals() else "Code executed (return value not specified)."
             except Exception as e:
                 exec_result = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
@@ -1138,7 +1141,13 @@ async def on_message(message: discord.Message) -> None:
                 await message.channel.send("Code executed.")
             else:
                 expr = expression.replace("\n", "\n>>> ")
-                await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{exec_result}\n```")
+                try:
+                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{exec_result}\n```")
+                except discord.errors.HTTPException:
+                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*(result too long to send in message, attaching file)*")
+                    with open("result.txt", 'w') as file:
+                        file.write(exec_result)
+                    await message.channel.send(file=discord.File("result.txt"))
             return
 
         if msg_first_word == admin_commands[1]:
