@@ -23,7 +23,7 @@ def get_plan_id(class_name: str or int = None) -> int:
         base_id = "abcde".index(class_letter.lower()) + 1
         return base_id + ((3 * (class_name[2].lower() == "p")) if class_year == 3 else (6 + 5 * (class_year == 1)))
     except (ValueError, IndexError):
-        raise ValueError("Invalid class name.")
+        raise ValueError(f"Invalid class name: {class_name}.")
 
 
 def get_plan_link(class_id: str or int) -> str:

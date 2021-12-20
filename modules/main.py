@@ -687,9 +687,9 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
         try:
             # This 'try' clause raises RuntimeError if the input is invalid for whatever reason
             weekday_abbreviations = {"pn": 0, "śr": 2, "sr": 3, "pt": 4}
-            if args[1] in weekday_abbreviations:
-                current_day = weekday_abbreviations[args[1]]
-            else:
+            try:
+                current_day = {"pn": 0, "śr": 2, "sr": 3, "pt": 4}[args[1]]
+            except KeyError:
                 try:
                     # Check if the input is a number
                     if not 1 <= int(args[1]) <= 5:
@@ -715,7 +715,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
             log_message(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
-    loop_table = weekday_tables[current_day]
+    loop_table: list[list[str or int]] = weekday_tables[current_day]
     periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
     lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
     desc = f"Plan lekcji na **{weekday_names[current_day]}** ({len(periods)} lekcji) jest następujący:"
