@@ -203,7 +203,7 @@ restart_on_exit = True
 current_period: int = 0
 
 
-def read_data_file(filename="data.json") -> None:
+def read_data_file(filename: str = "data.json") -> None:
     global homework_events
     # Reads data file and updates settings
     if not os.path.isfile(filename):
@@ -241,7 +241,7 @@ def read_data_file(filename="data.json") -> None:
     lucky_numbers_api.cached_data = data["lucky_numbers"]
 
 
-def save_data_file(filename="data.json", should_log=True) -> None:
+def save_data_file(filename: str = "data.json", should_log: bool = True) -> None:
     """Saves the settings stored in the program's memory to the file provided.
 
     Arguments:
@@ -287,9 +287,8 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
         else:
             # Currently lesson
-            watch_roles = ["grupa_1", "grupa_2"]
             msgs: dict[str, str] = {}
-            for role_code in watch_roles:
+            for role_code in role_codes.keys():
                 lesson = get_lesson_info(current_period, lessons, [role_code])
                 if not lesson or lesson[-1] != current_period:
                     # No lesson for that group on current period
@@ -317,7 +316,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     return new_status_msg
 
 
-async def remind_about_homework_event(event, tense) -> None:
+async def remind_about_homework_event(event: HomeworkEvent, tense: str) -> None:
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
     for role in role_codes:
