@@ -725,7 +725,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
         for code, group, _ in lessons_per_period[period - periods[0]]:
             name, link = lesson_details[code].values()
             if link:
-                text += f"[{name}](https://meet.google.com/'{link}?authuser=0&hs=179) "
+                text += f"[{name}](https://meet.google.com/{link}?authuser=0&hs=179) "
             else:
                 text += f"[{name}](http://guzek.uk/error/404?lang=pl-PL&source=discord) "
             if group != "grupa_0":
