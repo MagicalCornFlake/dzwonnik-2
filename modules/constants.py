@@ -73,7 +73,7 @@ group_names = {
     "grupa_2": "dla grupy drugiej",
     "grupa_rel": "dla grupy religijnej",
     "grupa_2fp": "dla grupy francuskiej",
-    "grupa_2ep": "dla grupy hiszpańskiej",
+    "grupa_2hp": "dla grupy hiszpańskiej",
     "grupa_2np": "dla grupy niemieckiej z podstawą",
     "grupa_2pn": "dla grupy niemieckiej z rozszerzeniem",
     "grupa_RB": "dla rozszerzenia z biologii",

@@ -399,14 +399,15 @@ async def wait_until_ready_before_loops() -> None:
 
 
 def get_lesson_name(lesson_code: str) -> str:
-    lesson_name = lesson_code.lstrip('r_').rstrip(' DW')
     mappings = {
-        "mat": "matematyka",
         "mat.": "matematyka",
+        "r_mat": "r_matematyka",
         "j.": "język ",
         "ang.": "angielski",
         " hiszp.": "hiszpański",
-        "zaj. z wych.": "zajęcia z wychowawcą"
+        "zaj. z wych.": "zajęcia z wychowawcą",
+        "r_": "",
+        " DW": ""
     }
     for abbreviation, full_word in mappings.items():
         lesson_name = lesson_name.replace(abbreviation, full_word)
