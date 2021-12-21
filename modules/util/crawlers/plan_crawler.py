@@ -141,6 +141,8 @@ def get_lesson_plan(class_id: str, force_update = False) -> dict[str, list[list[
     filepath = f"cache/plan_{class_id}.json"
     if not os.path.isfile(filepath) or force_update:
         html = web_api.make_request(get_plan_link(class_id)).content.decode('UTF-8')
+        if not os.path.isdir('cache'):
+            os.mkdir('cache')
         with open(filepath, 'w') as file:
             json.dump(parse_html(html), file, indent=4, ensure_ascii=False)
     with open(filepath, 'r') as file:
