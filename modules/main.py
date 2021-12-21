@@ -399,20 +399,22 @@ async def wait_until_ready_before_loops() -> None:
 
 
 def get_lesson_name(lesson_code: str) -> str:
-    mappings = {
-        "zaj.z-wych": "zajęcia z wychowawcą",
-        "WF": "wychowanie fizyczne",
-        "WOS": "wiedza o społeczeństwie",
-        "TOK": "theory of knowledge",
-        "mat": "matematyka",
-        "j.": "język ",
-        "hiszp": "hiszpański",
-        "ang": "angielski",
-        "przedsięb": "przedsiębiorczość"
+    mappings: dict[str, tuple[bool, str]] = {
+        "zaj.z-wych": (False, "zajęcia z wychowawcą"),
+        "WF": (False, "wychowanie fizyczne"),
+        "WOS": (False, "wiedza o społeczeństwie"),
+        "TOK": (False, "theory of knowledge"),
+        "mat": (False, "matematyka"),
+        "j.": (False, "język "),
+        "hiszp": (True, "hiszpański"),
+        "ang": (True, "angielski"),
+        "przedsięb": (True, "przedsiębiorczość")
     }
     lesson_name = lesson_code.rstrip('.')
-    for abbreviation, full_word in mappings.items():
-        lesson_name = lesson_name.replace(abbreviation, full_word)
+    for abbreviation, behaviour in mappings.items():
+        map_entire_word, mapping = behaviour
+        if lesson_name.startswith(abbreviation) or map_entire_word:
+            lesson_name = lesson_name.replace(abbreviation, mapping)
     return lesson_name[lesson_code.startswith('r-') * 2:] + " rozszerzona" * lesson_code.startswith('r-')
 
 
