@@ -435,109 +435,96 @@ async def wait_until_ready_before_loops() -> None:
     await client.wait_until_ready()
 
 
-# Times for the start and end of each period (0-9)
-timetable = [
-    "07:10-07:55",  # Period 0
-    "08:00-08:45",  # Period 1
-    "08:50-09:35",  # Period 2
-    "09:45-10:30",  # Period 3
-    "10:40-11:25",  # Period 4
-    "11:35-12:20",  # Period 5
-    "12:50-13:35",  # Period 6
-    "13:40-14:25",  # Period 7
-    "14:30-15:15",  # Period 8
-    "15:20-16:05"   # Period 9
-]
+# # Times for the start and end of each period (0-9)
+# timetable = [
+#     "07:10-07:55",  # Period 0
+#     "08:00-08:45",  # Period 1
+#     "08:50-09:35",  # Period 2
+#     "09:45-10:30",  # Period 3
+#     "10:40-11:25",  # Period 4
+#     "11:35-12:20",  # Period 5
+#     "12:50-13:35",  # Period 6
+#     "13:40-14:25",  # Period 7
+#     "14:30-15:15",  # Period 8
+#     "15:20-16:05"   # Period 9
+# ]
 
-# List of times bot should update status for
-watch_times = [time.split("-")[i] for time in timetable for i in range(2)]
+# # List of times bot should update status for
+# watch_times = [time.split("-")[i] for time in timetable for i in range(2)]
 
-# The following are timetables for each day
-# Format: [lesson code, group ID, period]
-lessons_monday = [
-    ["bio", "grupa_0", 1],
-    ["mat", "grupa_0", 2],
-    ["wf", "grupa_0", 3],
-    ["wf", "grupa_0", 4],
-    ["ang-1", "grupa_1", 5],
-    ["ang-2", "grupa_2", 5],
-    ["pol", "grupa_0", 6],
-    ["pol", "grupa_0", 7],
-    ["rel", "grupa_rel", 8],
-    ["rel", "grupa_rel", 9]
-]
+# # The following are timetables for each day
+# # Format: [lesson code, group ID, period]
+# lessons_monday = [
+#     ["bio", "grupa_0", 1],
+#     ["mat", "grupa_0", 2],
+#     ["wf", "grupa_0", 3],
+#     ["wf", "grupa_0", 4],
+#     ["ang-1", "grupa_1", 5],
+#     ["ang-2", "grupa_2", 5],
+#     ["pol", "grupa_0", 6],
+#     ["pol", "grupa_0", 7],
+#     ["rel", "grupa_rel", 8],
+#     ["rel", "grupa_rel", 9]
+# ]
 
-lessons_tuesday = [
-    ["his", "grupa_0", 1],
-    ["ang-1", "grupa_1", 2],
-    ["ang-kw", "grupa_2", 2],
-    ["ang-1", "grupa_1", 3],
-    ["ang-2", "grupa_2", 3],
-    ["pol", "grupa_0", 4],
-    ["pol", "grupa_0", 5],
-    ["mat", "grupa_0", 6],
-    ["mat", "grupa_0", 7],
-    ["tok", "grupa_0", 8]
-]
+# lessons_tuesday = [
+#     ["his", "grupa_0", 1],
+#     ["ang-1", "grupa_1", 2],
+#     ["ang-kw", "grupa_2", 2],
+#     ["ang-1", "grupa_1", 3],
+#     ["ang-2", "grupa_2", 3],
+#     ["pol", "grupa_0", 4],
+#     ["pol", "grupa_0", 5],
+#     ["mat", "grupa_0", 6],
+#     ["mat", "grupa_0", 7],
+#     ["tok", "grupa_0", 8]
+# ]
 
-lessons_wednesday = [
-    ["geo", "grupa_0", 2],
-    ["mat", "grupa_0", 3],
-    ["chem", "grupa_0", 4],
-    ["pol", "grupa_0", 5],
-    ["pol", "grupa_0", 6],
-    ["inf", "grupa_1", 7],
-    ["ang-2", "grupa_2", 7],
-    ["inf", "grupa_1", 8],
-    ["ang-2", "grupa_2", 8]
-]
+# lessons_wednesday = [
+#     ["geo", "grupa_0", 2],
+#     ["mat", "grupa_0", 3],
+#     ["chem", "grupa_0", 4],
+#     ["pol", "grupa_0", 5],
+#     ["pol", "grupa_0", 6],
+#     ["inf", "grupa_1", 7],
+#     ["ang-2", "grupa_2", 7],
+#     ["inf", "grupa_1", 8],
+#     ["ang-2", "grupa_2", 8]
+# ]
 
-lessons_thursday = [
-    ["przed", "grupa_0", 1],
-    ["chem", "grupa_1", 2],
-    ["bio", "grupa_2", 2],
-    ["bio", "grupa_1", 3],
-    ["ang-2", "grupa_2", 3],
-    ["his", "grupa_0", 4],
-    ["wos", "grupa_0", 5],
-    ["geo", "grupa_0", 6],
-    ["wf", "grupa_0", 7],
-    ["fiz", "grupa_0", 8]
-]
+# lessons_thursday = [
+#     ["przed", "grupa_0", 1],
+#     ["chem", "grupa_1", 2],
+#     ["bio", "grupa_2", 2],
+#     ["bio", "grupa_1", 3],
+#     ["ang-2", "grupa_2", 3],
+#     ["his", "grupa_0", 4],
+#     ["wos", "grupa_0", 5],
+#     ["geo", "grupa_0", 6],
+#     ["wf", "grupa_0", 7],
+#     ["fiz", "grupa_0", 8]
+# ]
 
-lessons_friday = [
-    ["chem", "grupa_2", 1],
-    ["gw", "grupa_0", 2],
-    ["ang-1", "grupa_1", 3],
-    ["inf", "grupa_2", 3],
-    ["ang-1", "grupa_1", 4],
-    ["inf", "grupa_2", 4],
-    ["fr", "grupa_fr", 5],
-    ["es", "grupa_es", 5],
-    ["de-1", "grupa_de1", 5],
-    ["de-2", "grupa_de2", 5],
-    ["fr", "grupa_fr", 6],
-    ["es", "grupa_es", 6],
-    ["de-1", "grupa_de1", 6],
-    ["de-2", "grupa_de2", 6],
-    ["mat", "grupa_0", 7],
-    ["ang-kw", "grupa_1", 8],
-    ["dram", "grupa_2", 8],
-    ["dram", "grupa_1", 9]
-]
-
-# Table to easily identify which timetable to use for which day
-# Eg. weekday is 0 (Monday) -> use item 0 of this list (lessons_monday)
-# This means Saturday and Sunday (5 & 6) will use lessons_monday
-weekday_tables = [
-    lessons_monday,
-    lessons_tuesday,
-    lessons_wednesday,
-    lessons_thursday,
-    lessons_friday,
-    lessons_monday,
-    lessons_monday
-]
+# lessons_friday = [
+#     ["chem", "grupa_2", 1],
+#     ["gw", "grupa_0", 2],
+#     ["ang-1", "grupa_1", 3],
+#     ["inf", "grupa_2", 3],
+#     ["ang-1", "grupa_1", 4],
+#     ["inf", "grupa_2", 4],
+#     ["fr", "grupa_fr", 5],
+#     ["es", "grupa_es", 5],
+#     ["de-1", "grupa_de1", 5],
+#     ["de-2", "grupa_de2", 5],
+#     ["fr", "grupa_fr", 6],
+#     ["es", "grupa_es", 6],
+#     ["de-1", "grupa_de1", 6],
+#     ["de-2", "grupa_de2", 6],
+#     ["mat", "grupa_0", 7],
+#     ["ang-kw", "grupa_1", 8],
+#     ["dram", "grupa_2", 8],
+#     ["dram", "grupa_1", 9]
+# ]
 
 
 def create_homework_event(message: discord.Message) -> tuple[bool, str]:
@@ -1214,7 +1201,7 @@ async def send_log_message(message) -> None:
 
 
 def start_bot() -> bool:
-    """Log in to the Discord bot, and start its functionality.
+    """Log in to the Discord bot and start its functionality.
     This method is blocking -- once the bot is connected, it will run until it's disconnected.
 
     Returns a boolean that indicates if the bot should be restarted.

@@ -34,5 +34,5 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
     url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
     global cached_data
     old_cache = cached_data
-    cached_data = web_api.make_request(url).json()
+    cached_data = web_api.make_request(url, ignore_max_requests_cooldown=True).json()
     return old_cache

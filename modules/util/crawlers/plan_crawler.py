@@ -1,4 +1,6 @@
 """Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details."""
+import json
+import os
 import re
 
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
@@ -129,19 +131,22 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     return data
 
 
-def get_lesson_plan(class_id: str) -> dict[str, list[list[dict[str, str]]]]:
+def get_lesson_plan(class_id: str, force_update = False) -> dict[str, list[list[dict[str, str]]]]:
     """Gets the lesson plan for a given class.
 
     Arguments:
         class_id -- a string representing the name of the class.
     """
-    link = get_plan_link(get_plan_id(class_id))
-    html = web_api.make_request(link).content.decode('UTF-8')
-    return parse_html(html)
-
+    class_id = get_plan_id(class_id)
+    filepath = f"cache/plan_{class_id}.json"
+    if not os.path.isfile(filepath) or force_update:
+        html = web_api.make_request(get_plan_link(class_id)).content.decode('UTF-8')
+        with open(filepath, 'w') as file:
+            json.dump(parse_html(html), file, indent=4, ensure_ascii=False)
+    with open(filepath, 'r') as file:
+        return json.load(file)
 
 if __name__ == "__main__":
-    import json
     colours = vars(colour)
     for col in colours:
         if not col.startswith('_') and col is not None:

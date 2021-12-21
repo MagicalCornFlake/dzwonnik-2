@@ -67,7 +67,7 @@ class NoSuchItemException(Exception):
 #     "median_price": "0,00curr"
 # }
 
-def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN') -> dict[str, bool or str]:
+def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bool = False) -> dict[str, bool or str]:
     """Makes a web query on the Steam Community Market API for the specified search term and returns a dictionary containing the JSON response.
     
     Arguments:
@@ -82,7 +82,7 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN') -> dict[s
     query_encoded = urllib.parse.quote(raw_query)
     # noinspection SpellCheckingInspection
     url = f"{steam_url}priceoverview/?appid={app_id}&currency={currency_id}&market_hash_name={query_encoded}"
-    result = web_api.make_request(url).json()
+    result = web_api.make_request(url, force).json()
     if not result["success"]:
         raise NoSuchItemException(raw_query)
     return result

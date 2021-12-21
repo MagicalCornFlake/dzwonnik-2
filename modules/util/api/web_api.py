@@ -10,9 +10,9 @@ class TooManyRequestsException(Exception):
         time_since_last_request -- the time since the last request, in milliseconds
         message -- explanation of the error
     """
-    def __init__(self, time_since_last_request: int, message="You must must wait for another {cooldown}ms."):
+    def __init__(self, time_since_last_request: int, message="You must must wait for another {cooldown}s."):
         self.time_since_last_request = time_since_last_request
-        self.message = message.format(cooldown=f"{1000-time_since_last_request}")
+        self.message = message.format(cooldown=f"{(max_request_cooldown * 1000) - time_since_last_request:.2f}")
         super().__init__(self.message)
 
 
@@ -30,22 +30,22 @@ class InvalidResponseException(Exception):
 
 
 last_request_time: int = 0 
-max_request_cooldown: int = 1  # Must wait 1s since last request
+max_request_cooldown: int = 3  # Must wait 3s since last request
 
 
-def make_request(url: str) -> requests.Response:
+def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> requests.Response:
     """Make a web request.
 
     Arguments:
         url -- the url of the resource to request data from
 
     Raises:
-        TooManyRequestsException if there was more than one request made per second
+        TooManyRequestsException if there was more than one request made per 3 seconds
         InvalidResponseException if the request timed out or if it returned an invalid response
     """
     global last_request_time
     current_time = time.time()
-    if current_time - last_request_time < max_request_cooldown:
+    if current_time - last_request_time < max_request_cooldown and not ignore_max_requests_cooldown:
         raise TooManyRequestsException(int(current_time * 1000 - last_request_time * 1000))
     last_request_time = current_time
     try:
