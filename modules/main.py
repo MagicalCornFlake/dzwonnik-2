@@ -291,7 +291,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         else:
             # Currently lesson
             msgs: dict[str, str] = {}
-            for role_code in role_codes.keys():
+            for role_code in role_codes.keys()[1:]:
                 lesson = get_lesson_info(current_period, lessons, [role_code])
                 if not lesson or lesson[-1] != current_period:
                     # No lesson for that group on current period
