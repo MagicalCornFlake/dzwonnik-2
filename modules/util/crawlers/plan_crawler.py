@@ -68,7 +68,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     headers = []
     data: dict[str, list[list[dict[str, str]]]] = {}
 
-    def extract_regex() -> str or list[str]:
+    def extract_regex() -> any:
         """Extracts the data from a given table row."""
 
         if row == "<td class=\"l\">&nbsp;</td>":
@@ -79,12 +79,13 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         elif row.startswith("<td class=\"g\">"):
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            return [int(time) for time in duration_pattern.match(row).groups()]
+            times = [int(time) for time in duration_pattern.match(row).groups()]
+            return [times[:2], times[2:]]
         else:
             # Row containing lesson information for a given period
             tmp: list[dict[str, str]] = []
             for match in pattern.findall(row):
-                lesson, group, groups, teacher, code, room_id = match
+                lesson_name, group, groups, teacher, code, room_id = match
                 if group: 
                     if int(groups) == 5:
                         group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
@@ -92,10 +93,10 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                     # If the group is not specified but the room code is, use that instead
                     # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
                     # Finally, if none of the above, set the group to 'grupa_0' (whole class)
-                    group = code.lstrip('#') if code else 'rel' if lesson == "religia" else '0'
+                    group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
                 tmp.append({
                     # Replace extended language lessons with the regular variant since there is no practical distinction
-                    "lesson": lesson.replace("r_j.", "j."),
+                    "name": lesson_name.replace("r_j.", "j."),
                     "group": "grupa_" + group,
                     "room_id": room_id
                 })

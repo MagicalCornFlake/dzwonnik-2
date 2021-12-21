@@ -147,42 +147,42 @@ class TrackedItem:
 
 
 # noinspection SpellCheckingInspection
-lesson_details: dict[str, dict[str, str]] = {
-    "ang-1": {"name": "język angielski", "link": "lookup/bpwq26lzht"},
-    "ang-2": {"name": "język angielski", "link": "lookup/fbrsxfud26"},
-    "ang-kw": {"name": "język angielski z p. Kwiatkowską", "link": "lookup/bgz74rwodu"},
-    "bio": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
-    "bio-1": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
-    "bio-2": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
-    "bio-roz": {"name": "biologia rozszerzona", "link": ""},
-    "chem": {"name": "chemia", "link": "lookup/ccydofjmsy"},
-    "chem-1": {"name": "chemia", "link": "lookup/ccydofjmsy"},
-    "chem-2": {"name": "chemia", "link": "lookup/ccydofjmsy"},
-    "chem-roz": {"name": "chemia rozszerzona", "link": ""},
-    "de-1": {"name": "język niemiecki", "link": "otb-miyx-xfw"},
-    "de-2": {"name": "język niemiecki", "link": "lookup/ggm2fxojv6"},
-    "dram": {"name": "drama", "link": "lookup/dzhxxxfabz"},
-    "edb": {"name": "edukacja dla bezpieczeństwa", "link": "lookup/daw4tvxftt"},
-    "es": {"name": "język hiszpański", "link": "fpv-tduz-ptc"},
-    "fiz": {"name": "fizyka", "link": "lookup/exacwjtr67"},
-    "fiz-roz": {"name": "fizyka rozszerzona", "link": ""},
-    "fr": {"name": "język francuski", "link": "xwa-ahgy-wns"},
-    "geo": {"name": "geografia", "link": "lookup/dzuekigxx3"},
-    "geo-roz": {"name": "geografia rozszerzona", "link": ""},
-    "gw": {"name": "godzina wychowawcza", "link": ""},
-    "his": {"name": "historia", "link": "lookup/e5elwpevj5"},
-    "his-roz": {"name": "historia rozszerzona", "link": ""},
-    "inf": {"name": "informatyka", "link": "lookup/f7mwatesda"},
-    "mat": {"name": "matematyka", "link": ""},
-    "mat-roz": {"name": "matematyka rozszerzona", "link": ""},
-    "plas-1": {"name": "plastyka", "link": ""},
-    "plas-2": {"name": "plastyka", "link": ""},
-    "przed": {"name": "przedsiębiorczość", "link": ""},
-    "pol": {"name": "język polski", "link": "lookup/fthvbikyap"},
-    "rel": {"name": "religia", "link": "lookup/h2g6dftul7"},
-    "tok": {"name": "theory of knowledge", "link": "lookup/dpvw6r3mg7"},
-    "wf": {"name": "wychowanie fizyczne", "link": "lookup/gb75o2kzx4"},
-    "wos": {"name": "wiedza o społeczeństwie", "link": "lookup/flikhkjfkr"}
+lesson_details: dict = {
+    # "ang-1": {"name": "język angielski", "link": "lookup/bpwq26lzht"},
+    # "ang-2": {"name": "język angielski", "link": "lookup/fbrsxfud26"},
+    # "ang-kw": {"name": "język angielski z p. Kwiatkowską", "link": "lookup/bgz74rwodu"},
+    # "bio": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
+    # "bio-1": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
+    # "bio-2": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
+    # "bio-roz": {"name": "biologia rozszerzona", "link": ""},
+    # "chem": {"name": "chemia", "link": "lookup/ccydofjmsy"},
+    # "chem-1": {"name": "chemia", "link": "lookup/ccydofjmsy"},
+    # "chem-2": {"name": "chemia", "link": "lookup/ccydofjmsy"},
+    # "chem-roz": {"name": "chemia rozszerzona", "link": ""},
+    # "de-1": {"name": "język niemiecki", "link": "otb-miyx-xfw"},
+    # "de-2": {"name": "język niemiecki", "link": "lookup/ggm2fxojv6"},
+    # "dram": {"name": "drama", "link": "lookup/dzhxxxfabz"},
+    # "edb": {"name": "edukacja dla bezpieczeństwa", "link": "lookup/daw4tvxftt"},
+    # "es": {"name": "język hiszpański", "link": "fpv-tduz-ptc"},
+    # "fiz": {"name": "fizyka", "link": "lookup/exacwjtr67"},
+    # "fiz-roz": {"name": "fizyka rozszerzona", "link": ""},
+    # "fr": {"name": "język francuski", "link": "xwa-ahgy-wns"},
+    # "geo": {"name": "geografia", "link": "lookup/dzuekigxx3"},
+    # "geo-roz": {"name": "geografia rozszerzona", "link": ""},
+    # "gw": {"name": "godzina wychowawcza", "link": ""},
+    # "his": {"name": "historia", "link": "lookup/e5elwpevj5"},
+    # "his-roz": {"name": "historia rozszerzona", "link": ""},
+    # "inf": {"name": "informatyka", "link": "lookup/f7mwatesda"},
+    # "mat": {"name": "matematyka", "link": ""},
+    # "mat-roz": {"name": "matematyka rozszerzona", "link": ""},
+    # "plas-1": {"name": "plastyka", "link": ""},
+    # "plas-2": {"name": "plastyka", "link": ""},
+    # "przed": {"name": "przedsiębiorczość", "link": ""},
+    # "pol": {"name": "język polski", "link": "lookup/fthvbikyap"},
+    # "rel": {"name": "religia", "link": "lookup/h2g6dftul7"},
+    # "tok": {"name": "theory of knowledge", "link": "lookup/dpvw6r3mg7"},
+    # "wf": {"name": "wychowanie fizyczne", "link": "lookup/gb75o2kzx4"},
+    # "wos": {"name": "wiedza o społeczeństwie", "link": "lookup/flikhkjfkr"}
 }
 prefix = '!'  # Prefix used before commands
 enable_log_messages = True
@@ -191,6 +191,29 @@ homework_events = HomeworkEventContainer()
 tracked_market_items = []
 restart_on_exit = True
 current_period: int = 0
+lesson_plan: dict = plan_crawler.get_lesson_plan("2d")
+
+
+
+def populate_lesson_details():
+    lesson_names = []
+    for item in lesson_plan:
+        if item not in weekday_names:
+            continue
+        for period in item:
+            for lesson in period:
+                lesson_names.append(lesson["name"])
+    lesson_names.sort()
+    for lesson in lesson_names:
+        lesson_details[lesson] = { "name": lesson, "link": "" }
+
+populate_lesson_details()
+
+
+def get_formatted_period_time(period: int) -> str:
+    times: list[list[int]] = lesson_plan["Godz"][period]
+    # e.g. [[8, 0], [8, 45]] -> "08:00-08:45"
+    return "-".join([':'.join([f"{t:02}" for t in time]) for time in times])
 
 
 def read_data_file(filename: str = "data.json") -> None:
@@ -269,19 +292,20 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         # Default time to check is current time
         query_time = datetime.datetime.now()
     log_message(f"Updating bot status ...")
-    next_period_is_today, next_period, lessons = get_next_period(query_time)
+    next_period_is_today, next_period, next_lesson_weekday = get_next_period(query_time)
     if next_period_is_today:
-        current_period = math.floor(next_period)
-        if current_period == next_period:
+        current_period = next_period % 10
+        lesson_start_time, lesson_end_time = get_formatted_period_time(current_period).split('-')
+        if next_period < 10:
             # Currently break time
-            new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
+            new_status_msg = "przerwa do " + lesson_start_time
         else:
             # Currently lesson
             msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
             for role_code in list(role_codes.keys())[1:]:
-                lesson = get_lesson_info(current_period, lessons, [role_code])
-                if not lesson or lesson[-1] != current_period:
-                    # No lesson for that group on current period
+                lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
+                if not lesson:
+                    # No lesson for that group
                     continue
                 lesson_info, group_code = lesson[:2]
                 msgs[group_code] = lesson_info['name']
@@ -295,18 +319,11 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             if len(msgs) == 1 and group_name != "grupa_0":
                 # Specify the group the current lesson is for if only one group has it
                 lesson_text += " " + group_names[group_name]
-            lesson_end_time = timetable[current_period].split('-')[1]
             new_status_msg = f"{lesson_text} do {lesson_end_time}"
     else:
         # After the last lesson for the given day
         current_period = -1
-        if query_time.weekday() < Weekday.friday:
-            # Mon-Thu
-            new_status_msg = "koniec lekcji!"
-        else:
-            # Fri-Sun
-            log_message(f"... it's currently the weekend.")
-            new_status_msg = "weekend!"
+        new_status_msg = "koniec lekcji!" if query_time.weekday() < Weekday.friday else "weekend!"
     log_message(f"... new status message is '{new_status_msg}'.")
     return new_status_msg
 
@@ -362,7 +379,7 @@ async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's date + 1 day
     # Checks if current time is in list of key times
-    if f"{current_time:%H:%M}" in watch_times and current_time.second == 0:
+    if [current_time.hour, current_time.minute] in lesson_plan["Godz"] and current_time.second == 0:
         # Check is successful, bot updates Discord status
         status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
         await client.change_presence(activity=status)
@@ -698,90 +715,94 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
 
-    class_name = "2d"    
-    lesson_plan: dict = plan_crawler.get_lesson_plan(class_name)
-    plan_periods: list[int] = lesson_plan["Nr"]
-    plan_timetable: list[list[int]] = lesson_plan["Godz"]
     plan = lesson_plan[weekday_names[query_day]]
 
-    loop_table: list[list[str or int]] = weekday_tables[query_day]
-    periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
-    lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
-    desc = f"Plan lekcji na **{weekday_names[query_day].lower().replace('środa', 'środę')}** ({len(periods)} lekcji) jest następujący:"
+    # The generator expression creates a list that maps each element from 'plan' to the boolean it evaluates to.
+    # Empty lists are evaluated as False, non-empty lists are evaluated as True.
+    # The sum() function adds the contents of the list, keeping in mind that True == 1 and False == 0.
+    # In essence, 'periods' evaluates to the number of non-empty lists in 'plan' (i.e. the number of lessons on that day).
+    periods: int = sum([bool(lesson) for lesson in plan])
+    first_period: int = 0
+
+    desc = f"Plan lekcji na **{weekday_names[query_day].lower().replace('środa', 'środę')}** ({periods} lekcji) jest następujący:"
     embed = discord.Embed(title="Plan lekcji", description=desc)
-    for period in periods:
-        text = ""
-        for code, group, _ in lessons_per_period[period - periods[0]]:
-            name, link = lesson_details[code].values()
+    embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
+
+    for period in lesson_plan["Nr"]:
+        if not plan[period]:
+            # No lesson for the current period
+            first_period += 1
+            continue
+        for lesson in plan[period]:
+            text = f"Sala {lesson['room_id']} — " if "room_id" in lesson else ""
+            name = lesson["name"]
+            link = None
             if link:
                 text += f"[{name}](https://meet.google.com/{link}?authuser=0&hs=179) "
             else:
                 text += f"[{name}](http://guzek.uk/error/404?lang=pl-PL&source=discord) "
-            if group != "grupa_0":
-                text += f"({group_names[group]})"
-            if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
+            if lesson['group'] != "grupa_0":
+                text += f"({group_names[lesson['group']]})"
+            if period < first_period + periods:
                 text += "\n"
-        txt = f"Lekcja {period} ({timetable[period]})"
+        txt = f"Lekcja {period} ({get_formatted_period_time(period)})"
         is_current_lesson = query_day == today and period == current_period 
         embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value=text, inline=False)
-        embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
     return True, embed
 
 
-def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[list[str or int]]]:
+def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[list[dict[str, str]]]]:
     """Get the information about the next period for a given time.
 
     Arguments:
         given_time -- the start time to base the search off of.
 
-    Returns a tuple consisting of a boolean indicating if that day is today, the period number,
-    and the list containing the lessons for that day.
+    Returns a tuple consisting of a boolean indicating if that day is today, the period number, and the day of the week.
+    If the current time is during a lesson, the period number will be incremented by 10.
     """
     log_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
 
     if current_day_index < Weekday.saturday:
-        loop_table = weekday_tables[current_day_index]
-        # Looks for any lesson that begins or ends after the specified time.
-        for lesson in loop_table:
-            lesson_period = lesson[-1]
-            times = timetable[lesson_period].split("-")
-            lesson_start_time = datetime.datetime.strptime(f"{given_time.strftime('%x')} {times[0]}", "%x %H:%M")
-            if given_time < lesson_start_time:
-                log_message(f"... this is the break before period {lesson_period}.")
-                return True, lesson_period, loop_table
-            if given_time < lesson_start_time + datetime.timedelta(minutes=45):
-                log_message(f"... this is period {lesson_period}.")
-                return True, lesson_period + 0.5, loop_table
+        for period in lesson_plan["Godz"]:
+            for is_lesson, time in enumerate(period):
+                hour, minute = time
+                if given_time.hour < hour and given_time.minute < minute:
+                    log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
+                    return True, current_day_index, period + 10 * is_lesson
         # Could not find any such lesson.
-        next_school_day = current_day_index + 1
+        # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
+        next_school_day = (current_day_index + 1) % Weekday.saturday
     else:
         next_school_day = Weekday.monday
 
-    # If it's currently weekend or after the last lesson on Friday
-    loop_table = weekday_tables[next_school_day]
+    # If it's currently weekend or after the last lesson for the day
     log_message(f"... there are no more lessons today. Next school day: {next_school_day}")
-    first_period = loop_table[0][-1]
-    return False, first_period, loop_table
+    for first_period, lessons in enumerate(lesson_plan[next_school_day]):
+        # Stop incrementing 'first_period' when the 'lessons' object is a non-empty list
+        if lessons:
+            break
+    return False, first_period, next_school_day
 
 
-def get_lesson_info(query_period: int, loop_table: list[list[str, int]], roles: list[str, discord.Role]) -> \
-        tuple[dict[str, str], str, int] or False:
-    """Get the lesson details for a given period, day and user user_roles.
+def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, discord.Role]) -> \
+        tuple[dict[str, str], str] or False:
+    """Get the lesson details for a given period, day and user roles list.
     Arguments:
         query_period -- the period number to look for.
-        loop_table -- the table containing the lessons for that day.
-        user_roles -- the user_roles that the lesson is defined to be intended for.
+        weekday_index -- the index of the weekday to look at.
+        roles -- the roles of the user that the lesson is defined to be intended for.
 
-    Returns a tuple containing the lesson details, the code of the group and the period number.
+    Returns a tuple containing the lesson details and the code of the group.
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     log_message("Looking for lesson with roles:", target_roles)
-    for lesson_id, group_code, lesson_period in loop_table:
-        if lesson_period >= query_period and (group_code in target_roles or role_codes[group_code] in target_roles):
-            log_message(f"Found lesson '{lesson_details[lesson_id]['name']}' on period {lesson_period}.")
-            return lesson_details[lesson_id], group_code, lesson_period
-    log_message(f"Did not find lesson for period {query_period} in loop table {loop_table}.", force=True)
+    for lesson in lesson_plan[weekday_names[weekday_index]][query_period]:
+        group_code = lesson["group"]
+        if group_code in target_roles or role_codes[group_code] in target_roles:
+            log_message(f"Found lesson '{lesson['name']}' on period {query_period}.")
+            return lesson_details[lesson["name"]], group_code
+    log_message(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
     return False
 
 
@@ -812,10 +833,10 @@ def get_datetime_from_input(message: discord.Message, calling_command: str) -> t
 
 
 def get_time(period: int, base_time: datetime.datetime, get_period_end_time: bool) -> tuple[str, datetime.datetime]:
-    time = timetable[period].split("-")[get_period_end_time]
-    hour, minute = time.split(":")
-    date_time = base_time.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
-    return time, date_time
+    times = lesson_plan["Godz"][period]
+    hour, minute = times[get_period_end_time]
+    date_time = base_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return date_time
 
 
 def conjugate_seconds_to_minutes(seconds: int) -> str:
@@ -837,27 +858,26 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
     current_time: datetime.datetime = result
 
     def process(time: datetime.datetime) -> tuple[bool, str, str]:
-        next_lesson_is_today, lesson_period, lessons = get_next_period(time)
-        lesson = get_lesson_info(math.floor(lesson_period), lessons, message.author.roles)
+        next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
+        actual_period = lesson_period % 10
+        lesson = get_lesson_by_roles(actual_period, weekday_index, message.author.roles)
         if not lesson:
-            return False, f":x: Nie znaleziono żadnych lekcji dla Twojej grupy po godzinie {current_time:%H:%M}.", ""
-        lesson_info, group_code, period = lesson
+            return False, f":x: Nie ma żadnych zajęć dla Twojej grupy na {actual_period}-ej lekcji.", ""
+        lesson_info, group_code = lesson
         if next_lesson_is_today:
-            if math.ceil(lesson_period) != lesson_period:
+            if actual_period != lesson_period:
                 # Currently lesson
-                lesson_end_time, lesson_end_datetime = get_time(math.floor(lesson_period), current_time, True)
+                lesson_end_datetime = get_time(actual_period, current_time, True)
                 # Get the next lesson after the end of this one, recursive call
-                log_message(f"Currently lesson {lesson_period} ...")
-                log_message(f"Continue looking for lessons after {lesson_end_time} ...")
                 return process(lesson_end_datetime)
             # Currently break
             when = " "
-            lesson_start_time, lesson_start_datetime = get_time(math.floor(lesson_period), current_time, False)
+            lesson_start_datetime = get_time(actual_period, current_time, False)
             countdown = f" (za {conjugate_seconds_to_minutes((lesson_start_datetime - current_time).seconds)})"
         else:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
-        next_period_time = timetable[period].split("-")[0]
+        next_period_time = get_formatted_period_time(actual_period).split("-")[0]
         group = group_names[group_code] + " " * (group_code != "grupa_0")
         return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_info['name']}**" \
                      f"{when} o godzinie __{next_period_time}__{countdown}.", lesson_info['link']
@@ -882,14 +902,14 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
 
     if next_period_is_today:
-        break_start_time, break_start_datetime = get_time(math.floor(lesson_period), current_time, True)
+        break_start_time, break_start_datetime = get_time(lesson_period % 10, current_time, True)
         break_countdown = break_start_datetime - current_time
         minutes = conjugate_seconds_to_minutes(break_countdown.seconds)
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         log_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
-            break_end_time, break_end_datetime = get_time(int(next_period), break_start_datetime, False)
+            break_end_time, break_end_datetime = get_time(next_period, break_start_datetime, False)
             break_length = break_end_datetime - break_start_datetime
             msg += f"—{break_end_time}__ ({break_length.seconds // 60} min)."
         else:
@@ -1131,7 +1151,7 @@ async def on_message(message: discord.Message) -> None:
                 expr = expression.replace("\n", "\n>>> ")
                 try:
                     try:
-                        result = "```\n```json\n" + json.dumps(exec_result, indent=4, ensure_ascii=False)
+                        result = "```\nDetected JSON content:```json\n" + json.dumps(exec_result, indent=4, ensure_ascii=False)
                     except (TypeError, OverflowError):
                         result = exec_result
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{result}\n```")
