@@ -1027,10 +1027,12 @@ async def on_message(message: discord.Message) -> None:
             else:
                 expr = expression.replace("\n", "\n>>> ")
                 try:
-                    try:
-                        result = "```\nDetected JSON content:```json\n" + json.dumps(exec_result, indent=4, ensure_ascii=False)
-                    except (TypeError, OverflowError):
-                        result = exec_result
+                    result = exec_result
+                    if type(exec_result) in [dict, list]:
+                        try:
+                            result = "```\nDetected JSON content:```json\n" + json.dumps(exec_result, indent=4, ensure_ascii=False)
+                        except (TypeError, OverflowError):
+                            pass
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{result}\n```")
                 except discord.errors.HTTPException:
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*Result too long to send in message, attaching file 'result.txt'...*")
