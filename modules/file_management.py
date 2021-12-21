@@ -21,6 +21,18 @@ def save_log_file() -> None:
     clear_log_file("bot.log")
 
 
+def clear_cache(cache_path: str = "cache") -> bool:
+    """Removes all files in the given directory, as well as the directory itself. Returns True if the directory previously existed, otherwise False."""
+    if os.path.exists(cache_path):
+        for filename in os.listdir(cache_path):
+            os.remove(cache_path + os.path.sep + filename)
+        os.rmdir(cache_path)
+        print("Successfully cleared cache at directory: ./" + cache_path)
+        return True
+    else:
+        print(f"Did not clear cache from directory ./{cache_path}: path does not exist.")
+        return False
+
 def read_env_files() -> bool:
     write_log("\n    --- Processing environment variable (.env) files... ---")
     return_value = False

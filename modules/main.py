@@ -7,7 +7,6 @@ import importlib
 import json
 import math
 import os
-from re import sub
 import traceback
 
 # Third-party imports
@@ -15,33 +14,17 @@ import discord
 import discord.ext.tasks
 
 # Local application imports
-if __name__ == "__main__":
-    import file_management
-    from constants import *
-    from util.api import web_api, steam_api, lucky_numbers_api
-    from util.crawlers import plan_crawler, substitutions_crawler
-else:
-    # file_management = importlib.import_module('modules.file_management')
-    # constants = importlib.import_module('modules.constants')
-    # web_api = importlib.import_module('modules.util.api.web_api')
-    # steam_api = importlib.import_module('modules.util.api.steam_api')
-    # lucky_numbers_api = importlib.import_module('modules.util.api.lucky_numbers_api')
-    # plan_crawler = importlib.import_module('modules.util.crawlers.plan_crawler')
-    # substitutions_crawler = importlib.import_module('modules.util.crawlers.substitutions_crawler')
-
-    # # Import constant definitions to the global namespace
-    # globals().update({k: getattr(constants, k) for k in constants.__dict__["__all__"]})
-    from modules import file_management
-    from modules.constants import *
-    from modules.util.api import *
-    from modules.util.crawlers import *
+from modules import file_management
+from modules.constants import *
+from modules.util import web_api
+from modules.util.api import steam_api, lucky_numbers_api
+from modules.util.crawlers import plan_crawler, substitutions_crawler
 
 
 intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents=intents)
 my_server = client.get_guild(766346477874053130)  # 2D The Supreme server
-
 
 # This method is called when the bot comes online
 @client.event
@@ -681,13 +664,13 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
     args = message.content.split(" ")
     today = datetime.datetime.now().weekday()
     if len(args) == 1:
-        current_day = today if today < Weekday.saturday else Weekday.monday
+        query_day = today if today < Weekday.saturday else Weekday.monday
     else:
-        current_day = -1
+        query_day = -1
         try:
             # This 'try' clause raises RuntimeError if the input is invalid for whatever reason
             try:
-                current_day = {"pn": 0, "śr": 2, "sr": 2, "pt": 4}[args[1]]
+                query_day = {"pn": 0, "śr": 2, "sr": 2, "pt": 4}[args[1]]
             except KeyError:
                 try:
                     # Check if the input is a number
@@ -696,17 +679,17 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                         raise RuntimeError(f"{args[1]} is not a number between 1 and 5.")
                     else:
                         # It is, and of correct format
-                        current_day = int(args[1]) - 1
+                        query_day = int(args[1]) - 1
                 except ValueError:
                     # The input is not a number.
                     # Check if it is a day of the week
                     for i, weekday in enumerate(weekday_names):
-                        if weekday.startswith(args[1]):
+                        if weekday.lower().startswith(args[1].lower()):
                             # The input is a valid weekday name.
-                            current_day = i
+                            query_day = i
                             break
-                    # 'current_day' will have the default value of -1 if the above for loop didn't find any matches
-                    if current_day == -1:
+                    # 'query_day' will have the default value of -1 if the above for loop didn't find any matches
+                    if query_day == -1:
                         # The input is not a valid weekday name.
                         # ValueError can't be used since it has already been caught
                         raise RuntimeError(f"invalid weekday name: {args[1]}")
@@ -717,11 +700,14 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
 
     class_name = "2d"    
     lesson_plan: dict = plan_crawler.get_lesson_plan(class_name)
+    plan_periods: list[int] = lesson_plan["Nr"]
+    plan_timetable: list[list[int]] = lesson_plan["Godz"]
+    plans = [lesson_plan[day] for day in [weekday_names]]
 
-    loop_table: list[list[str or int]] = weekday_tables[current_day]
+    loop_table: list[list[str or int]] = weekday_tables[query_day]
     periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
     lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
-    desc = f"Plan lekcji na **{weekday_names[current_day]}** ({len(periods)} lekcji) jest następujący:"
+    desc = f"Plan lekcji na **{weekday_names[query_day].lower().replace('środa', 'środę')}** ({len(periods)} lekcji) jest następujący:"
     embed = discord.Embed(title="Plan lekcji", description=desc)
     for period in periods:
         text = ""
@@ -736,7 +722,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
             if [code, group, period] != lessons_per_period[period - periods[0]][-1]:
                 text += "\n"
         txt = f"Lekcja {period} ({timetable[period]})"
-        is_current_lesson = current_day == today and period == current_period 
+        is_current_lesson = query_day == today and period == current_period 
         embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value=text, inline=False)
         embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
     return True, embed
@@ -1146,7 +1132,7 @@ async def on_message(message: discord.Message) -> None:
                 try:
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{exec_result}\n```")
                 except discord.errors.HTTPException:
-                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*(result too long to send in message, attaching file)*")
+                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*result too long to send in message, attaching file...*")
                     with open("result.txt", 'w') as file:
                         try:
                             json.dump(exec_result, file, indent=2, ensure_ascii=False)

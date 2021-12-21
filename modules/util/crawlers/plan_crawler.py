@@ -5,7 +5,7 @@ import re
 
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
 # ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
-from .. api import web_api
+from .. import web_api
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
@@ -85,11 +85,12 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             tmp: list[dict[str, str]] = []
             for match in pattern.findall(row):
                 lesson, group, groups, teacher, code, room_id = match
-                if group and int(groups) == 5:
-                    group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
+                if group: 
+                    if int(groups) == 5:
+                        group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
                 else:
-                    # If the group is specified, use it
-                    # If not, check if the current lesson is Religious Studies (and set the group accordingly)
+                    # If the group is not specified but the room code is, use that instead
+                    # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
                     # Finally, if none of the above, set the group to 'grupa_0' (whole class)
                     group = code.lstrip('#') if code else 'rel' if lesson == "religia" else '0'
                 tmp.append({
@@ -157,7 +158,7 @@ if __name__ == "__main__":
     input_msg = f"{colour.OKBLUE}Enter {colour.OKGREEN}{colour.UNDERLINE}class name{colour.ENDC}{colour.OKBLUE}...\n{colour.WARNING}> "
     try:
         while True:
-            plan = json.dumps(get_lesson_plan(input(input_msg)), indent=4, ensure_ascii=False)
+            plan = json.dumps(get_lesson_plan(input(input_msg), force_update=True), indent=4, ensure_ascii=False)
             print(f"{colour.OKGREEN}Lesson plan:\n{colour.ENDC}{plan}")
     except KeyboardInterrupt:
         print(f"...{colour.FAIL}\nGoodbye!\n{colour.ENDC}")

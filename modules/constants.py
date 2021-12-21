@@ -46,9 +46,7 @@ weekday_names = [
     "wtorek",
     "środa",
     "czwartek",
-    "piątek",
-    "poniedziałek",  # When get_next_lesson() is called on Saturday or Sunday,
-    "poniedziałek"  # the program looks at Monday as the next school day.
+    "piątek"
 ]
 
 # What group code correlates to which Discord role
