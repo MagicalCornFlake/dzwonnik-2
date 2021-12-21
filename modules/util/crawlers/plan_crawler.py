@@ -1,5 +1,11 @@
 """Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details"""
+import importlib
 import re
+
+if __name__ == "__main__":
+    from ..api import web_api
+else:
+    web_api = importlib.import_module('modules.util.api.web_api')
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
@@ -111,7 +117,6 @@ def get_lesson_plan(class_id: str) -> dict[str, list[list[dict[str, str]]]]:
 
 
 if __name__ == "__main__":
-    import web_api
     try:
         while True:
             print(get_lesson_plan(input("Enter class name...\n> ")))

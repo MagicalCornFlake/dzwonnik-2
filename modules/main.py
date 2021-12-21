@@ -7,6 +7,7 @@ import importlib
 import json
 import math
 import os
+from re import sub
 import traceback
 
 # Third-party imports
@@ -17,14 +18,16 @@ import discord.ext.tasks
 if __name__ == "__main__":
     import file_management
     from constants import *
-    from util import web_api, steam_api, plan_crawler, lucky_numbers_api
+    from util.api import web_api, steam_api, lucky_numbers_api
+    from util.crawlers import plan_crawler, substitutions_crawler
 else:
     file_management = importlib.import_module('modules.file_management')
     constants = importlib.import_module('modules.constants')
-    web_api = importlib.import_module('modules.util.web_api')
-    steam_api = importlib.import_module('modules.util.steam_api')
-    plan_crawler = importlib.import_module('modules.util.plan_crawler')
-    lucky_numbers_api = importlib.import_module('modules.util.lucky_numbers_api')
+    web_api = importlib.import_module('modules.util.api.web_api')
+    steam_api = importlib.import_module('modules.util.api.steam_api')
+    lucky_numbers_api = importlib.import_module('modules.util.api.lucky_numbers_api')
+    plan_crawler = importlib.import_module('modules.util.crawlers.plan_crawler')
+    substitutions_crawler = importlib.import_module('modules.util.crawlers.substitutions_crawler')
 
     # Import constant definitions to the global namespace
     globals().update({k: getattr(constants, k) for k in constants.__dict__["__all__"]})
@@ -1215,7 +1218,7 @@ def start_bot() -> bool:
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (steam_api, web_api, plan_crawler, lucky_numbers_api, file_management):
+    for module in (file_management, steam_api, web_api, lucky_numbers_api, plan_crawler, substitutions_crawler):
         importlib.reload(module)
     try:
         file_management.read_env_files()
