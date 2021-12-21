@@ -114,13 +114,3 @@ def get_lesson_plan(class_id: str) -> dict[str, list[list[dict[str, str]]]]:
     link = get_plan_link(get_plan_id(class_id))
     html = web_api.make_request(link).content.decode('UTF-8')
     return parse_html(html)
-
-
-if __name__ == "__main__":
-    try:
-        while True:
-            print(get_lesson_plan(input("Enter class name...\n> ")))
-    except KeyboardInterrupt:
-        print("Goodbye!")
-else:
-    from . import web_api
