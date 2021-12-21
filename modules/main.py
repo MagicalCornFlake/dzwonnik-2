@@ -780,7 +780,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
 
     # If it's currently weekend or after the last lesson for the day
     log_message(f"... there are no more lessons today. Next school day: {next_school_day}")
-    for first_period, lessons in enumerate(lesson_plan[next_school_day]):
+    for first_period, lessons in enumerate(lesson_plan[weekday_names[next_school_day]]):
         # Stop incrementing 'first_period' when the 'lessons' object is a non-empty list
         if lessons:
             break
