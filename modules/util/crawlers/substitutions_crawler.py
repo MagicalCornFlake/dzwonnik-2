@@ -1,9 +1,6 @@
-"""Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson substitution details"""
-import importlib
+"""Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson substitution details."""
 import re
 
-if __name__ == "__main__":
-    from ..api import web_api
-else:
-    web_api = importlib.import_module('modules.util.api.web_api')
-
+# If this script is run manually, it must be done so from a root package with the -m flag. For example:
+# ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
+from .. api import web_api

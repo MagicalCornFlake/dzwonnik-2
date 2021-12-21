@@ -1,20 +1,33 @@
-"""Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details"""
-import importlib
+"""Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details."""
 import re
 
-if __name__ == "__main__":
-    from ..api import web_api
-else:
-    web_api = importlib.import_module('modules.util.api.web_api')
+# If this script is run manually, it must be done so from a root package with the -m flag. For example:
+# ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
+from .. api import web_api
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
-pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>|"
-                     r"<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
+pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
+                     r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
+
+# Tags that should not increment or decrement a line's tag depth
+ignored_tags = ["hr", "br"]
+
+class colour:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 def get_plan_id(class_name: str or int = None) -> int:
     """Gets the plan ID that is used on the school website of a given class."""
+
     if type(class_name) is int and 1 <= class_name <= 16:
         return class_name
     class_name = "2d" if class_name is None else class_name
@@ -49,40 +62,56 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
 
     Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher]) to each weekday name.
     """
-    table_tag_index = tag_index = seen_tables = row_number = column_number = 0
+    tag_index = seen_tables = row_number = column_number = 0
     headers = []
     data: dict[str, list[list[dict[str, str]]]] = {}
 
     def extract_regex() -> str or list[str]:
+        """Extracts the data from a given table row."""
+
         if row == "<td class=\"l\">&nbsp;</td>":
-            return "---"
+            return []
         elif row.startswith("<td class=\"nr\">"):
-            return period_pattern.match(row).groups()[-1]
+            # Row containing the lesson period number
+            return int(period_pattern.match(row).groups()[-1])
         elif row.startswith("<td class=\"g\">"):
+            # Row containing the lesson period start hour, start minute, end hour and end minute
+            # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
             return [int(time) for time in duration_pattern.match(row).groups()]
         else:
+            # Row containing lesson information for a given period
             tmp: list[dict[str, str]] = []
             for match in pattern.findall(row):
                 lesson, group, groups, teacher, code, room_id = match
                 if group and int(groups) == 5:
                     group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
                 else:
+                    # If the group is specified, use it
+                    # If not, check if the current lesson is Religious Studies (and set the group accordingly)
+                    # Finally, if none of the above, set the group to 'grupa_0' (whole class)
                     group = code.lstrip('#') if code else 'rel' if lesson == "religia" else '0'
                 tmp.append({
+                    # Replace extended language lessons with the regular variant since there is no practical distinction
                     "lesson": lesson.replace("r_j.", "j."),
                     "group": "grupa_" + group,
                     "room_id": room_id
                 })
                 if teacher:
+                    # Add the teacher to the returned lesson info if they are specified in the given data
                     tmp[-1]["teacher"] = teacher
             return tmp
 
+    # Go through each line in the inputted HTML
     for row in html.splitlines():
-        tag_index += row.count("<") - 2 * row.count("</") - row.count("<br>") - row.count("<hr>")
+        # Increment the tag depth if the line introduces a new tag
+        # Decremenet the tag depth if the line contains a closing tag
+        # Ignore tags like '<hr>', '<br>' that are defined above
+        tag_index += row.count("<") - 2 * row.count("</") - sum([row.count(f"<{tag}>") for tag in ignored_tags])
         if "<table" in row:
-            table_tag_index += 1
-            seen_tables += 1
-        if seen_tables == 3 and table_tag_index == 2:
+            # Increment the number of tables that have been met so far
+            seen_tables += row.count('<table')
+        # The table containing the lesson plans is the 3rd table 
+        if seen_tables == 3:
             if row == "<tr>":
                 row_number += 1
                 column_number = 0
@@ -95,13 +124,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 if weekday not in data:
                     data[weekday] = []
                 data[weekday].append(extract_regex())
-                # print("row", row_number, "|", row)
-        if "</table>" in row:
-            table_tag_index -= 1
-    for row in data:
-        print(row)
-        for column in data[row]:
-            print(column)
+                print(f"{colour.OKCYAN}row {row_number}{colour.ENDC}, seen {colour.OKGREEN}{seen_tables} tables {colour.WARNING}| {row}")
+    print(colour.ENDC)
     return data
 
 
@@ -114,3 +138,19 @@ def get_lesson_plan(class_id: str) -> dict[str, list[list[dict[str, str]]]]:
     link = get_plan_link(get_plan_id(class_id))
     html = web_api.make_request(link).content.decode('UTF-8')
     return parse_html(html)
+
+
+if __name__ == "__main__":
+    import json
+    colours = vars(colour)
+    for col in colours:
+        if not col.startswith('_') and col is not None:
+            print(f"Colour {colours[col]}{col}{colour.ENDC}")
+    print()
+    input_msg = f"{colour.OKBLUE}Enter {colour.OKGREEN}{colour.UNDERLINE}class name{colour.ENDC}{colour.OKBLUE}...\n{colour.WARNING}> "
+    try:
+        while True:
+            plan = json.dumps(get_lesson_plan(input(input_msg)), indent=4, ensure_ascii=False)
+            print(f"{colour.OKGREEN}Lesson plan:\n{colour.ENDC}{plan}")
+    except KeyboardInterrupt:
+        print(f"...{colour.FAIL}\nGoodbye!\n{colour.ENDC}")
