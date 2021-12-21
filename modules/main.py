@@ -201,6 +201,7 @@ def populate_lesson_details():
         if item not in weekday_names:
             continue
         for period in item:
+            print("Lessons in period:", period)
             for lesson in period:
                 lesson_names.append(lesson["name"])
     lesson_names.sort()
@@ -758,7 +759,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
         given_time -- the start time to base the search off of.
 
     Returns a tuple consisting of a boolean indicating if that day is today, the period number, and the day of the week.
-    If the current time is during a lesson, the period number will be incremented by 10.
+    If the current time is during a lesson, the periodlesson_names.append(lesson number will be incremented by 10.
     """
     log_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
