@@ -94,9 +94,10 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                     # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
                     # Finally, if none of the above, set the group to 'grupa_0' (whole class)
                     group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
+                name = lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace('r_', 'r-')
                 tmp.append({
                     # Replace extended language lessons with the regular variant since there is no practical distinction
-                    "name": lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace(' ', '-').replace('r_', 'r-'),
+                    "name": name.replace(' ', '-'),
                     "group": "grupa_" + group,
                     "room_id": room_id
                 })
