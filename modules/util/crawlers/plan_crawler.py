@@ -128,8 +128,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 if weekday not in data:
                     data[weekday] = []
                 data[weekday].append(extract_regex())
-                print(f"{colour.OKCYAN}row {row_number}{colour.ENDC}, seen {colour.OKGREEN}{seen_tables} tables {colour.WARNING}| {row}")
-    print(colour.ENDC)
+    #             print(f"{colour.OKCYAN}row {row_number}{colour.ENDC}, seen {colour.OKGREEN}{seen_tables} tables {colour.WARNING}| {row}")
+    # print(colour.ENDC)
     return data
 
 
@@ -142,7 +142,7 @@ def get_lesson_plan(class_id: str, force_update = False) -> dict[str, list[list[
     class_id = get_plan_id(class_id)
     filepath = f"cache/plan_{class_id}.json"
     if not os.path.isfile(filepath) or force_update:
-        html = web_api.make_request(get_plan_link(class_id)).content.decode('UTF-8')
+        html = web_api.make_request(get_plan_link(class_id), force_update).content.decode('UTF-8')
         if not os.path.isdir('cache'):
             os.mkdir('cache')
         with open(filepath, 'w') as file:
