@@ -638,8 +638,6 @@ def process_homework_events_alias(message: discord.Message) -> tuple[bool, str o
 
 
 def update_meet_link(message: discord.Message) -> tuple[bool, str]:
-    if not message.channel.permissions_for(message.author).administrator:
-        return False, ":warning: Niestety nie posiadasz uprawnień do korzystania z tej komendy."
     args = message.content.split(" ")
     if len(args) != 1:
         if args[1] in lesson_details:
@@ -648,6 +646,8 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
                 return False, f"{Emoji.info} Link do Meeta dla lekcji " + \
                     f"'__{lesson}__' to <https://meet.google.com/{link}?authuser=0&hs=179>."
             else:
+                if not message.channel.permissions_for(message.author).administrator:
+                    return False, ":warning: Niestety nie posiadasz uprawnień do korzystania z tej komendy."
                 link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
                 link_is_lookup_format = len(args[2]) == 17 and args[2].startsWith("lookup/")
                 if link_is_dash_format or link_is_lookup_format:
@@ -657,8 +657,9 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
                     save_data_file()
                     return False, f":white_check_mark: Zmieniono link dla lekcji " \
                                   f"'__{lesson_details[args[1]]['name']}__' z `{old_link}` na **{args[2]}**."
-    msg = f"""Należy napisać po komendzie `{prefix}meet` kod lekcji, aby zobaczyć jaki jest ustawiony \
-    link do Meeta dla tej lekcji, albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"""
+    msg = f"Należy napisać po komendzie `{prefix}meet` kod lekcji, " + \
+        "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
+        "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
     for code, info_dict in lesson_details.items():
         msg += f"\n# {code} [{info_dict['name']}]({info_dict['link']})"
     # noinspection SpellCheckingInspection
