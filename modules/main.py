@@ -228,7 +228,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     serialised_tracked_market_items = [item.serialised for item in tracked_market_items]
     # Creates a parent dictionary to save all data that needs to be saved
     data_to_be_saved = {
-        "lesson_links": lesson_links,
+        "lesson_links": {code: link for code, link in lesson_links.items() if link},
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
         "lucky_numbers": lucky_numbers_api.cached_data
