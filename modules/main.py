@@ -405,7 +405,8 @@ def get_lesson_name(lesson_code: str) -> str:
         "j.": "język ",
         "ang.": "angielski",
         " hiszp.": "hiszpański",
-        "zaj. z wych.": "zajęcia z wychowawcą"
+        "zaj. z wych.": "zajęcia z wychowawcą",
+        "WF": "wychowanie fizyczne"
     }
     lesson_name = lesson_code.rstrip(' DW')
     for abbreviation, full_word in mappings.items():
@@ -619,7 +620,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
         for lesson in plan[period]:
             raw_link = lesson_links[lesson['name']]
             link = f"https://meet.google.com/{raw_link}?authuser=0&hs=179" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
-            lesson_texts.append(f"[{get_lesson_name(lesson['name'])}]({link}) - __sala {lesson['room_id']}__")
+            lesson_texts.append(f"[{get_lesson_name(lesson['name'])} - __sala {lesson['room_id']}__]({link})")
             if lesson['group'] != "grupa_0":
                 lesson_texts[-1] += f" ({group_names[lesson['group']]})"
         txt = f"Lekcja {period} ({get_formatted_period_time(period)})"
