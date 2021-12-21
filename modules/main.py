@@ -191,7 +191,7 @@ homework_events = HomeworkEventContainer()
 tracked_market_items = []
 restart_on_exit = True
 current_period: int = 0
-lesson_plan: dict = plan_crawler.get_lesson_plan("2d")
+lesson_plan: dict = plan_crawler.get_lesson_plan("2d", True)
 
 
 
@@ -764,8 +764,8 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     current_day_index: int = given_time.weekday()
 
     if current_day_index < Weekday.saturday:
-        for period in lesson_plan["Godz"]:
-            for is_lesson, time in enumerate(period):
+        for period, times in enumerate(lesson_plan["Godz"]):
+            for is_lesson, time in enumerate(times):
                 hour, minute = time
                 if given_time.hour < hour and given_time.minute < minute:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
