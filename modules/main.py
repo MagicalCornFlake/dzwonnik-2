@@ -400,15 +400,15 @@ async def wait_until_ready_before_loops() -> None:
 
 def get_lesson_name(lesson_code: str) -> str:
     mappings = {
-        "zaj. z wych.": "zajęcia z wychowawcą",
+        "zaj.-z-wych.": "zajęcia z wychowawcą",
         "WF": "wychowanie fizyczne",
         "mat.": "matematyka",
         "r_mat": "r_matematyka",
         "j.": "język ",
-        " hiszp.": "hiszpański",
+        "hiszp.": "hiszpański",
         "ang.": "angielski"
     }
-    lesson_name = lesson_code.rstrip(' DW')
+    lesson_name = lesson_code.rstrip('.')
     for abbreviation, full_word in mappings.items():
         lesson_name = lesson_name.replace(abbreviation, full_word)
     return lesson_name[lesson_code.startswith('r_') * 2:] + " rozszerzona" * lesson_code.startswith('r_')
@@ -544,7 +544,7 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
         "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
         "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
     for lesson_code, link in lesson_links.items():
-        msg += f"\n# {lesson_code} [{get_lesson_name(lesson_code)}]({link})"
+        msg += f"\n# **{lesson_code.replace('_', '\_')}** [*{get_lesson_name(lesson_code)}*](__{link}__)"
     # noinspection SpellCheckingInspection
     msg += "```\n:warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
     return False, msg
@@ -620,7 +620,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
         for lesson in plan[period]:
             raw_link = lesson_links[lesson['name']]
             link = f"https://meet.google.com/{raw_link}?authuser=0&hs=179" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
-            lesson_texts.append(f"[__{get_lesson_name(lesson['name'])}__ - sala {lesson['room_id']}]({link})")
+            lesson_texts.append(f"[{get_lesson_name(lesson['name'])} - sala {lesson['room_id']}]({link})")
             if lesson['group'] != "grupa_0":
                 lesson_texts[-1] += f" ({group_names[lesson['group']]})"
         txt = f"Lekcja {period} ({get_formatted_period_time(period)})"
