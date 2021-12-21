@@ -10,14 +10,19 @@ def clear_log_file(filename: str) -> None:
 
 def write_log(message: str) -> None:
     with open("bot.log", 'a') as file:
-        file.write(message + '\n')
+        file.write(f"{datetime.now():%Y-%m-%d @ %H:%M:%S}: {message}\n")
 
 
 def save_log_file() -> None:
-    with open("bot.log", 'r') as file:
-        log_start_time, log_contents = file.read().split(" END TIMESTAMP ", maxsplit=1)
-    with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n") + ".log", 'w') as file:
-        file.write(log_contents)
+    try:
+        with open("bot.log", 'r') as file:
+            log_start_time, log_contents = file.read().split(" END TIMESTAMP ", maxsplit=1)
+    except ValueError:
+        # Discard current log
+        pass
+    else:
+        with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n") + ".log", 'w') as file:
+            file.write(log_contents)
     clear_log_file("bot.log")
 
 
