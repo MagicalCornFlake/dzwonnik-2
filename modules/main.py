@@ -21,16 +21,20 @@ if __name__ == "__main__":
     from util.api import web_api, steam_api, lucky_numbers_api
     from util.crawlers import plan_crawler, substitutions_crawler
 else:
-    file_management = importlib.import_module('modules.file_management')
-    constants = importlib.import_module('modules.constants')
-    web_api = importlib.import_module('modules.util.api.web_api')
-    steam_api = importlib.import_module('modules.util.api.steam_api')
-    lucky_numbers_api = importlib.import_module('modules.util.api.lucky_numbers_api')
-    plan_crawler = importlib.import_module('modules.util.crawlers.plan_crawler')
-    substitutions_crawler = importlib.import_module('modules.util.crawlers.substitutions_crawler')
+    # file_management = importlib.import_module('modules.file_management')
+    # constants = importlib.import_module('modules.constants')
+    # web_api = importlib.import_module('modules.util.api.web_api')
+    # steam_api = importlib.import_module('modules.util.api.steam_api')
+    # lucky_numbers_api = importlib.import_module('modules.util.api.lucky_numbers_api')
+    # plan_crawler = importlib.import_module('modules.util.crawlers.plan_crawler')
+    # substitutions_crawler = importlib.import_module('modules.util.crawlers.substitutions_crawler')
 
-    # Import constant definitions to the global namespace
-    globals().update({k: getattr(constants, k) for k in constants.__dict__["__all__"]})
+    # # Import constant definitions to the global namespace
+    # globals().update({k: getattr(constants, k) for k in constants.__dict__["__all__"]})
+    from modules import file_management
+    from modules.constants import *
+    from modules.util.api import *
+    from modules.util.crawlers import *
 
 
 intents = discord.Intents.default()
@@ -682,9 +686,8 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
         current_day = -1
         try:
             # This 'try' clause raises RuntimeError if the input is invalid for whatever reason
-            weekday_abbreviations = {"pn": 0, "śr": 2, "sr": 3, "pt": 4}
             try:
-                current_day = {"pn": 0, "śr": 2, "sr": 3, "pt": 4}[args[1]]
+                current_day = {"pn": 0, "śr": 2, "sr": 2, "pt": 4}[args[1]]
             except KeyError:
                 try:
                     # Check if the input is a number
@@ -711,6 +714,10 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
             log_message(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
+
+    class_name = "2d"    
+    lesson_plan: dict = plan_crawler.get_lesson_plan(class_name)
+
     loop_table: list[list[str or int]] = weekday_tables[current_day]
     periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
     lessons_per_period = [[lesson for lesson in loop_table if lesson[-1] == period] for period in periods]
