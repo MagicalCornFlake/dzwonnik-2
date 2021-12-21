@@ -415,7 +415,7 @@ def get_lesson_name(lesson_code: str) -> str:
         map_entire_word, mapping = behaviour
         if map_entire_word or lesson_name.startswith(abbreviation):
             lesson_name = lesson_name.replace(abbreviation, mapping)
-    return lesson_name[lesson_code] + " rozszerzona" * lesson_code.startswith('r-')
+    return lesson_name + " rozszerzona" * lesson_code.startswith('r-')
 
 
 def create_homework_event(message: discord.Message) -> tuple[bool, str]:
