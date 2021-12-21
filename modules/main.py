@@ -1114,7 +1114,7 @@ async def on_message(message: discord.Message) -> None:
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
     admin_commands = ["exec", "restart", "quit", "exit"]
-    if message.channel.id in [ChannelID.bot_testing, ChannelID.bot_logs] and msg_first_word in admin_commands:
+    if msg_first_word in admin_commands:
         if message.author != client.get_user(member_ids[8 - 1]):
             author_name = message.author.name if message.author.nick is None else message.author.nick
             await message.reply(f"Ha ha! Nice try, {author_name}.")
