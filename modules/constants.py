@@ -42,11 +42,11 @@ class Weekday:
 
 
 weekday_names = [
-    "poniedziałek",
-    "wtorek",
-    "środa",
-    "czwartek",
-    "piątek"
+    "Poniedziałek",
+    "Wtorek",
+    "Środa",
+    "Czwartek",
+    "Piątek"
 ]
 
 # What group code correlates to which Discord role
