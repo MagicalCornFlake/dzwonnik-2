@@ -12,6 +12,7 @@ import traceback
 # Third-party imports
 import discord
 import discord.ext.tasks
+from discord.flags import fill_with_flags
 
 # Local application imports
 from modules import file_management
@@ -146,44 +147,6 @@ class TrackedItem:
         return False
 
 
-# noinspection SpellCheckingInspection
-lesson_details: dict = {
-    # "ang-1": {"name": "język angielski", "link": "lookup/bpwq26lzht"},
-    # "ang-2": {"name": "język angielski", "link": "lookup/fbrsxfud26"},
-    # "ang-kw": {"name": "język angielski z p. Kwiatkowską", "link": "lookup/bgz74rwodu"},
-    # "bio": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
-    # "bio-1": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
-    # "bio-2": {"name": "biologia", "link": "lookup/bhaw4bkiwa"},
-    # "bio-roz": {"name": "biologia rozszerzona", "link": ""},
-    # "chem": {"name": "chemia", "link": "lookup/ccydofjmsy"},
-    # "chem-1": {"name": "chemia", "link": "lookup/ccydofjmsy"},
-    # "chem-2": {"name": "chemia", "link": "lookup/ccydofjmsy"},
-    # "chem-roz": {"name": "chemia rozszerzona", "link": ""},
-    # "de-1": {"name": "język niemiecki", "link": "otb-miyx-xfw"},
-    # "de-2": {"name": "język niemiecki", "link": "lookup/ggm2fxojv6"},
-    # "dram": {"name": "drama", "link": "lookup/dzhxxxfabz"},
-    # "edb": {"name": "edukacja dla bezpieczeństwa", "link": "lookup/daw4tvxftt"},
-    # "es": {"name": "język hiszpański", "link": "fpv-tduz-ptc"},
-    # "fiz": {"name": "fizyka", "link": "lookup/exacwjtr67"},
-    # "fiz-roz": {"name": "fizyka rozszerzona", "link": ""},
-    # "fr": {"name": "język francuski", "link": "xwa-ahgy-wns"},
-    # "geo": {"name": "geografia", "link": "lookup/dzuekigxx3"},
-    # "geo-roz": {"name": "geografia rozszerzona", "link": ""},
-    # "gw": {"name": "godzina wychowawcza", "link": ""},
-    # "his": {"name": "historia", "link": "lookup/e5elwpevj5"},
-    # "his-roz": {"name": "historia rozszerzona", "link": ""},
-    # "inf": {"name": "informatyka", "link": "lookup/f7mwatesda"},
-    # "mat": {"name": "matematyka", "link": ""},
-    # "mat-roz": {"name": "matematyka rozszerzona", "link": ""},
-    # "plas-1": {"name": "plastyka", "link": ""},
-    # "plas-2": {"name": "plastyka", "link": ""},
-    # "przed": {"name": "przedsiębiorczość", "link": ""},
-    # "pol": {"name": "język polski", "link": "lookup/fthvbikyap"},
-    # "rel": {"name": "religia", "link": "lookup/h2g6dftul7"},
-    # "tok": {"name": "theory of knowledge", "link": "lookup/dpvw6r3mg7"},
-    # "wf": {"name": "wychowanie fizyczne", "link": "lookup/gb75o2kzx4"},
-    # "wos": {"name": "wiedza o społeczeństwie", "link": "lookup/flikhkjfkr"}
-}
 prefix = '!'  # Prefix used before commands
 enable_log_messages = True
 use_bot_testing = False
@@ -192,10 +155,9 @@ tracked_market_items = []
 restart_on_exit = True
 current_period: int = 0
 lesson_plan: dict = plan_crawler.get_lesson_plan("2d", True)
+lesson_links: dict[str, str] = {}
 
-
-
-def populate_lesson_details():
+def populate_lesson_links():
     lesson_names = []
     for item in lesson_plan:
         if item not in weekday_names:
@@ -205,9 +167,9 @@ def populate_lesson_details():
                 lesson_names.append(lesson["name"])
     lesson_names.sort()
     for lesson in lesson_names:
-        lesson_details[lesson] = { "name": lesson, "link": "" }
+        lesson_links[lesson] = None
 
-populate_lesson_details()
+populate_lesson_links()
 
 
 def get_formatted_period_time(period: int) -> str:
@@ -222,8 +184,7 @@ def read_data_file(filename: str = "data.json") -> None:
     if not os.path.isfile(filename):
         with open(filename, 'w') as file:
             default_settings = {
-                # lesson_details is updated later anyway, so we can leave it empty.
-                "lesson_details": {},
+                "lesson_links": {},
                 "homework_events": {},
                 "tracked_market_items": [],
                 "lucky_numbers": lucky_numbers_api.cached_data
@@ -231,9 +192,8 @@ def read_data_file(filename: str = "data.json") -> None:
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r') as file:
         data = json.load(file)
-    # We have defined lesson_details above, but this replaces any values that are different than the default
-    if "lesson_details" in data:
-        lesson_details.update(data["lesson_details"])
+    if "lesson_links" in data:
+        lesson_links.update(data["lesson_links"])
     # homework_events.clear()  # To ensure there aren't any old instances, not 100% needed though
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = HomeworkEventContainer()
@@ -268,7 +228,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     serialised_tracked_market_items = [item.serialised for item in tracked_market_items]
     # Creates a parent dictionary to save all data that needs to be saved
     data_to_be_saved = {
-        "lesson_details": lesson_details,
+        "lesson_links": lesson_links,
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
         "lucky_numbers": lucky_numbers_api.cached_data
@@ -307,10 +267,9 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 if not lesson:
                     # No lesson for that group
                     continue
-                lesson_info, group_code = lesson[:2]
-                msgs[group_code] = lesson_info['name']
+                msgs[lesson['group']] = get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
-                if group_code == "grupa_0":
+                if lesson['group'] == "grupa_0":
                     log_message("Found lesson for entire class, skipping checking individual groups.")
                     break
             # set(msgs.values()) returns a list of unique lesson names
@@ -439,96 +398,19 @@ async def wait_until_ready_before_loops() -> None:
     await client.wait_until_ready()
 
 
-# # Times for the start and end of each period (0-9)
-# timetable = [
-#     "07:10-07:55",  # Period 0
-#     "08:00-08:45",  # Period 1
-#     "08:50-09:35",  # Period 2
-#     "09:45-10:30",  # Period 3
-#     "10:40-11:25",  # Period 4
-#     "11:35-12:20",  # Period 5
-#     "12:50-13:35",  # Period 6
-#     "13:40-14:25",  # Period 7
-#     "14:30-15:15",  # Period 8
-#     "15:20-16:05"   # Period 9
-# ]
-
-# # List of times bot should update status for
-# watch_times = [time.split("-")[i] for time in timetable for i in range(2)]
-
-# # The following are timetables for each day
-# # Format: [lesson code, group ID, period]
-# lessons_monday = [
-#     ["bio", "grupa_0", 1],
-#     ["mat", "grupa_0", 2],
-#     ["wf", "grupa_0", 3],
-#     ["wf", "grupa_0", 4],
-#     ["ang-1", "grupa_1", 5],
-#     ["ang-2", "grupa_2", 5],
-#     ["pol", "grupa_0", 6],
-#     ["pol", "grupa_0", 7],
-#     ["rel", "grupa_rel", 8],
-#     ["rel", "grupa_rel", 9]
-# ]
-
-# lessons_tuesday = [
-#     ["his", "grupa_0", 1],
-#     ["ang-1", "grupa_1", 2],
-#     ["ang-kw", "grupa_2", 2],
-#     ["ang-1", "grupa_1", 3],
-#     ["ang-2", "grupa_2", 3],
-#     ["pol", "grupa_0", 4],
-#     ["pol", "grupa_0", 5],
-#     ["mat", "grupa_0", 6],
-#     ["mat", "grupa_0", 7],
-#     ["tok", "grupa_0", 8]
-# ]
-
-# lessons_wednesday = [
-#     ["geo", "grupa_0", 2],
-#     ["mat", "grupa_0", 3],
-#     ["chem", "grupa_0", 4],
-#     ["pol", "grupa_0", 5],
-#     ["pol", "grupa_0", 6],
-#     ["inf", "grupa_1", 7],
-#     ["ang-2", "grupa_2", 7],
-#     ["inf", "grupa_1", 8],
-#     ["ang-2", "grupa_2", 8]
-# ]
-
-# lessons_thursday = [
-#     ["przed", "grupa_0", 1],
-#     ["chem", "grupa_1", 2],
-#     ["bio", "grupa_2", 2],
-#     ["bio", "grupa_1", 3],
-#     ["ang-2", "grupa_2", 3],
-#     ["his", "grupa_0", 4],
-#     ["wos", "grupa_0", 5],
-#     ["geo", "grupa_0", 6],
-#     ["wf", "grupa_0", 7],
-#     ["fiz", "grupa_0", 8]
-# ]
-
-# lessons_friday = [
-#     ["chem", "grupa_2", 1],
-#     ["gw", "grupa_0", 2],
-#     ["ang-1", "grupa_1", 3],
-#     ["inf", "grupa_2", 3],
-#     ["ang-1", "grupa_1", 4],
-#     ["inf", "grupa_2", 4],
-#     ["fr", "grupa_fr", 5],
-#     ["es", "grupa_es", 5],
-#     ["de-1", "grupa_de1", 5],
-#     ["de-2", "grupa_de2", 5],
-#     ["fr", "grupa_fr", 6],
-#     ["es", "grupa_es", 6],
-#     ["de-1", "grupa_de1", 6],
-#     ["de-2", "grupa_de2", 6],
-#     ["mat", "grupa_0", 7],
-#     ["ang-kw", "grupa_1", 8],
-#     ["dram", "grupa_2", 8],
-#     ["dram", "grupa_1", 9]
-# ]
+def get_lesson_name(lesson_code: str) -> str:
+    lesson_name = lesson_code.lstrip('r_').rstrip(' DW')
+    mappings = {
+        "mat": "matematyka",
+        "mat.": "matematyka",
+        "j.": "język ",
+        "ang.": "angielski",
+        " hiszp.": "hiszpański",
+        "zaj. z wych.": "zajęcia z wychowawcą"
+    }
+    for abbreviation, full_word in mappings.items():
+        lesson_name = lesson_name.replace(abbreviation, full_word)
+    return lesson_name + " rozszerzona" * lesson_code.startswith('r_')
 
 
 def create_homework_event(message: discord.Message) -> tuple[bool, str]:
@@ -640,11 +522,12 @@ def process_homework_events_alias(message: discord.Message) -> tuple[bool, str o
 def update_meet_link(message: discord.Message) -> tuple[bool, str]:
     args = message.content.split(" ")
     if len(args) != 1:
-        if args[1] in lesson_details:
+        if args[1] in lesson_links:
+            link = lesson_links[args[1]]
+            lesson_name = get_lesson_name(args[1])
             if len(args) == 2:
-                lesson, link = lesson_details[args[1]].values()
                 return False, f"{Emoji.info} Link do Meeta dla lekcji " + \
-                    f"'__{lesson}__' to <https://meet.google.com/{link}?authuser=0&hs=179>."
+                    f"'__{lesson_name}__' to <https://meet.google.com/{link}?authuser=0&hs=179>."
             else:
                 if not message.channel.permissions_for(message.author).administrator:
                     return False, ":warning: Nie posiadasz uprawnień do zmieniania linków Google Meet."
@@ -652,16 +535,15 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
                 link_is_lookup_format = len(args[2]) == 17 and args[2].startsWith("lookup/")
                 if link_is_dash_format or link_is_lookup_format:
                     # User-given link is valid
-                    old_link = lesson_details[args[1]]["link"]
-                    lesson_details[args[1]]["link"] = args[2]
+                    lesson_links[args[1]] = args[2]
                     save_data_file()
                     return False, f":white_check_mark: Zmieniono link dla lekcji " \
-                                  f"'__{lesson_details[args[1]]['name']}__' z `{old_link}` na **{args[2]}**."
+                                  f"'__{lesson_name}__' z `{link}` na **{args[2]}**."
     msg = f"Należy napisać po komendzie `{prefix}meet` kod lekcji, " + \
         "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
         "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
-    for code, info_dict in lesson_details.items():
-        msg += f"\n# {code} [{info_dict['name']}]({info_dict['link']})"
+    for lesson_code, link in lesson_links.items():
+        msg += f"\n# {lesson_code} [{get_lesson_name(lesson_code)}]({link})"
     # noinspection SpellCheckingInspection
     msg += "```\n:warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
     return False, msg
@@ -733,21 +615,16 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
             # No lesson for the current period
             first_period += 1
             continue
+        lesson_texts = []
         for lesson in plan[period]:
-            text = f"Sala {lesson['room_id']} — " if "room_id" in lesson else ""
-            name = lesson["name"]
-            link = None
-            if link:
-                text += f"[{name}](https://meet.google.com/{link}?authuser=0&hs=179) "
-            else:
-                text += f"[{name}](http://guzek.uk/error/404?lang=pl-PL&source=discord) "
+            raw_link = lesson_links[lesson['name']]
+            link = f"https://meet.google.com/{raw_link}?authuser=0&hs=179" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
+            lesson_texts.append(f"{lesson['name']}]({link}) - __sala {lesson['room_id']}__")
             if lesson['group'] != "grupa_0":
-                text += f"({group_names[lesson['group']]})"
-            if period < first_period + periods:
-                text += "\n"
+                lesson_texts[-1] += f" ({group_names[lesson['group']]})"
         txt = f"Lekcja {period} ({get_formatted_period_time(period)})"
         is_current_lesson = query_day == today and period == current_period 
-        embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value=text, inline=False)
+        embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value='\n'.join(lesson_texts), inline=False)
     return True, embed
 
 
@@ -785,15 +662,14 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, next_school_day
 
 
-def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, discord.Role]) -> \
-        tuple[dict[str, str], str] or False:
+def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, discord.Role]) -> dict[str, str] or False:
     """Get the lesson details for a given period, day and user roles list.
     Arguments:
         query_period -- the period number to look for.
         weekday_index -- the index of the weekday to look at.
         roles -- the roles of the user that the lesson is defined to be intended for.
 
-    Returns a tuple containing the lesson details and the code of the group.
+    Returns a dictionary containing the lesson details, or False if no lesson was found.
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     log_message("Looking for lesson with roles:", target_roles)
@@ -801,7 +677,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
         group_code = lesson["group"]
         if group_code in target_roles or role_codes[group_code] in target_roles:
             log_message(f"Found lesson '{lesson['name']}' on period {query_period}.")
-            return lesson_details[lesson["name"]], group_code
+            return lesson
     log_message(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
     return False
 
@@ -863,7 +739,6 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         lesson = get_lesson_by_roles(actual_period, weekday_index, message.author.roles)
         if not lesson:
             return False, f":x: Nie ma żadnych zajęć dla Twojej grupy na {actual_period}-ej lekcji.", ""
-        lesson_info, group_code = lesson
         if next_lesson_is_today:
             if actual_period != lesson_period:
                 # Currently lesson
@@ -878,16 +753,17 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
         next_period_time = get_formatted_period_time(actual_period).split("-")[0]
-        group = group_names[group_code] + " " * (group_code != "grupa_0")
-        return True, f"{Emoji.info} Następna lekcja {group}to **{lesson_info['name']}**" \
-                     f"{when} o godzinie __{next_period_time}__{countdown}.", lesson_info['link']
+        group = group_names[lesson['group']] + " " * (lesson['group'] != "grupa_0")
+        return True, f"{Emoji.info} Następna lekcja {group}to **{get_lesson_name(lesson['name'])}**" \
+                     f"{when} o godzinie __{next_period_time}__{countdown}.", lesson_links[lesson['name']]
 
-    success, msg, link = process(current_time)
+    success, msg, raw_link = process(current_time)
     if not success:
         return False, msg
 
     embed = discord.Embed(title=f"Następna lekcja ({current_time:%H:%M})", description=msg)
-    embed.add_field(name="Link do lekcji", value=f"[meet.google.com](https://meet.google.com/{link}?authuser=0&hs=179)")
+    link = f"[meet.google.com](https://meet.google.com/{raw_link}?authuser=0&hs=179)" if raw_link else "[brak](http://guzek.uk/error/404?lang=pl-PL&source=discord)"
+    embed.add_field(name="Link do lekcji", value=link)
     embed.set_footer(text=f"Użyj komendy {prefix}nl, aby pokazać tą wiadomość.")
     return True, embed
 
