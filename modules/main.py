@@ -403,7 +403,7 @@ def get_lesson_name(lesson_code: str) -> str:
         "zaj.-z-wych.": "zajęcia z wychowawcą",
         "WF": "wychowanie fizyczne",
         "mat.": "matematyka",
-        "r_mat": "r_matematyka",
+        "r-mat": "r-matematyka",
         "j.": "język ",
         "hiszp.": "hiszpański",
         "ang.": "angielski"
@@ -411,7 +411,7 @@ def get_lesson_name(lesson_code: str) -> str:
     lesson_name = lesson_code.rstrip('.')
     for abbreviation, full_word in mappings.items():
         lesson_name = lesson_name.replace(abbreviation, full_word)
-    return lesson_name[lesson_code.startswith('r_') * 2:] + " rozszerzona" * lesson_code.startswith('r_')
+    return lesson_name[lesson_code.startswith('r-') * 2:] + " rozszerzona" * lesson_code.startswith('r-')
 
 
 def create_homework_event(message: discord.Message) -> tuple[bool, str]:
@@ -544,8 +544,7 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
         "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
         "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
     for lesson_code, link in lesson_links.items():
-        code = lesson_code.replace('_', '\_')
-        msg += f"\n# **{code}** [*{get_lesson_name(lesson_code)}*](__{link}__)"
+        msg += f"\n# {lesson_code} [{get_lesson_name(lesson_code)}](__{link}__)"
     # noinspection SpellCheckingInspection
     msg += "```\n:warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
     return False, msg

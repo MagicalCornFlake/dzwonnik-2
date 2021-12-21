@@ -96,7 +96,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                     group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
                 tmp.append({
                     # Replace extended language lessons with the regular variant since there is no practical distinction
-                    "name": lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace(' ', '-'),
+                    "name": lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace(' ', '-').replace('r_', 'r-'),
                     "group": "grupa_" + group,
                     "room_id": room_id
                 })
