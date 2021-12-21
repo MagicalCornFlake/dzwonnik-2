@@ -400,13 +400,15 @@ async def wait_until_ready_before_loops() -> None:
 
 def get_lesson_name(lesson_code: str) -> str:
     mappings = {
-        "zaj.-z-wych.": "zajęcia z wychowawcą",
+        "zaj.z-wych": "zajęcia z wychowawcą",
         "WF": "wychowanie fizyczne",
-        "mat.": "matematyka",
-        "r-mat": "r-matematyka",
+        "WOS": "wiedza o społeczeństwie",
+        "TOK": "theory of knowledge",
+        "mat": "matematyka",
         "j.": "język ",
-        "hiszp.": "hiszpański",
-        "ang.": "angielski"
+        "hiszp": "hiszpański",
+        "ang": "angielski",
+        "przedsięb": "przedsiębiorczość"
     }
     lesson_name = lesson_code.rstrip('.')
     for abbreviation, full_word in mappings.items():
