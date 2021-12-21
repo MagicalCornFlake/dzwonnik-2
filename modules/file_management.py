@@ -16,7 +16,9 @@ def write_log(message: str) -> None:
 def save_log_file() -> None:
     try:
         with open("bot.log", 'r') as file:
-            log_start_time, log_contents = file.read().split(" END TIMESTAMP ", maxsplit=1)
+            contents = file.read()
+            if contents and " END TIMESTAMP " in file.readlines()[0]:
+                log_start_time, log_contents = contents.split(" END TIMESTAMP ", maxsplit=1)
     except ValueError:
         # Discard current log
         pass
