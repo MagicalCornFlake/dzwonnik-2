@@ -532,12 +532,12 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
             lesson_name = get_lesson_name(args[1])
             if len(args) == 2:
                 return False, f"{Emoji.info} Link do Meeta dla lekcji " + \
-                    f"'__{lesson_name}__' to <https://meet.google.com/{link}?authuser=0&hs=179>."
+                    f"'__{lesson_name}__' to <https://meet.google.com/{link}?authuser=0>."
             else:
                 if not message.channel.permissions_for(message.author).administrator:
                     return False, ":warning: Nie posiadasz uprawnień do zmieniania linków Google Meet."
                 link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
-                link_is_lookup_format = len(args[2]) == 17 and args[2].startsWith("lookup/")
+                link_is_lookup_format = len(args[2]) == 17 and args[2].startswith("lookup/")
                 if link_is_dash_format or link_is_lookup_format:
                     # User-given link is valid
                     lesson_links[args[1]] = args[2]
@@ -623,7 +623,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
         lesson_texts = []
         for lesson in plan[period]:
             raw_link = lesson_links[lesson['name']]
-            link = f"https://meet.google.com/{raw_link}?authuser=0&hs=179" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
+            link = f"https://meet.google.com/{raw_link}?authuser=0" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
             lesson_texts.append(f"[{get_lesson_name(lesson['name'])} - sala {lesson['room_id']}]({link})")
             if lesson['group'] != "grupa_0":
                 lesson_texts[-1] += f" ({group_names[lesson['group']]})"
@@ -767,7 +767,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         return False, msg
 
     embed = discord.Embed(title=f"Następna lekcja ({current_time:%H:%M})", description=msg)
-    link = f"[meet.google.com](https://meet.google.com/{raw_link}?authuser=0&hs=179)" if raw_link else "[brak](http://guzek.uk/error/404?lang=pl-PL&source=discord)"
+    link = f"[meet.google.com](https://meet.google.com/{raw_link}?authuser=0)" if raw_link else "[brak](http://guzek.uk/error/404?lang=pl-PL&source=discord)"
     embed.add_field(name="Link do lekcji", value=link)
     embed.set_footer(text=f"Użyj komendy {prefix}nl, aby pokazać tą wiadomość.")
     return True, embed
