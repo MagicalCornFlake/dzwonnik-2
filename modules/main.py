@@ -200,7 +200,7 @@ def populate_lesson_details():
     for item in lesson_plan:
         if item not in weekday_names:
             continue
-        for period in item:
+        for period in lesson_plan[item]:
             print("Lessons in period:", period)
             for lesson in period:
                 lesson_names.append(lesson["name"])
