@@ -544,7 +544,7 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
         "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
         "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
     for lesson_code, link in lesson_links.items():
-        msg += f"\n# {lesson_code} [{get_lesson_name(lesson_code)}](__{link}__)"
+        msg += f"\n# {lesson_code} [{get_lesson_name(lesson_code)}]({link or 'brak'})"
     # noinspection SpellCheckingInspection
     msg += "```\n:warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
     return False, msg
