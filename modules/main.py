@@ -647,7 +647,7 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
                     f"'__{lesson}__' to <https://meet.google.com/{link}?authuser=0&hs=179>."
             else:
                 if not message.channel.permissions_for(message.author).administrator:
-                    return False, ":warning: Niestety nie posiadasz uprawnień do korzystania z tej komendy."
+                    return False, ":warning: Nie posiadasz uprawnień do zmieniania linków Google Meet."
                 link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
                 link_is_lookup_format = len(args[2]) == 17 and args[2].startsWith("lookup/")
                 if link_is_dash_format or link_is_lookup_format:
