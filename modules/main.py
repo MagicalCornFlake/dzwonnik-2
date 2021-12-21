@@ -702,7 +702,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
     lesson_plan: dict = plan_crawler.get_lesson_plan(class_name)
     plan_periods: list[int] = lesson_plan["Nr"]
     plan_timetable: list[list[int]] = lesson_plan["Godz"]
-    plans = [lesson_plan[day] for day in [weekday_names]]
+    plan = lesson_plan[weekday_names[query_day]]
 
     loop_table: list[list[str or int]] = weekday_tables[query_day]
     periods = list(dict.fromkeys([lesson[-1] for lesson in loop_table]))
@@ -1129,6 +1129,11 @@ async def on_message(message: discord.Message) -> None:
                 await message.channel.send("Code executed.")
             else:
                 expr = expression.replace("\n", "\n>>> ")
+                try:
+                    exec_result = "```\n```json\n" +json.dumps(exec_result, indent=4, ensure_ascii=False)
+                except (TypeError, OverflowError):
+                    # Object is not JSON serialisable
+                    pass
                 try:
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{exec_result}\n```")
                 except discord.errors.HTTPException:
