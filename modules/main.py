@@ -765,7 +765,9 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
 
     if current_day_index < Weekday.saturday:
         for period, times in enumerate(lesson_plan["Godz"]):
+            print("times:", times)
             for is_lesson, time in enumerate(times):
+                print("time:", time)
                 hour, minute = time
                 if given_time.hour < hour and given_time.minute < minute:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
