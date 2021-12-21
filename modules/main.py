@@ -1130,14 +1130,13 @@ async def on_message(message: discord.Message) -> None:
             else:
                 expr = expression.replace("\n", "\n>>> ")
                 try:
-                    exec_result = "```\n```json\n" +json.dumps(exec_result, indent=4, ensure_ascii=False)
-                except (TypeError, OverflowError):
-                    # Object is not JSON serialisable
-                    pass
-                try:
-                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{exec_result}\n```")
+                    try:
+                        result = "```\n```json\n" + json.dumps(exec_result, indent=4, ensure_ascii=False)
+                    except (TypeError, OverflowError):
+                        result = exec_result
+                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{result}\n```")
                 except discord.errors.HTTPException:
-                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*result too long to send in message, attaching file...*")
+                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*Result too long to send in message, attaching file 'result.txt'...*")
                     with open("result.txt", 'w') as file:
                         try:
                             json.dump(exec_result, file, indent=2, ensure_ascii=False)
