@@ -290,7 +290,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             new_status_msg = "przerwa do " + timetable[math.floor(next_period)].split("-")[0]
         else:
             # Currently lesson
-            msgs: dict[str, str] = {}
+            msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
             for role_code in list(role_codes.keys())[1:]:
                 lesson = get_lesson_info(current_period, lessons, [role_code])
                 if not lesson or lesson[-1] != current_period:
@@ -298,9 +298,15 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     continue
                 lesson_info, group_code = lesson[:2]
                 msgs[group_code] = lesson_info['name']
+                # Found lesson for 'grupa_0' (whole class)
+                if group_code == "grupa_0":
+                    log_message("Found lesson for entire class, skipping checking individual groups.")
+                    break
+            # set(msgs.values()) returns a list of unique lesson names
             lesson_text = "/".join(set(msgs.values()))
             group_name = list(msgs.keys())[0]
             if len(msgs) == 1 and group_name != "grupa_0":
+                # Specify the group the current lesson is for if only one group has it
                 lesson_text += " " + group_names[group_name]
             lesson_end_time = timetable[current_period].split('-')[1]
             new_status_msg = f"{lesson_text} do {lesson_end_time}"
