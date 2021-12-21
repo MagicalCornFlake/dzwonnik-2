@@ -216,7 +216,7 @@ def read_data_file(filename: str = "data.json") -> None:
                 "lucky_numbers": lucky_numbers_api.cached_data
             }
             json.dump(default_settings, file, indent=2)
-    with open(filename, 'r', encoding="utf-8") as file:
+    with open(filename, 'r') as file:
         data = json.load(file)
     # We have defined lesson_details above, but this replaces any values that are different than the default
     if "lesson_details" in data:
@@ -1146,7 +1146,7 @@ async def on_message(message: discord.Message) -> None:
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*(result too long to send in message, attaching file)*")
                     with open("result.txt", 'w') as file:
                         try:
-                            json.dump(exec_result, file, indent=2, encoding="utf-8")
+                            json.dump(exec_result, file, indent=2, ensure_ascii=False)
                         except TypeError:
                             file.write(str(exec_result))
                     await message.channel.send(file=discord.File("result.txt"))
