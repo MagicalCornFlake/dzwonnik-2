@@ -1144,7 +1144,7 @@ async def on_message(message: discord.Message) -> None:
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{exec_result}\n```")
                 except discord.errors.HTTPException:
                     await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*(result too long to send in message, attaching file)*")
-                    with open("result.txt", 'w') as file:
+                    with open("result.txt", 'w', encoding="utf-8") as file:
                         try:
                             json.dump(exec_result, file, indent=2)
                         except TypeError:
