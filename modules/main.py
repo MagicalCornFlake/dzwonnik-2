@@ -405,13 +405,12 @@ def get_lesson_name(lesson_code: str) -> str:
         "j.": "język ",
         "ang.": "angielski",
         " hiszp.": "hiszpański",
-        "zaj. z wych.": "zajęcia z wychowawcą",
-        "r_": "",
-        " DW": ""
+        "zaj. z wych.": "zajęcia z wychowawcą"
     }
+    lesson_name = lesson_code.rstrip(' DW')
     for abbreviation, full_word in mappings.items():
         lesson_name = lesson_name.replace(abbreviation, full_word)
-    return lesson_name + " rozszerzona" * lesson_code.startswith('r_')
+    return lesson_name[lesson_code.startswith('r_') * 2:] + " rozszerzona" * lesson_code.startswith('r_')
 
 
 def create_homework_event(message: discord.Message) -> tuple[bool, str]:
