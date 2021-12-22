@@ -269,7 +269,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 if lessons:
                     break
             if next_period == period:
-                new_status_msg = "rozpoczęcie lekcji o " + get_formatted_period_time(period).split('-')[0]
+                new_status_msg = "szkoła o " + get_formatted_period_time(period).split('-')[0]
             else:
                 new_status_msg = "przerwa do " + get_formatted_period_time(current_period).split('-')[0]
         else:
