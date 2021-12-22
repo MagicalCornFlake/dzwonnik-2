@@ -1,6 +1,5 @@
 """Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson substitution details."""
-import json
-import os
+from datetime import datetime
 import re
 
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
@@ -10,7 +9,10 @@ from ... import file_management
 
 
 def parse_html(html: str) -> dict:
-    return {}
+    return {
+        "date": datetime.strftime(datetime.now(), "%d.%m.%Y"),
+        "html": html
+    }
 
 
 def get_substitutions(force_update: bool = False) -> tuple[bool, dict]:

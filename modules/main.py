@@ -398,7 +398,7 @@ async def track_api_updates() -> None:
     except web_api.InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        log_message(f"Error! Received an invalid response from the web request (cache update). Exception trace:\n" +
+        log_message(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if old_cache != lucky_numbers_api.cached_data:
@@ -406,7 +406,19 @@ async def track_api_updates() -> None:
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             await target_channel.send(embed=get_lucky_numbers_embed()[1])
             save_data_file()
-    old_cache = substitutions_crawler.get_substitutions()
+    try:
+        old_cache = file_management.check_if_cache_exists("subs")
+        substitutions = substitutions_crawler.get_substitutions(True)
+    except web_api.InvalidResponseException as e:
+        # Ping @Konrad
+        await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
+        log_message(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n" +
+                    ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+    else:
+        if old_cache != substitutions:
+            log_message(f"New substitutions data!")
+            target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
+            # await target_channel.send(embed=get_substitutions_embed()[1])
 
 
 @track_api_updates.before_loop
@@ -914,7 +926,7 @@ def stop_market_tracking(message: discord.Message) -> tuple[bool, str]:
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."
 
 
-def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, discord.Embed or str]:
+def get_lucky_numbers_embed(_: discord.Message = None) -> tuple[bool, discord.Embed or str]:
     try:
         data = lucky_numbers_api.get_lucky_numbers()
     except Exception as e:
@@ -932,6 +944,21 @@ def get_lucky_numbers_embed(*_message: tuple[discord.Message]) -> tuple[bool, di
     embed.add_field(name="Wykluczone klasy", value=excluded_classes, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}numerki, aby pokazać tą wiadomość.")
     return True, embed
+
+
+def get_substitions_embed(message: discord.Message = None) -> tuple[bool, discord.Embed or str]:
+    try:
+        data = substitutions_crawler.get_substitutions(message is None)
+    except Exception as e:
+        log_message(f"Error! Received an invalid response from the web request. Exception trace:\n" +
+                    ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        return False, get_web_api_error_message(e)
+    msg = f"Zastępstwa na {data['date']}:"
+    embed = discord.Embed(title="Zastępstwa", description=msg)
+    embed.add_field(name="Surowe dane HTML", value=data["html"], inline=False)
+    embed.set_footer(text=f"Użyj komendy {prefix}zast, aby pokazać tą wiadomość.")
+    return True, embed
+
 
 
 # noinspection SpellCheckingInspection
@@ -988,7 +1015,9 @@ command_descriptions = {
 
     "numerki": "Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone.",
 
-    "num": "Alias komendy `{p}numerki`."
+    "num": "Alias komendy `{p}numerki`.",
+
+    "zast": "Podaje zastępstwa na dany dzień."
 }
 # noinspection SpellCheckingInspection
 command_methods = {
@@ -1004,7 +1033,8 @@ command_methods = {
     'sledz': start_market_tracking,
     'odsledz': stop_market_tracking,
     'numerki': get_lucky_numbers_embed,
-    'num': get_lucky_numbers_embed
+    'num': get_lucky_numbers_embed,
+    'zast': get_substitions_embed
 }
 
 # noinspection SpellCheckingInspection
