@@ -147,8 +147,8 @@ def get_lesson_plan(class_id: str or int, force_update = False) -> dict[str, lis
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     plan_id = get_plan_id(class_id)
-    update_cache_callback: function = lambda: parse_html(web_api.get_html(get_plan_link(plan_id), force_update))
-    return file_management.get_cache(f"plan_{plan_id}", update_cache_callback)
+    update_cache_callback: function = lambda force: parse_html(web_api.get_html(get_plan_link(plan_id), force))
+    return file_management.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
 
 if __name__ == "__main__":
     colours = vars(colour)

@@ -43,7 +43,7 @@ def get_cache(cache_name: str, force_update: bool, callback) -> dict:
     cache = check_if_cache_exists(cache_name)
     if not force_update and cache:
         return cache
-    json_data = callback()
+    json_data = callback(force_update)
     with open(f"cache/{cache_name}.json", 'w') as file:
         json.dump(json_data, file, indent=4, ensure_ascii=False)
     return json_data
