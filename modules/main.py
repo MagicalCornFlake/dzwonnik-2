@@ -667,6 +667,8 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
                     return True, current_day_index, period + 10 * is_during_lesson
+                else:
+                    log_message(f"... this is not before {hour:02}:{minute:02} (period {period}). Continuing search.")
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
         next_school_day = (current_day_index + 1) % Weekday.saturday
@@ -699,6 +701,8 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
                 log_message(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
+            else:
+                log_message(f"... lesson '{lesson['name']}' on period {period} is for group '{lesson['group']}', continuing search.")
     log_message(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
     return {}
 
@@ -762,11 +766,13 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
             if actual_period != lesson_period:
                 # Currently lesson
                 lesson_end_datetime = get_time(actual_period, current_time, True)
+                log_message("Lesson ending at:", lesson_end_datetime)
                 # Get the next lesson after the end of this one, recursive call
                 return process(lesson_end_datetime)
             # Currently break
             when = " "
             lesson_start_datetime = get_time(actual_period, current_time, False)
+            log_message("Lesson starting at:", lesson_start_datetime)
             mins = math.ceil((lesson_start_datetime - current_time).seconds / 60)
             countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')})"
         else:
@@ -798,17 +804,17 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
 
     if next_period_is_today:
-        break_start_time, break_start_datetime = get_time(lesson_period % 10, current_time, True)
+        break_start_datetime = get_time(lesson_period % 10, current_time, True)
         break_countdown = break_start_datetime - current_time
         mins = math.ceil(break_countdown.seconds / 60)
         minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')}"
-        msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
+        msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{get_formatted_period_time(lesson_period % 10).split('-')[1]}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         log_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
-            break_end_time, break_end_datetime = get_time(next_period, break_start_datetime, False)
+            break_end_datetime = get_time(next_period, break_start_datetime, False)
             break_length = break_end_datetime - break_start_datetime
-            msg += f"—{break_end_time}__ ({break_length.seconds // 60} min)."
+            msg += f"—{get_formatted_period_time(next_period).split('-')[0]}__ ({break_length.seconds // 60} min)."
         else:
             msg += "__ i jest to ostatnia przerwa."
     else:
