@@ -265,11 +265,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     next_period = lesson['period']
                     break
             # Get the period of the first lesson
-            for period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
+            for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
                 if lessons:
                     break
-            if next_period == period:
-                new_status_msg = "szkoła o " + get_formatted_period_time(period).split('-')[0]
+            if next_period == first_period:
+                # Currently before school
+                new_status_msg = "szkoła o " + get_formatted_period_time(first_period).split('-')[0]
             else:
                 new_status_msg = "przerwa do " + get_formatted_period_time(current_period).split('-')[0]
         else:
@@ -277,7 +278,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
             for role_code in list(role_codes.keys())[1:]:
                 lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
-                if not lesson or lesson["period"] != current_period:
+                if not lesson or lesson["period"] > current_period:
                     # No lesson for that group
                     continue
                 msgs[lesson['group']] = get_lesson_name(lesson['name'])
@@ -709,6 +710,8 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     log_message(f"Looking for lesson on day {weekday_index} with roles:", target_roles)
     for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]]):
+        if period < query_period:
+            continue
         for lesson in lessons:
             if lesson["group"] in target_roles or role_codes[lesson["group"]] in target_roles:
                 log_message(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
