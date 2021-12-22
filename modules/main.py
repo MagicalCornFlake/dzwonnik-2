@@ -254,22 +254,21 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     log_message(f"Updating bot status ...")
     next_period_is_today, next_period, next_lesson_weekday = get_next_period(query_time)
     if next_period_is_today:
-        current_period = next_period % 10
-
-        # Get the period of the first lesson
-        for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
-            if lessons:
-                log_message("Today's first lesson is on period", first_period)
-                break
-
         # Get the period of the next lesson
         for role_code in list(role_codes.keys())[1:]:
             lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
             if lesson:
-                current_period = lesson['period']
+                next_period = lesson['period']
                 log_message("The next lesson is on period", lesson['period'])
                 break
+        # Get the period of the first lesson
+        for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
+            if lessons:
+                log_message("The first lesson is on period", first_period)
+                break
 
+        current_period = next_period % 10
+        
         if next_period < 10:
             # Currently break time
 
@@ -277,7 +276,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 # Currently before school
                 new_status_msg = "szkoła o " + get_formatted_period_time(first_period).split('-')[0]
             else:
-                new_status_msg = "przerwa do " + get_formatted_period_time(current_period).split('-')[0]
+                new_status_msg = "przerwa do " + get_formatted_period_time(next_period).split('-')[0]
         else:
             # Currently lesson
             msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
