@@ -139,8 +139,9 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     return data
 
 
-def get_lesson_plan(class_id: str or int, force_update = False) -> dict[str, list[list[dict[str, str]]]]:
+def get_lesson_plan(class_id: str or int, force_update = False) -> tuple[dict, bool]:
     """Gets the lesson plan for a given class.
+    Returns the data itself and a tuple containing a boolean indicating if the cache needed to be updated.
 
     Arguments:
         class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
@@ -148,7 +149,9 @@ def get_lesson_plan(class_id: str or int, force_update = False) -> dict[str, lis
     """
     plan_id = get_plan_id(class_id)
     update_cache_callback: function = lambda force: parse_html(web_api.get_html(get_plan_link(plan_id), force))
-    return file_management.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
+    cache, cache_existed = file_management.get_cache("plan_" + plan_id, force_update, update_cache_callback)
+    return cache, not cache_existed
+
 
 if __name__ == "__main__":
     colours = vars(colour)

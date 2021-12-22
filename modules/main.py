@@ -155,7 +155,7 @@ homework_events = HomeworkEventContainer()
 tracked_market_items = []
 restart_on_exit = True
 current_period: int = 0
-lesson_plan: dict = plan_crawler.get_lesson_plan("2d", True)
+lesson_plan: dict = plan_crawler.get_lesson_plan("2d", True)[0]
 lesson_links: dict[str, str] = {}
 
 def populate_lesson_links():
@@ -409,15 +409,18 @@ async def track_api_updates() -> None:
             save_data_file()
     try:
         old_cache = file_management.check_if_cache_exists("subs")
-        substitutions = substitutions_crawler.get_substitutions(True)
+        substitutions, cache_updated = substitutions_crawler.get_substitutions(True)
     except web_api.InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         send_log(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
-        if old_cache != substitutions:
-            send_log(f"Substitution data updated! New data: {substitutions}\n\nOld data {old_cache}")
+        if cache_updated:
+            send_log("Substitution data updated! New data:")
+            send_log(substitutions)
+            send_log("Old data:")
+            send_log(old_cache)
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             # await target_channel.send(embed=get_substitutions_embed()[1])
 
@@ -641,7 +644,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                 except ValueError:
                     raise RuntimeError(f"invalid class name: {args[2]}")
                 else:
-                    class_lesson_plan = plan_crawler.get_lesson_plan(plan_id)
+                    class_lesson_plan = plan_crawler.get_lesson_plan(plan_id)[0]
         except RuntimeError as e:
             send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
@@ -949,7 +952,7 @@ def get_lucky_numbers_embed(_: discord.Message = None) -> tuple[bool, discord.Em
 
 def get_substitutions_embed(message: discord.Message = None) -> tuple[bool, discord.Embed or str]:
     try:
-        data = substitutions_crawler.get_substitutions(message is None)
+        data = substitutions_crawler.get_substitutions(message is None)[0]
     except Exception as e:
         send_log(f"Error! Received an invalid response from the web request. Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))

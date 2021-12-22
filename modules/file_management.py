@@ -45,10 +45,10 @@ def check_if_cache_exists(cache_name: str) -> dict:
         return json.load(file)
 
 
-def get_cache(cache_name: str, force_update: bool, callback_function) -> dict:
+def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[bool, dict]:
     """Attempts to get the cache if it exists and the 'force_update' argument is set to False.
     If the above criterion are not met, the callback function is called and its return value is saved as the new cache.
-    Returns the cached data.
+    Returns the cached data and a boolean indicating if it previously existed.
 
     Arguments:
         cache_name -- the filename of the cache without the .json extension.
@@ -56,12 +56,12 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> dict:
         callback_function -- a lambda function that takes 'force_update' as an argument and returns the new cache.
     """
     cache = check_if_cache_exists(cache_name)
-    if not force_update and cache:
-        return cache
-    json_data = callback_function(force_update)
-    with open(f"cache/{cache_name}.json", 'w') as file:
-        json.dump(json_data, file, indent=4, ensure_ascii=False)
-    return json_data
+    cache_existed = bool(cache)
+    if force_update or not cache_existed:
+        cache.update(callback_function(force_update))
+        with open(f"cache/{cache_name}.json", 'w') as file:
+            json.dump(cache, file, indent=4, ensure_ascii=False)
+    return cache, cache_existed
 
 
 def clear_cache(cache_path: str = "cache") -> bool:
