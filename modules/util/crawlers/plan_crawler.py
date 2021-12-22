@@ -72,12 +72,12 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             return [times[:2], times[2:]]
         else:
             file_manager.log("Element text:", elem.text)
-            if elem.text == "&nbsp;":
+            if not elem.text or elem.text == "&nbsp;":
                 return []
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
             matches = lesson_pattern.findall(elem_str)
-            file_manager("Regex matches:", matches)
+            file_manager.log("Regex matches:", matches)
             for match in matches:
                 lesson_name, group, groups, teacher, code, room_id = match
                 if group: 
