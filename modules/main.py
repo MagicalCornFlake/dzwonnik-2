@@ -7,6 +7,7 @@ import importlib
 import json
 import math
 import os
+from re import sub
 import traceback
 
 # Third-party imports
@@ -416,7 +417,7 @@ async def track_api_updates() -> None:
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if old_cache != substitutions:
-            log_message(f"New substitutions data!")
+            log_message(f"New substitutions data:", substitutions.keys())
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             # await target_channel.send(embed=get_substitutions_embed()[1])
 
@@ -946,7 +947,7 @@ def get_lucky_numbers_embed(_: discord.Message = None) -> tuple[bool, discord.Em
     return True, embed
 
 
-def get_substitions_embed(message: discord.Message = None) -> tuple[bool, discord.Embed or str]:
+def get_substitutions_embed(message: discord.Message = None) -> tuple[bool, discord.Embed or str]:
     try:
         data = substitutions_crawler.get_substitutions(message is None)
     except Exception as e:
@@ -1034,7 +1035,7 @@ command_methods = {
     'odsledz': stop_market_tracking,
     'numerki': get_lucky_numbers_embed,
     'num': get_lucky_numbers_embed,
-    'zast': get_substitions_embed
+    'zast': get_substitutions_embed
 }
 
 # noinspection SpellCheckingInspection

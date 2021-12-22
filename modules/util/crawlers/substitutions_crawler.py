@@ -15,7 +15,7 @@ def parse_html(html: str) -> dict:
     }
 
 
-def get_substitutions(force_update: bool = False) -> tuple[bool, dict]:
+def get_substitutions(force_update: bool = False) -> dict:
     """Gets the current lesson substitutions.
 
     Arguments:
