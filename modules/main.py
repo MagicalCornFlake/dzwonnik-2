@@ -265,7 +265,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     next_period = lesson['period']
                     break
             # Get the period of the first lesson
-            for period, lessons in lesson_plan[weekday_names[query_time.weekday()]]:
+            for period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
                 if lessons:
                     break
             prefix = "rozpoczęcie lekcji o " if next_period == period else "przerwa do "
