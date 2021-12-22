@@ -417,7 +417,7 @@ async def track_api_updates() -> None:
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if old_cache != substitutions:
-            send_log(f"New substitutions data:", substitutions.keys())
+            send_log(f"Substitution data updated! New data: {list(substitutions.keys())}\nOld data {old_cache}")
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             # await target_channel.send(embed=get_substitutions_embed()[1])
 
@@ -1060,15 +1060,15 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
         await reply_msg.edit(embed=get_homework_events(message, True)[1])
 
 
-async def try_send_message(message: discord.Message, reply: bool, send_args: str, on_fail_data, is_embed: bool = False, on_fail_msg: str = None) -> discord.message:
+async def try_send_message(message: discord.Message, reply: bool, send_args: str, on_fail_data, on_fail_msg: str = None) -> discord.message:
     send_method = message.reply if reply else message.channel.send
     try:
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException:
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
         with open("result.txt", 'w') as file:
-            if is_embed:
-                embed_attributes = vars(on_fail_data)
+            if type(on_fail_data) is discord.Embed:
+                embed_attributes = on_fail_data.to_dict()
                 attributes_to_dump = ["title", "description", "fields", "footer"]
                 on_fail_data = { attribute: embed_attributes[attribute] for attribute in attributes_to_dump }
             try:
@@ -1161,7 +1161,7 @@ async def on_message(message: discord.Message) -> None:
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
-    reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply, is_embed=reply_is_embed)
+    reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
     if msg_first_word == "zadania":
         await wait_for_zadania_reaction(message, reply_msg)
 
