@@ -22,7 +22,7 @@ def parse_html(html: str) -> dict:
     root = lxml.html.fromstring(html)
     content = root.get_element_by_id("content")
     sidebar = root.get_element_by_id("sidebar")
-    return { "content": content.attrib, "sidebar": sidebar.attrib }
+    return { "content": dict(content.attrib), "sidebar": dict(sidebar.attrib) }
 
 
 def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
