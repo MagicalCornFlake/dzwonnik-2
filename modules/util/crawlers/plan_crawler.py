@@ -107,10 +107,11 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             column = lxml.html.tostring(table_column).decode('UTF-8')
             if table_column.tag == "th":
                 headers.append(table_column.text)
-            else:
+            elif table_column.tag == "td":
                 weekday = headers[i]
                 if weekday not in data:
                     data[weekday] = []
+                file_management.log("Table data:", column.tag, column.attrib)
                 data[weekday].append(extract_regex(column))
     return data
 
