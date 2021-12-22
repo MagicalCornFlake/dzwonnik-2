@@ -13,7 +13,6 @@ import traceback
 # Third-party imports
 import discord
 import discord.ext.tasks
-from discord.flags import fill_with_flags
 
 # Local application imports
 from modules import file_manager
@@ -163,6 +162,7 @@ lesson_links: dict[str, str] = {}
 
 def initialise_variables():
     lesson_plan = plan_crawler.get_lesson_plan(force_update=True)[0]
+    file_manager.log("Lesson plan:", lesson_plan)
     lesson_names: set[str] = {}
     for weekday in lesson_plan[2:]:
         for period in lesson_plan[weekday]:

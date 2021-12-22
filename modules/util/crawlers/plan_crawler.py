@@ -71,11 +71,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             times = [int(time) for time in duration_pattern.search(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
-            if not elem.text or elem.text == "&nbsp;":
-                return []
-            file_manager.log("Element:", elem)
-            file_manager.log("Element text:", elem.text)
-            file_manager.log("Element attributes:", elem.attrib)
+            file_manager.log(f"Element:\n  {elem}\n  text: '{elem.text}'\n  attributes: {elem.attrib}")
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
             for i, child in enumerate(elem, start=1):
