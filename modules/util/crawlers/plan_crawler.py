@@ -9,10 +9,9 @@ from .. import web_api
 from ... import file_management
 from ... constants import Colour
 
-period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
-duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
-pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
-                     r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
+duration_pattern = re.compile(r"(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)")
+lesson_pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
+                            r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
 
 # Tags that should not increment or decrement a line's tag depth
 ignored_tags = ["hr", "br"]
@@ -63,21 +62,21 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     def extract_regex(elem: lxml.html.Element) -> any:
         """Extracts the data from a given table row."""
 
-        elem_str = lxml.html.tostring(elem).decode('UTF-8')
         if elem.attrib["class"] == "nr":
             # Row containing the lesson period number
-            return int(period_pattern.match(elem_str).groups()[-1])
+            return int(elem.text)
         elif elem.attrib["class"] == "g":
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            times = [int(time) for time in duration_pattern.match(elem_str).groups()]
+            times = [int(time) for time in duration_pattern.match(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
+            elem_str = lxml.html.tostring(elem).decode('UTF-8')
             # Row containing lesson information for a given period
             file_management.log(elem.text)
             
             tmp: list[dict[str, str]] = []
-            for match in pattern.findall(elem_str):
+            for match in lesson_pattern.findall(elem_str):
                 lesson_name, group, groups, teacher, code, room_id = match
                 if group: 
                     if int(groups) == 5:
