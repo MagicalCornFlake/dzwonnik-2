@@ -110,6 +110,12 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 if weekday not in data:
                     data[weekday] = []
                 data[weekday].append(extract_regex(column))
+    for key in data:
+        file_management.log(f"'{key}: {len(data[key])}")
+        if key in ["Nr", "Godz"]:
+            continue
+        for period in data[key]:
+            file_management.log(f"{data[key]}: list with length {len(period)}")
     return data
 
 
