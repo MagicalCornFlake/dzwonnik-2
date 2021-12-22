@@ -664,7 +664,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
         for period, times in enumerate(lesson_plan["Godz"]):
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
-                if given_time.hour < hour and given_time.minute < minute and lesson_plan[weekday_names[current_day_index]][period]:
+                if given_time.hour < hour and given_time.minute < minute:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
                     return True, current_day_index, period + 10 * is_during_lesson
         # Could not find any such lesson.
@@ -697,7 +697,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
         for lesson in lessons:
             group_code = lesson["group"]
             if group_code in target_roles or role_codes[group_code] in target_roles:
-                log_message(f"Found lesson '{lesson['name']}' on period {query_period}.")
+                log_message(f"Found lesson '{lesson['name']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
     log_message(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
@@ -773,7 +773,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         else:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
-        next_period_time = get_formatted_period_time(actual_period).split("-")[0]
+        next_period_time = get_formatted_period_time(lesson["period"]).split("-")[0]
         group = group_names[lesson['group']] + " " * (lesson['group'] != "grupa_0")
         return True, f"{Emoji.info} Następna lekcja {group}to **{get_lesson_name(lesson['name'])}**" \
                      f"{when} o godzinie __{next_period_time}__{countdown}.", get_lesson_link(lesson['name'])
