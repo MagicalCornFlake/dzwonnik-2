@@ -34,7 +34,7 @@ async def on_ready() -> None:
     global my_server
 
     guilds = {guild.id: guild.name for guild in client.guilds}
-    log_message(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
+    send_log(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
     my_server = client.get_guild(my_server_id)
 
     # Sets status message on bot start
@@ -51,15 +51,15 @@ async def on_ready() -> None:
         try:
             last_test_message = await channel.fetch_message(channel.last_message_id)
         except discord.errors.NotFound:
-            log_message(f"Could not find last message in channel {channel.name}. It was probably deleted.")
+            send_log(f"Could not find last message in channel {channel.name}. It was probably deleted.")
         else:
             if last_test_message is None:
-                log_message(f"Last message in channel {channel.name} is None.")
+                send_log(f"Last message in channel {channel.name} is None.")
             elif last_test_message.author == client.user:
                 if last_test_message.content == "Restarting bot...":
                     await last_test_message.edit(content="Restarted bot!")
             else:
-                log_message(f"Last message in channel {channel.name} was not sent by me.")
+                send_log(f"Last message in channel {channel.name} was not sent by me.")
 
 
 class HomeworkEvent:
@@ -122,7 +122,7 @@ class HomeworkEventContainer(list):
     def remove_disjunction(self, reference_container):
         for event in self:
             if event.serialised not in reference_container.serialised:
-                log_message(f"Removing obsolete event '{event.title}' from container")
+                send_log(f"Removing obsolete event '{event.title}' from container")
                 self.remove(event)
 
 
@@ -223,7 +223,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         should_log -- whether or not the save should be logged in the Discord Log and in the console.
     """
     if should_log:
-        log_message("Saving data file", filename)
+        send_log("Saving data file", filename)
     # Creates containers with the data to be saved in .json format
     serialised_homework_events = {event.id_string: event.serialised for event in homework_events}
     serialised_tracked_market_items = [item.serialised for item in tracked_market_items]
@@ -239,7 +239,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     with open(filename, 'w') as file:
         json.dump(data_to_be_saved, file, indent=2)
     if should_log:
-        log_message(f"Successfully saved data file '{filename}'.")
+        send_log(f"Successfully saved data file '{filename}'.")
 
 
 def get_new_status_msg(query_time: datetime.datetime = None) -> str:
@@ -252,18 +252,18 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     if query_time is None:
         # Default time to check is current time
         query_time = datetime.datetime.now()
-    log_message(f"Updating bot status ...")
+    send_log(f"Updating bot status ...")
     next_period_is_today, next_period, next_lesson_weekday = get_next_period(query_time)
     if next_period_is_today:
         # Get the period of the next lesson
         lesson = get_lesson_by_roles(next_period % 10, next_lesson_weekday, list(role_codes.keys())[1:])
         if lesson:
             current_period = lesson['period']
-            log_message("The next lesson is on period", lesson['period'])
+            send_log("The next lesson is on period", lesson['period'])
         # Get the period of the first lesson
         for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
             if lessons:
-                log_message("The first lesson is on period", first_period)
+                send_log("The first lesson is on period", first_period)
                 break
 
         if next_period < 10:
@@ -281,13 +281,13 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
                 if not lesson or lesson["period"] > current_period:
                     # No lesson for that group
-                    log_message("Skipping lesson:", lesson, "on period", current_period)
+                    send_log("Skipping lesson:", lesson, "on period", current_period)
                     continue
-                log_message("Using lesson:", lesson)
+                send_log("Using lesson:", lesson)
                 msgs[lesson['group']] = get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
                 if lesson['group'] == "grupa_0":
-                    log_message("Found lesson for entire class, skipping checking individual groups.")
+                    send_log("Found lesson for entire class, skipping checking individual groups.")
                     break
             # set(msgs.values()) returns a list of unique lesson names
             lesson_text = "/".join(set(msgs.values()))
@@ -299,7 +299,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         # After the last lesson for the given day
         current_period = -1
         new_status_msg = "koniec lekcji!" if query_time.weekday() < Weekday.friday else "weekend!"
-    log_message(f"... new status message is '{new_status_msg}'.")
+    send_log(f"... new status message is '{new_status_msg}'.")
     return new_status_msg
 
 
@@ -399,11 +399,11 @@ async def track_api_updates() -> None:
     except web_api.InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        log_message(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n" +
+        send_log(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if old_cache != lucky_numbers_api.cached_data:
-            log_message(f"New lucky numbers data!")
+            send_log(f"New lucky numbers data!")
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             await target_channel.send(embed=get_lucky_numbers_embed()[1])
             save_data_file()
@@ -413,11 +413,11 @@ async def track_api_updates() -> None:
     except web_api.InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        log_message(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n" +
+        send_log(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if old_cache != substitutions:
-            log_message(f"New substitutions data:", substitutions.keys())
+            send_log(f"New substitutions data:", substitutions.keys())
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             # await target_channel.send(embed=get_substitutions_embed()[1])
 
@@ -643,7 +643,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                 else:
                     class_lesson_plan = plan_crawler.get_lesson_plan(plan_id)
         except RuntimeError as e:
-            log_message(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
+            send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste. Drugim opcjonalnym argumentem jest nazwa klasy."
 
@@ -687,7 +687,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, int, int]:
     Returns a tuple consisting of a boolean indicating if that day is today, the period number, and the day of the week.
     If the current time is during a lesson, the period number will be incremented by 10.
     """
-    log_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
+    send_log(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
 
     if current_day_index < Weekday.saturday:
@@ -695,7 +695,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, int, int]:
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
-                    log_message(f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
+                    send_log(f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
                     return True, period + 10 * is_during_lesson, current_day_index
                 # else:
                 #     log_message(f"... this is not before {hour:02}:{minute:02} (period {period}). Continuing search.")
@@ -706,7 +706,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, int, int]:
         next_school_day = Weekday.monday
 
     # If it's currently weekend or after the last lesson for the day
-    log_message(f"... there are no more lessons today. Next school day: {next_school_day}")
+    send_log(f"... there are no more lessons today. Next school day: {next_school_day}")
     for first_period, lessons in enumerate(lesson_plan[weekday_names[next_school_day]]):
         # Stop incrementing 'first_period' when the 'lessons' object is a non-empty list
         if lessons:
@@ -725,18 +725,18 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     weekday_name = weekday_names[weekday_index]
-    log_message(f"Looking for lesson of period {query_period} on day {weekday_name} with roles: {target_roles})")
+    send_log(f"Looking for lesson of period {query_period} on day {weekday_name} with roles: {target_roles})")
     for period, lessons in enumerate(lesson_plan[weekday_name]):
         if period < query_period:
             continue
         for lesson in lessons:
             if lesson["group"] in target_roles or role_codes[lesson["group"]] in target_roles:
-                log_message(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
+                send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
             else:
-                log_message(f"... lesson '{lesson['name']}' on period {period} is for group '{lesson['group']}', continuing search.")
-    log_message(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
+                send_log(f"... lesson '{lesson['name']}' on period {period} is for group '{lesson['group']}', continuing search.")
+    send_log(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
     return {}
 
 
@@ -794,18 +794,18 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         lesson = get_lesson_by_roles(lesson_period if lesson_period < 10 else lesson_period - 9, weekday_index, message.author.roles)
         if not lesson:
             return False, f"{Emoji.info} Nie ma żadnych zajęć dla Twojej grupy po godz. {time:%H:%M}.", ""
-        log_message("Received lesson:", lesson)
+        send_log("Received lesson:", lesson)
         if next_lesson_is_today:
             if lesson['period'] > 10:
                 # Currently lesson
                 lesson_end_datetime = get_time(lesson['period'] - 10, current_time, True)
-                log_message("Lesson ending at:", lesson_end_datetime)
+                send_log("Lesson ending at:", lesson_end_datetime)
                 # Get the next lesson after the end of this one, recursive call
                 return process(lesson_end_datetime)
             # Currently break
             when = " "
             lesson_start_datetime = get_time(lesson['period'], current_time, False)
-            log_message("Lesson starting at:", lesson_start_datetime)
+            send_log("Lesson starting at:", lesson_start_datetime)
             mins = math.ceil((lesson_start_datetime - current_time).seconds / 60)
             countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')})"
         else:
@@ -846,7 +846,7 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
         minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')}"
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{get_formatted_period_time(lesson['period']).split('-')[1]}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
-        log_message("More lessons today:", more_lessons_today)
+        send_log("More lessons today:", more_lessons_today)
         if more_lessons_today:
             break_end_datetime = get_time(next_period, break_start_datetime, False)
             break_length = break_end_datetime - break_start_datetime
@@ -931,7 +931,7 @@ def get_lucky_numbers_embed(_: discord.Message = None) -> tuple[bool, discord.Em
     try:
         data = lucky_numbers_api.get_lucky_numbers()
     except Exception as e:
-        log_message(f"Error! Received an invalid response from the web request. Exception trace:\n" +
+        send_log(f"Error! Received an invalid response from the web request. Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         return False, get_web_api_error_message(e)
     msg = f"Szczęśliwe numerki na {data['date']}:"
@@ -951,7 +951,7 @@ def get_substitutions_embed(message: discord.Message = None) -> tuple[bool, disc
     try:
         data = substitutions_crawler.get_substitutions(message is None)
     except Exception as e:
-        log_message(f"Error! Received an invalid response from the web request. Exception trace:\n" +
+        send_log(f"Error! Received an invalid response from the web request. Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         return False, get_web_api_error_message(e)
     msg = f"Zastępstwa na {data['date']}:"
@@ -1110,7 +1110,7 @@ async def on_message(message: discord.Message) -> None:
                 await message.channel.send("Type an expression or command to execute.")
                 return
             expression = message.content[len(prefix + "exec "):]
-            log_message("Executing code:", expression)
+            send_log("Executing code:", expression)
             try:
                 if "return " in expression:
                     exec(expression.replace("return ", "locals()['temp'] = "))
@@ -1141,7 +1141,7 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            file_management.write_log(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
+            file_management.log(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()
@@ -1152,12 +1152,12 @@ async def on_message(message: discord.Message) -> None:
         return
     # await message.delete()
 
-    log_message(f"Received command: '{message.content}'", "from user:", message.author)
+    send_log(f"Received command: '{message.content}'", "from user:", message.author)
     command_method_to_call_when_executed = command_methods[msg_first_word]
     try:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:
-        log_message(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        send_log(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
@@ -1168,19 +1168,16 @@ async def on_message(message: discord.Message) -> None:
 
 def log(*message) -> None:
     """Shorthand for sending a message to the log channel and program output file regardless of log settings."""
-    log_message(*message, force=True)
+    send_log(*message, force=True)
 
 
-def log_message(*raw_message, force=False) -> None:
+def send_log(*raw_message, force=False) -> None:
     """Determine if the message should actually be logged, and if so, generate the string that should be sent."""
     if not (enable_log_messages or force):
         return
-    timestamp = f"{datetime.datetime.now():%Y-%m-%d @ %H:%M:%S}: "
-    # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning 
-    message = timestamp + ' '.join(map(str, raw_message)).replace("\n", "\n" + " " * len(timestamp))
-    file_management.write_log(message)
+    
     log_loop = asyncio.get_event_loop()
-    log_loop.create_task(send_log_message(message))
+    log_loop.create_task(send_log_message(file_management.log(*raw_message)))
 
 
 async def send_log_message(message) -> None:
@@ -1208,8 +1205,8 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            file_management.write_log("\n    --- CRITICAL ERROR! ---")
-            file_management.write_log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
+            file_management.log("\n    --- CRITICAL ERROR! ---")
+            file_management.log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
             return False
@@ -1223,19 +1220,19 @@ def start_bot() -> bool:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (eg. Ctrl+F2 in PyCharm).
-            file_management.write_log("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
+            file_management.log("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
             # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
-            file_management.write_log("\n    --- Bot execution terminated successfully. ---")
+            file_management.log("\n    --- Bot execution terminated successfully. ---")
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() method returns any value.
             # Do not send a debug message since the bot is already offline.
             save_data_file(should_log=False)
-            file_management.write_log("Successfully saved data file 'data.json'. Program exiting.")
+            file_management.log("Successfully saved data file 'data.json'. Program exiting.")
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
@@ -1243,7 +1240,7 @@ def start_bot() -> bool:
 
 
 if __name__ == "__main__":
-    file_management.write_log("Started bot from main file! Assuming this is debug behaviour.\n")
+    file_management.log("Started bot from main file! Assuming this is debug behaviour.\n")
     use_bot_testing = True
     enable_log_messages = True
     start_bot()
