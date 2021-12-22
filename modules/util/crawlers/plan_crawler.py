@@ -111,7 +111,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 weekday = headers[i]
                 if weekday not in data:
                     data[weekday] = []
-                file_management.log("Table data:", column.tag, column.attrib)
+                file_management.log("Table data:", table_column.tag, table_column.attrib)
                 data[weekday].append(extract_regex(column))
     return data
 
