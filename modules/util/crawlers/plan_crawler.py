@@ -111,11 +111,11 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                     data[weekday] = []
                 data[weekday].append(extract_regex(column))
     for key in data:
-        file_management.log(f"{key}: {len(data[key])}")
+        _log(f"{key}: {len(data[key])}")
         if key in ["Nr", "Godz"]:
             continue
         for period, lessons in enumerate(data[key]):
-            file_management.log(f"    period {period}: {len(lessons)} lessons")
+            _log(f"    period {period}: {len(lessons)} lesson(s)")
     return data
 
 
@@ -129,20 +129,29 @@ def get_lesson_plan(class_id = "2d", force_update = False) -> tuple[dict, bool]:
     """
     plan_id = get_plan_id(class_id)
     update_cache_callback: function = lambda force: parse_html(web_api.get_html(get_plan_link(plan_id), force))
-    file_management.log(f"Getting lesson plan with id {plan_id} for class {class_id} ({force_update = }) ...")
-    return file_management.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
+    _log(f"Getting lesson plan with id {plan_id} for class {class_id} ({force_update = }) ...")
+    # return file_management.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
+    return update_cache_callback(force_update), False
+
+
+def _log(*args):
+    if __name__ == "__main__":
+        print(*args)
+    else:
+        file_management.log(*args)
 
 
 if __name__ == "__main__":
     colours = vars(Colour)
     for col in colours:
         if not col.startswith('_') and col is not None:
-            print(f"Colour {colours[col]}{col}{Colour.ENDC}")
-    print()
+            _log(f"Colour {colours[col]}{col}{Colour.ENDC}")
+    _log()
     input_msg = f"{Colour.OKBLUE}Enter {Colour.OKGREEN}{Colour.UNDERLINE}class name{Colour.ENDC}{Colour.OKBLUE}...\n{Colour.WARNING}> "
     try:
         while True:
             plan = json.dumps(get_lesson_plan(input(input_msg), force_update=True)[0], indent=4, ensure_ascii=False)
-            print(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
+            print(Colour.ENDC)
+            # _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:
-        print(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")
+        _log(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")

@@ -18,6 +18,7 @@ def log(*raw_message: str) -> str:
     with open("bot.log", 'a') as file:
 
         file.write(message + "\n")
+    print(message)
     return message
 
 
