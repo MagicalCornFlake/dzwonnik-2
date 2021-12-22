@@ -78,28 +78,30 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             file_manager.log("Element attributes:", elem.attrib)
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
-            matches = lesson_pattern.findall(elem_str)
-            file_manager.log("Regex matches:", matches)
-            for match in matches:
-                lesson_name, group, groups, teacher, code, room_id = match
-                if group: 
-                    if int(groups) == 5:
-                        group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
-                else:
-                    # If the group is not specified but the room code is, use that instead
-                    # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
-                    # Finally, if none of the above, set the group to 'grupa_0' (whole class)
-                    group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
-                name = lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace('r_', 'r-')
-                tmp.append({
-                    # Replace extended language lessons with the regular variant since there is no practical distinction
-                    "name": name.replace(' ', '-'),
-                    "group": "grupa_" + group,
-                    "room_id": room_id
-                })
-                if teacher:
-                    # Add the teacher to the returned lesson info if they are specified in the given data
-                    tmp[-1]["teacher"] = teacher
+            for i, child in enumerate(elem, start=1):
+                file_manager.log(f"    child {i}: {child.text}")
+            # matches = lesson_pattern.findall(elem_str)
+            # file_manager.log("Regex matches:", matches)
+            # for match in matches:
+            #     lesson_name, group, groups, teacher, code, room_id = match
+            #     if group: 
+            #         if int(groups) == 5:
+            #             group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
+            #     else:
+            #         # If the group is not specified but the room code is, use that instead
+            #         # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
+            #         # Finally, if none of the above, set the group to 'grupa_0' (whole class)
+            #         group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
+            #     name = lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace('r_', 'r-')
+            #     tmp.append({
+            #         # Replace extended language lessons with the regular variant since there is no practical distinction
+            #         "name": name.replace(' ', '-'),
+            #         "group": "grupa_" + group,
+            #         "room_id": room_id
+            #     })
+            #     if teacher:
+            #         # Add the teacher to the returned lesson info if they are specified in the given data
+            #         tmp[-1]["teacher"] = teacher
             return tmp
 
     data: dict[str, list[list[dict[str, str]]]] = {}
