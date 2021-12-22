@@ -664,9 +664,12 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
         for period, times in enumerate(lesson_plan["Godz"]):
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
-                if given_time.hour < hour and given_time.minute < minute:
+                if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
                     return True, current_day_index, period + 10 * is_during_lesson
+                else:
+                    # log_message(f"... this is not before {hour:02}:{minute:02}. Continuing search.")
+                    continue
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
         next_school_day = (current_day_index + 1) % Weekday.saturday
