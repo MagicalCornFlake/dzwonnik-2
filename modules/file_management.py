@@ -56,12 +56,13 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
         callback_function -- a lambda function that takes 'force_update' as an argument and returns the new cache.
     """
     cache = check_if_cache_exists(cache_name)
-    cache_existed = bool(cache)
-    if force_update or not cache_existed:
+    cache_exists = bool(cache)
+    if force_update or not cache_exists:
         cache.update(callback_function(force_update))
+        log("Found cache:", cache)
         with open(f"cache/{cache_name}.json", 'w') as file:
             json.dump(cache, file, indent=4, ensure_ascii=False)
-    return cache, cache_existed
+    return cache, cache_exists
 
 
 def clear_cache(cache_path: str = "cache") -> bool:

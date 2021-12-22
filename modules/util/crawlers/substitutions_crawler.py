@@ -27,14 +27,13 @@ def parse_html(html: str) -> dict:
 
 def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
     """Gets the current lesson substitutions.
-    Returns the data itself and a tuple containing a boolean indicating if the cache needed to be updated.
+    Returns the data itself and a tuple containing a boolean indicating if the cache already existed.
 
     Arguments:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     update_cache_callback: function = lambda force: parse_html(web_api.get_html("http://www.lo1.gliwice.pl/zastepstwa-2/", force))
-    cache, cache_existed = file_management.get_cache("subs", force_update, update_cache_callback)
-    return cache, not cache_existed
+    return file_management.get_cache("subs", force_update, update_cache_callback)
 
 
 if __name__ == "__main__":

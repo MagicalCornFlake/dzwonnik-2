@@ -409,14 +409,14 @@ async def track_api_updates() -> None:
             save_data_file()
     try:
         old_cache = file_management.check_if_cache_exists("subs")
-        substitutions, cache_updated = substitutions_crawler.get_substitutions(True)
+        substitutions, cache_existed = substitutions_crawler.get_substitutions(True)
     except web_api.InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         send_log(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
-        if cache_updated:
+        if not cache_existed:
             send_log("Substitution data updated! New data:")
             send_log(substitutions)
             send_log("Old data:")
