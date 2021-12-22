@@ -268,8 +268,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             for period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
                 if lessons:
                     break
-            prefix = "rozpoczęcie lekcji o " if next_period == period else "przerwa do "
-            new_status_msg = prefix + get_formatted_period_time(current_period).split('-')[0]
+            if next_period == period:
+                new_status_msg = "rozpoczęcie lekcji o " + get_formatted_period_time(period).split('-')[0]
+            else:
+                new_status_msg = "przerwa do " + get_formatted_period_time(current_period).split('-')[0]
         else:
             # Currently lesson
             msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
