@@ -162,9 +162,8 @@ lesson_links: dict[str, str] = {}
 
 def initialise_variables():
     lesson_plan = plan_crawler.get_lesson_plan(force_update=True)[0]
-    file_manager.log("Lesson plan:", lesson_plan)
     lesson_names: set[str] = {}
-    for weekday in lesson_plan[2:]:
+    for weekday in lesson_plan.keys()[2:]:
         for period in lesson_plan[weekday]:
             for lesson in period:
                 lesson_names.add(lesson["name"])
