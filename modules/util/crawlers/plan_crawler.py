@@ -149,7 +149,7 @@ def get_lesson_plan(class_id: str or int, force_update = False) -> tuple[dict, b
     """
     plan_id = get_plan_id(class_id)
     update_cache_callback: function = lambda force: parse_html(web_api.get_html(get_plan_link(plan_id), force))
-    cache, cache_existed = file_management.get_cache("plan_" + plan_id, force_update, update_cache_callback)
+    cache, cache_existed = file_management.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
     return cache, not cache_existed
 
 
