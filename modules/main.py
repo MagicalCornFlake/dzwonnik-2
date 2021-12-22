@@ -695,7 +695,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     log_message(f"Looking for lesson on day {weekday_index} with roles:", target_roles)
-    for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]][query_period]):
+    for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]]):
         for lesson in lessons:
             if lesson["group"] in target_roles or role_codes[lesson["group"]] in target_roles:
                 log_message(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
@@ -761,7 +761,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         actual_period = lesson_period % 10
         lesson = get_lesson_by_roles(actual_period, weekday_index, message.author.roles)
         if not lesson:
-            return False, f":x: Nie ma żadnych zajęć dla Twojej grupy na {actual_period}-ej lekcji.", ""
+            return False, f":x: Nie ma żadnych zajęć dla Twojej grupy po {actual_period}-ej lekcji.", ""
         if next_lesson_is_today:
             if actual_period != lesson_period:
                 # Currently lesson
