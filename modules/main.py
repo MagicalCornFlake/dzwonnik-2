@@ -776,9 +776,10 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
 
     def process(time: datetime.datetime) -> tuple[bool, str, str]:
         next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
-        lesson = get_lesson_by_roles(lesson_period % 10, weekday_index, message.author.roles)
+        lesson = get_lesson_by_roles(lesson_period if lesson_period < 10 else lesson_period - 9, weekday_index, message.author.roles)
         if not lesson:
             return False, f":x: Nie ma żadnych zajęć dla Twojej grupy po godz. {time:%H:%M}.", ""
+        log_message("Received lesson:", lesson)
         if next_lesson_is_today:
             if lesson['period'] > 10:
                 # Currently lesson
