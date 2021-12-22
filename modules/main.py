@@ -1060,13 +1060,17 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
         await reply_msg.edit(embed=get_homework_events(message, True)[1])
 
 
-async def try_send_message(message: discord.Message, reply: bool, send_args: str, on_fail_data, on_fail_msg: str = None) -> discord.message:
+async def try_send_message(message: discord.Message, reply: bool, send_args: str, on_fail_data, is_embed: bool = False, on_fail_msg: str = None) -> discord.message:
     send_method = message.reply if reply else message.channel.send
     try:
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException:
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
         with open("result.txt", 'w') as file:
+            if is_embed:
+                embed_attributes = vars(on_fail_data)
+                attributes_to_dump = ["title", "description", "fields", "footer"]
+                on_fail_data = { attribute: embed_attributes[attribute] for attribute in attributes_to_dump }
             try:
                 json.dump(on_fail_data, file, indent=2, ensure_ascii=False)
             except TypeError:
@@ -1130,7 +1134,7 @@ async def on_message(message: discord.Message) -> None:
                         pass
                 too_long_msg = f"Code executed:\n```py\n>>> {expr}```*Result too long to send in message, attaching file 'result.txt'...*"
                 success_reply = f"Code executed:\n```py\n>>> {expr}\n{result}\n```"
-                await try_send_message(message, False, {"content": success_reply }, exec_result, too_long_msg)
+                await try_send_message(message, False, {"content": success_reply }, exec_result, on_fail_msg=too_long_msg)
             return
 
         if msg_first_word == admin_commands[1]:
@@ -1157,7 +1161,7 @@ async def on_message(message: discord.Message) -> None:
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
-    reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
+    reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply, is_embed=reply_is_embed)
     if msg_first_word == "zadania":
         await wait_for_zadania_reaction(message, reply_msg)
 
