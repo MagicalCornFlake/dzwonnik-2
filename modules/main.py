@@ -570,7 +570,7 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
         lesson_name = get_lesson_name(args[1])
         link = get_lesson_link(args[1])
         if len(args) == 2:
-            link_desc = f"to <https://meet.google.com/{link}?authuser=0>" if link else "nie jest ustawiony."
+            link_desc = f"to <https://meet.google.com/{link}?authuser=0>" if link else "nie jest ustawiony"
             return False, f"{Emoji.info} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
         else:
             if not message.channel.permissions_for(message.author).administrator:
@@ -1071,8 +1071,8 @@ async def try_send_message(message: discord.Message, reply: bool, send_args: str
         with open("result.txt", 'w') as file:
             if type(on_fail_data) is discord.Embed:
                 embed_attributes = on_fail_data.to_dict()
-                attributes_to_dump = ["title", "description", "fields", "footer"]
-                on_fail_data = { attribute: embed_attributes[attribute] for attribute in attributes_to_dump }
+                # attributes_to_dump = ["title", "description", "fields", "footer"]
+                on_fail_data = { attribute: embed_attributes[attribute] for attribute in embed_attributes }
             try:
                 json.dump(on_fail_data, file, indent=2, ensure_ascii=False)
             except TypeError:
