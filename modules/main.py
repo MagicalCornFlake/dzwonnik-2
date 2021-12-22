@@ -357,6 +357,8 @@ async def track_time_changes() -> None:
         # Check is successful, bot updates Discord status
         status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
         await client.change_presence(activity=status)
+    else:
+        log_message([current_time.hour, current_time.minute], ":", lesson_plan["Godz"])
     # Checks if the bot should make a reminder about due homework
     for event in homework_events:
         reminder_time = datetime.datetime.strptime(event.reminder_date, "%d.%m.%Y %H")
