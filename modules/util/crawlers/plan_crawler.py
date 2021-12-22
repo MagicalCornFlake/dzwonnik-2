@@ -71,9 +71,11 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             times = [int(time) for time in duration_pattern.search(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
-            file_manager.log("Element text:", elem.text)
             if not elem.text or elem.text == "&nbsp;":
                 return []
+            file_manager.log("Element:", elem)
+            file_manager.log("Element text:", elem.text)
+            file_manager.log("Element attributes:", elem.attrib)
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
             matches = lesson_pattern.findall(elem_str)
