@@ -62,13 +62,16 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     def extract_regex(elem: lxml.html.Element) -> any:
         """Extracts the data from a given table row."""
 
+        file_management.log("Element text:", elem.text)
         if elem.attrib["class"] == "nr":
             # Row containing the lesson period number
             return int(elem.text)
         elif elem.attrib["class"] == "g":
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            times = [int(time) for time in duration_pattern.match(elem.text).groups()]
+            match = duration_pattern.match(elem.text)
+            file_management.log(match)
+            times = [int(time) for time in match.groups()]
             return [times[:2], times[2:]]
         else:
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
