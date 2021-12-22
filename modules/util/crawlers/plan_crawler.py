@@ -1,12 +1,13 @@
 """Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details."""
 import json
-import os
 import re
+import lxml.html
 
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
 # ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
 from .. import web_api
 from ... import file_management
+from ... constants import Colour
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
@@ -15,17 +16,6 @@ pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<
 
 # Tags that should not increment or decrement a line's tag depth
 ignored_tags = ["hr", "br"]
-
-class colour:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 
 def get_plan_id(class_id: str or int = None) -> int:
@@ -69,11 +59,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
 
     Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher]) to each weekday name.
     """
-    tag_index = seen_tables = row_number = column_number = 0
-    headers = []
-    data: dict[str, list[list[dict[str, str]]]] = {}
 
-    def extract_regex() -> any:
+    def extract_regex(row: str) -> any:
         """Extracts the data from a given table row."""
 
         if row == "<td class=\"l\">&nbsp;</td>":
@@ -111,31 +98,20 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                     tmp[-1]["teacher"] = teacher
             return tmp
 
-    # Go through each line in the inputted HTML
-    for row in html.splitlines():
-        # Increment the tag depth if the line introduces a new tag
-        # Decremenet the tag depth if the line contains a closing tag
-        # Ignore tags like '<hr>', '<br>' that are defined above
-        tag_index += row.count("<") - 2 * row.count("</") - sum([row.count(f"<{tag}>") for tag in ignored_tags])
-        if "<table" in row:
-            # Increment the number of tables that have been met so far
-            seen_tables += row.count('<table')
-        # The table containing the lesson plans is the 3rd table 
-        if seen_tables == 3:
-            if row == "<tr>":
-                row_number += 1
-                column_number = 0
-                continue
-            if row_number == 1 and row.startswith("<th>"):
-                headers.append(row.lstrip("<th>").rstrip("</th>"))
-            elif row.startswith("<td"):
-                weekday = headers[column_number]
-                column_number += 1
+    data: dict[str, list[list[dict[str, str]]]] = {}
+    headers = []
+    root = lxml.html.fromstring(html)
+    table_element = root.xpath("//html/body/div/table/tr/td/table")[0]
+    for table_row in table_element:
+        for i, table_column in enumerate(table_row):
+            column = lxml.html.tostring(table_column).decode('UTF-8')
+            if table_column.tag == "th":
+                headers.append(table_column.text)
+            else:
+                weekday = headers[i]
                 if weekday not in data:
                     data[weekday] = []
-                data[weekday].append(extract_regex())
-    #             print(f"{colour.OKCYAN}row {row_number}{colour.ENDC}, seen {colour.OKGREEN}{seen_tables} tables {colour.WARNING}| {row}")
-    # print(colour.ENDC)
+                data[weekday].append(extract_regex(column))
     return data
 
 
@@ -154,15 +130,15 @@ def get_lesson_plan(class_id: str or int, force_update = False) -> tuple[dict, b
 
 
 if __name__ == "__main__":
-    colours = vars(colour)
+    colours = vars(Colour)
     for col in colours:
         if not col.startswith('_') and col is not None:
-            print(f"Colour {colours[col]}{col}{colour.ENDC}")
+            print(f"Colour {colours[col]}{col}{Colour.ENDC}")
     print()
-    input_msg = f"{colour.OKBLUE}Enter {colour.OKGREEN}{colour.UNDERLINE}class name{colour.ENDC}{colour.OKBLUE}...\n{colour.WARNING}> "
+    input_msg = f"{Colour.OKBLUE}Enter {Colour.OKGREEN}{Colour.UNDERLINE}class name{Colour.ENDC}{Colour.OKBLUE}...\n{Colour.WARNING}> "
     try:
         while True:
-            plan = json.dumps(get_lesson_plan(input(input_msg), force_update=True), indent=4, ensure_ascii=False)
-            print(f"{colour.OKGREEN}Lesson plan:\n{colour.ENDC}{plan}")
+            plan = json.dumps(get_lesson_plan(input(input_msg), force_update=True)[0], indent=4, ensure_ascii=False)
+            print(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:
-        print(f"...{colour.FAIL}\nGoodbye!\n{colour.ENDC}")
+        print(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")

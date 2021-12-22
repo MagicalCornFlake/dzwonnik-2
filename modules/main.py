@@ -283,7 +283,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     # No lesson for that group
                     send_log("Skipping lesson:", lesson, "on period", current_period)
                     continue
-                send_log("Using lesson:", lesson)
+                send_log("Validated lesson:", lesson)
                 msgs[lesson['group']] = get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
                 if lesson['group'] == "grupa_0":
@@ -699,8 +699,6 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, int, int]:
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
                     send_log(f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
                     return True, period + 10 * is_during_lesson, current_day_index
-                # else:
-                #     log_message(f"... this is not before {hour:02}:{minute:02} (period {period}). Continuing search.")
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
         next_school_day = (current_day_index + 1) % Weekday.saturday
@@ -736,8 +734,6 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
                 send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
-            else:
-                send_log(f"... lesson '{lesson['name']}' on period {period} is for group '{lesson['group']}', continuing search.")
     send_log(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
     return {}
 
@@ -956,9 +952,9 @@ def get_substitutions_embed(message: discord.Message = None) -> tuple[bool, disc
         send_log(f"Error! Received an invalid response from the web request. Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         return False, get_web_api_error_message(e)
-    msg = f"Zastępstwa na {data['date']}:"
+    msg = f"Zastępstwa na {datetime.datetime.now():%m.%d.%Y}:"
     embed = discord.Embed(title="Zastępstwa", description=msg)
-    embed.add_field(name="Surowe dane HTML", value=data["html"], inline=False)
+    embed.add_field(name="Sane", value=data, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}zast, aby pokazać tą wiadomość.")
     return True, embed
 
@@ -1072,7 +1068,7 @@ async def try_send_message(message: discord.Message, reply: bool, send_args: str
             if type(on_fail_data) is discord.Embed:
                 embed_attributes = on_fail_data.to_dict()
                 # attributes_to_dump = ["title", "description", "fields", "footer"]
-                on_fail_data = { attribute: embed_attributes[attribute] for attribute in embed_attributes }
+                on_fail_data = { attribute: embed_attributes[attribute] for attribute in list(embed_attributes.keys()).sort(reverse=True) }
             try:
                 json.dump(on_fail_data, file, indent=2, ensure_ascii=False)
             except TypeError:
