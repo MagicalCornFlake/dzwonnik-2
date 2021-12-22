@@ -62,21 +62,17 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     def extract_regex(elem: lxml.html.Element) -> any:
         """Extracts the data from a given table row."""
 
-        file_management.log("Element text:", elem.text)
         if elem.attrib["class"] == "nr":
             # Row containing the lesson period number
             return int(elem.text)
         elif elem.attrib["class"] == "g":
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            match = duration_pattern.search(elem.text)
-            file_management.log("Match:", match)
-            times = [int(time) for time in match.groups()]
+            times = [int(time) for time in duration_pattern.search(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             # Row containing lesson information for a given period
-            file_management.log(elem.text)
             
             tmp: list[dict[str, str]] = []
             for match in lesson_pattern.findall(elem_str):
@@ -113,7 +109,6 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 weekday = headers[i]
                 if weekday not in data:
                     data[weekday] = []
-                file_management.log("Table data:", column.tag, column.attrib)
                 data[weekday].append(extract_regex(column))
     return data
 
