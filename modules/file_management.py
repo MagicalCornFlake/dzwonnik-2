@@ -39,7 +39,7 @@ def check_if_cache_exists(cache_name: str) -> dict:
         return json.load(file)
 
 
-def get_cache(cache_name: str, force_update: bool, callback: function) -> dict:
+def get_cache(cache_name: str, force_update: bool, callback) -> dict:
     cache = check_if_cache_exists(cache_name)
     if not force_update and cache:
         return cache
