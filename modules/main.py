@@ -769,7 +769,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
             when = " "
             lesson_start_datetime = get_time(actual_period, current_time, False)
             mins = math.ceil((lesson_start_datetime - current_time).seconds / 60)
-            countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins // 60}{conjugate_numeric(mins % 60, 'minut')})"
+            countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins >= 60}{conjugate_numeric(mins % 60, 'minut')})"
         else:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
@@ -802,7 +802,7 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
         break_start_time, break_start_datetime = get_time(lesson_period % 10, current_time, True)
         break_countdown = break_start_datetime - current_time
         mins = math.ceil(break_countdown.seconds / 60)
-        minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins // 60}{conjugate_numeric(mins % 60, 'minut')}"
+        minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins >= 60}{conjugate_numeric(mins % 60, 'minut')}"
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         log_message("More lessons today:", more_lessons_today)
