@@ -353,12 +353,11 @@ async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's date + 1 day
     # Checks if current time is in list of key times
-    if [current_time.hour, current_time.minute] in lesson_plan["Godz"] and current_time.second == 0:
-        # Check is successful, bot updates Discord status
-        status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
-        await client.change_presence(activity=status)
-    else:
-        log_message([current_time.hour, current_time.minute], ":", lesson_plan["Godz"])
+    if current_time.second == 0:
+        if any([current_time.hour, current_time.minute] in times for times in lesson_plan["Godz"]):
+            # Check is successful, bot updates Discord status
+            status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
+            await client.change_presence(activity=status)
     # Checks if the bot should make a reminder about due homework
     for event in homework_events:
         reminder_time = datetime.datetime.strptime(event.reminder_date, "%d.%m.%Y %H")
