@@ -270,11 +270,11 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         if next_period < 10:
             # Currently break time
 
-            if next_period == first_period:
+            if current_period == first_period:
                 # Currently before school
                 new_status_msg = "szkoła o " + get_formatted_period_time(first_period).split('-')[0]
             else:
-                new_status_msg = "przerwa do " + get_formatted_period_time(next_period).split('-')[0]
+                new_status_msg = "przerwa do " + get_formatted_period_time(current_period).split('-')[0]
         else:
             # Currently lesson
             msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
