@@ -692,12 +692,11 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     Returns a dictionary containing the lesson details including the period, or an empty dictionary if no lesson was found.
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
-    log_message("Looking for lesson with roles:", target_roles)
+    log_message(f"Looking for lesson on day {weekday_index} with roles:", target_roles)
     for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]][query_period:]):
         for lesson in lessons:
-            group_code = lesson["group"]
-            if group_code in target_roles or role_codes[group_code] in target_roles:
-                log_message(f"Found lesson '{lesson['name']}' on period {period}.")
+            if lesson["group"] in target_roles or role_codes[lesson["group"]] in target_roles:
+                log_message(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
     log_message(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
@@ -769,7 +768,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
             when = " "
             lesson_start_datetime = get_time(actual_period, current_time, False)
             mins = math.ceil((lesson_start_datetime - current_time).seconds / 60)
-            countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins >= 60}{conjugate_numeric(mins % 60, 'minut')})"
+            countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')})"
         else:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
@@ -802,7 +801,7 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
         break_start_time, break_start_datetime = get_time(lesson_period % 10, current_time, True)
         break_countdown = break_start_datetime - current_time
         mins = math.ceil(break_countdown.seconds / 60)
-        minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins >= 60}{conjugate_numeric(mins % 60, 'minut')}"
+        minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')}"
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         log_message("More lessons today:", more_lessons_today)
