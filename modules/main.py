@@ -737,15 +737,13 @@ def get_time(period: int, base_time: datetime.datetime, get_period_end_time: boo
     return date_time
 
 
-def conjugate_seconds_to_minutes(seconds: int) -> str:
-    num = math.ceil(seconds / 60)
+def conjugate_numeric(num: int, word: str) -> str:
     if num == 1:
-        return f"1 minutę"
-    last_digit: int = int(str(num)[-1])
-    if 1 < last_digit < 5 and num not in [12, 13, 14]:
-        return f"{num} minuty"
+        suffix = "ę"
     else:
-        return f"{num} minut"
+        last_digit: int = int(str(num)[-1])
+        suffix = "y" if 1 < last_digit < 5 and num not in [12, 13, 14] else ""
+    return f"{num} {word}{suffix}"
 
 
 # Returns the message to send when the user asks for the next lesson
@@ -770,7 +768,8 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
             # Currently break
             when = " "
             lesson_start_datetime = get_time(actual_period, current_time, False)
-            countdown = f" (za {conjugate_seconds_to_minutes((lesson_start_datetime - current_time).seconds)})"
+            mins = math.ceil((lesson_start_datetime - current_time).seconds / 60)
+            countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins // 60}{conjugate_numeric(mins % 60, 'minut')})"
         else:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
@@ -802,7 +801,8 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     if next_period_is_today:
         break_start_time, break_start_datetime = get_time(lesson_period % 10, current_time, True)
         break_countdown = break_start_datetime - current_time
-        minutes = conjugate_seconds_to_minutes(break_countdown.seconds)
+        mins = math.ceil(break_countdown.seconds / 60)
+        minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * mins // 60}{conjugate_numeric(mins % 60, 'minut')}"
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{break_start_time}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         log_message("More lessons today:", more_lessons_today)
