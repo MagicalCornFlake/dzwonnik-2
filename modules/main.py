@@ -1060,6 +1060,20 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
         await reply_msg.edit(embed=get_homework_events(message, True)[1])
 
 
+async def try_send_message(channel: discord.TextChannel, send_method, send_args: str, on_fail_data, on_fail_msg: str = None) -> discord.message:
+    try:
+        reply_msg = send_method(**send_args)
+    except discord.errors.HTTPException:
+        reply_msg = send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
+        with open("result.txt", 'w') as file:
+            try:
+                json.dump(on_fail_data, file, indent=2, ensure_ascii=False)
+            except TypeError:
+                file.write(str(on_fail_data))
+        await channel.send(file=discord.File("result.txt"))
+    return reply_msg
+
+
 # This method is called when someone sends a message in the server
 @client.event
 async def on_message(message: discord.Message) -> None:
@@ -1107,22 +1121,15 @@ async def on_message(message: discord.Message) -> None:
                 await message.channel.send("Code executed.")
             else:
                 expr = expression.replace("\n", "\n>>> ")
-                try:
-                    result = exec_result
-                    if type(exec_result) in [dict, list]:
-                        try:
-                            result = "```\nDetected JSON content:```json\n" + json.dumps(exec_result, indent=4, ensure_ascii=False)
-                        except (TypeError, OverflowError):
-                            pass
-                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}\n{result}\n```")
-                except discord.errors.HTTPException:
-                    await message.channel.send(f"Code executed:\n```py\n>>> {expr}```*Result too long to send in message, attaching file 'result.txt'...*")
-                    with open("result.txt", 'w') as file:
-                        try:
-                            json.dump(exec_result, file, indent=2, ensure_ascii=False)
-                        except TypeError:
-                            file.write(str(exec_result))
-                    await message.channel.send(file=discord.File("result.txt"))
+                result = exec_result
+                if type(exec_result) in [dict, list]:
+                    try:
+                        result = "```\nDetected JSON content:```json\n" + json.dumps(exec_result, indent=4, ensure_ascii=False)
+                    except (TypeError, OverflowError):
+                        pass
+                too_long_msg = f"Code executed:\n```py\n>>> {expr}```*Result too long to send in message, attaching file 'result.txt'...*"
+                success_reply = f"Code executed:\n```py\n>>> {expr}\n{result}\n```"
+                await try_send_message(message.channel, message.channel.send, {"content": success_reply }, exec_result, too_long_msg)
             return
 
         if msg_first_word == admin_commands[1]:
@@ -1136,7 +1143,7 @@ async def on_message(message: discord.Message) -> None:
         track_api_updates.stop()
         await client.close()
 
-    if msg_first_word not in command_descriptions:
+    if msg_first_word not in command_methods:
         return
     # await message.delete()
 
@@ -1149,8 +1156,7 @@ async def on_message(message: discord.Message) -> None:
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
-    reply_msg = await message.reply(**{"embed" if reply_is_embed else "content": reply})
-
+    reply_msg = await try_send_message(message.channel, message.channel.reply, {"embed" if reply_is_embed else "content": reply}, reply)
     if msg_first_word == "zadania":
         await wait_for_zadania_reaction(message, reply_msg)
 
