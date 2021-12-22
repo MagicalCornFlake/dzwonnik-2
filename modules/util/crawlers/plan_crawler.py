@@ -6,6 +6,7 @@ import re
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
 # ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
 from .. import web_api
+from ... import file_management
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
@@ -143,17 +144,10 @@ def get_lesson_plan(class_id: str or int, force_update = False) -> dict[str, lis
 
     Arguments:
         class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
+        force_update -- a boolean indicating if the cache should be forcefully updated.
     """
-    class_id = get_plan_id(class_id)
-    filepath = f"cache/plan_{class_id}.json"
-    if not os.path.isfile(filepath) or force_update:
-        html = web_api.make_request(get_plan_link(class_id), force_update).content.decode('UTF-8')
-        if not os.path.isdir('cache'):
-            os.mkdir('cache')
-        with open(filepath, 'w') as file:
-            json.dump(parse_html(html), file, indent=4, ensure_ascii=False)
-    with open(filepath, 'r') as file:
-        return json.load(file)
+    update_cache_callback: function = lambda: parse_html(web_api.get_html(get_plan_link(get_plan_id(class_id)), force_update))
+    return file_management.get_cache(update_cache_callback, "subs")
 
 if __name__ == "__main__":
     colours = vars(colour)

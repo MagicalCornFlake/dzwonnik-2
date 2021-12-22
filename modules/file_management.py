@@ -1,4 +1,5 @@
 """Functionality for reading the .env files in the program root directory."""
+import json
 import os
 from datetime import datetime
 
@@ -28,6 +29,26 @@ def save_log_file() -> None:
     clear_log_file("bot.log")
 
 
+def check_if_cache_exists(cache_name: str) -> dict:
+    filepath = f"cache/{cache_name}.json"    
+    if not os.path.isdir('cache'):
+        os.mkdir('cache')
+    if not os.path.isfile(filepath):
+        return {}
+    with open(filepath, 'r') as file:
+        return json.load(file)
+
+
+def get_cache(cache_name: str, force_update: bool, callback: function) -> dict:
+    cache = check_if_cache_exists(cache_name)
+    if not force_update and cache:
+        return cache
+    json_data = callback()
+    with open(f"cache/{cache_name}.json", 'w') as file:
+        json.dump(json_data, file, indent=4, ensure_ascii=False)
+    return json_data
+
+
 def clear_cache(cache_path: str = "cache") -> bool:
     """Removes all files in the given directory, as well as the directory itself. Returns True if the directory previously existed, otherwise False."""
     if os.path.exists(cache_path):
@@ -39,6 +60,7 @@ def clear_cache(cache_path: str = "cache") -> bool:
     else:
         print(f"Did not clear cache from directory ./{cache_path}: path does not exist.")
         return False
+
 
 def read_env_files() -> bool:
     write_log("\n    --- Processing environment variable (.env) files... ---")

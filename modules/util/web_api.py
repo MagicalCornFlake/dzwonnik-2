@@ -2,6 +2,8 @@
 import requests
 import time
 
+from modules import file_management
+
 
 class TooManyRequestsException(Exception):
     """Raised when the user tries to make more than one request per second.
@@ -55,3 +57,8 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
     if response.status_code not in [requests.codes.ok, 500]:
         raise InvalidResponseException(response.status_code)
     return response
+
+
+def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
+    file_management.write_log("Getting HTML file from URL:", url)
+    return make_request(url, ignore_max_requests_cooldown).content.decode('UTF-8')
