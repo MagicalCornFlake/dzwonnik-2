@@ -1058,12 +1058,13 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
         await reply_msg.edit(embed=get_homework_events(message, True)[1])
 
 
-async def try_send_message(message: discord.Message, reply: bool, send_args: str, on_fail_data, on_fail_msg: str = None) -> discord.message:
-    send_method = message.reply if reply else message.channel.send
+async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict, on_fail_data, on_fail_msg: str = None) -> discord.message:
+    send_method = user_message.reply if should_reply else user_message.channel.send
     try:
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException as e:
-        send_log(f"{e.response = }\n{e.text = }\n{e.status = }")
+        send_log(f"{e.text = }\n{e.status = }")
+        send_log("Length of data:", len(on_fail_data))
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
         with open("result.txt", 'w') as file:
             if type(on_fail_data) is discord.Embed:
@@ -1072,7 +1073,7 @@ async def try_send_message(message: discord.Message, reply: bool, send_args: str
                 json.dump(on_fail_data, file, indent=2, ensure_ascii=False)
             except TypeError:
                 file.write(str(on_fail_data))
-        await message.channel.send(file=discord.File("result.txt"))
+        await user_message.channel.send(file=discord.File("result.txt"))
     return reply_msg
 
 
