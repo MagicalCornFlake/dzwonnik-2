@@ -161,9 +161,10 @@ lesson_plan: dict[str, list[int] or list[list[int]] or list[list[dict[str, str]]
 lesson_links: dict[str, str] = {}
 
 def initialise_variables():
+    global lesson_plan, lesson_links
     lesson_plan = plan_crawler.get_lesson_plan(force_update=True)[0]
     lesson_names: set[str] = {}
-    for weekday in list(lesson_plan.keys())[2:]:
+    for weekday in [key for key in lesson_plan.keys() if key in weekday_names]:
         for period in lesson_plan[weekday]:
             for lesson in period:
                 lesson_names.add(lesson["name"])
