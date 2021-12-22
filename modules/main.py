@@ -258,7 +258,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         for role_code in list(role_codes.keys())[1:]:
             lesson = get_lesson_by_roles(next_period % 10, next_lesson_weekday, [role_code])
             if lesson:
-                next_period = lesson['period']
+                current_period = lesson['period']
                 log_message("The next lesson is on period", lesson['period'])
                 break
         # Get the period of the first lesson
@@ -266,8 +266,6 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             if lessons:
                 log_message("The first lesson is on period", first_period)
                 break
-
-        current_period = next_period
 
         if next_period < 10:
             # Currently break time
