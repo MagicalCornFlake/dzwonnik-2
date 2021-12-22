@@ -113,7 +113,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     return data
 
 
-def get_lesson_plan(class_id: str or int, force_update = False) -> tuple[dict, bool]:
+def get_lesson_plan(class_id: str or int = "2d", force_update = False) -> tuple[dict, bool]:
     """Gets the lesson plan for a given class.
     Returns the data itself and a tuple containing a boolean indicating if the cache already existed.
 

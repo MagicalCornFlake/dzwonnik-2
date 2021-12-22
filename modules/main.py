@@ -155,7 +155,7 @@ homework_events = HomeworkEventContainer()
 tracked_market_items = []
 restart_on_exit = True
 current_period: int = 0
-lesson_plan: dict = plan_crawler.get_lesson_plan("2d", True)[0]
+lesson_plan: dict = plan_crawler.get_lesson_plan(force_update = True)[0]
 lesson_links: dict[str, str] = {}
 
 def populate_lesson_links():
