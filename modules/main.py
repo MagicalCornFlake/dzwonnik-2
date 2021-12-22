@@ -710,7 +710,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     Returns a dictionary containing the lesson details including the period, or an empty dictionary if no lesson was found.
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
-    log_message(f"Looking for lesson on day {weekday_index} with roles:", target_roles)
+    log_message(f"Looking for lesson on day {weekday_index} with roles: {target_roles}\n(original roles: {roles})")
     for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]]):
         if period < query_period:
             continue
