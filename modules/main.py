@@ -255,10 +255,21 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     next_period_is_today, next_period, next_lesson_weekday = get_next_period(query_time)
     if next_period_is_today:
         current_period = next_period % 10
-        lesson_start_time, lesson_end_time = get_formatted_period_time(current_period).split('-')
         if next_period < 10:
             # Currently break time
-            new_status_msg = "przerwa do " + lesson_start_time
+
+            # Get the period of the next lesson
+            for role_code in list(role_codes.keys())[1:]:
+                lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
+                if lesson:
+                    next_period = lesson['period']
+                    break
+            # Get the period of the first lesson
+            for period, lessons in lesson_plan[weekday_names[query_time.weekday]]:
+                if lessons:
+                    break
+            prefix = "rozpoczęcie lekcji o " if next_period == period else "przerwa do "
+            new_status_msg = prefix + get_formatted_period_time(current_period).split('-')[0]
         else:
             # Currently lesson
             msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
@@ -278,7 +289,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             if len(msgs) == 1 and group_name != "grupa_0":
                 # Specify the group the current lesson is for if only one group has it
                 lesson_text += " " + group_names[group_name]
-            new_status_msg = f"{lesson_text} do {lesson_end_time}"
+            new_status_msg = f"{lesson_text} do {get_formatted_period_time(current_period).split('-')[1]}"
     else:
         # After the last lesson for the given day
         current_period = -1
@@ -803,11 +814,14 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
 
     if next_period_is_today:
-        break_start_datetime = get_time(lesson_period % 10, current_time, True)
+        lesson = get_lesson_by_roles(lesson_period, current_time.weekday, message.author.roles)
+        if not lesson:
+            return False, f"{Emoji.info} Już się na dziś skończyły lekcje!"
+        break_start_datetime = get_time(lesson['period'], current_time, True)
         break_countdown = break_start_datetime - current_time
         mins = math.ceil(break_countdown.seconds / 60)
         minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')}"
-        msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{get_formatted_period_time(lesson_period % 10).split('-')[1]}"
+        msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{get_formatted_period_time(lesson['period']).split('-')[1]}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         log_message("More lessons today:", more_lessons_today)
         if more_lessons_today:
