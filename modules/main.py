@@ -342,7 +342,7 @@ async def remind_about_homework_event(event: HomeworkEvent, tense: str) -> None:
         if str(reaction.emoji) == emojis[0]:
             # Reaction emoji is ':ballot_box_with_check:'
             event.reminder_is_active = False
-            await message.edit(content=f":ballot_box_with_check: Zaznaczono zadanie `{event_name}` jako odrobione.")
+            await message.edit(content=f"{Emoji.check_2} Zaznaczono zadanie `{event_name}` jako odrobione.")
         else:  # Reaction emoji is :alarm_clock:
             await snooze_event()
     await message.clear_reactions()
@@ -388,7 +388,7 @@ async def track_api_updates() -> None:
         if item.min_price < price < item.max_price:
             continue
         target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.admini)
-        await target_channel.send(f":moneybag: Uwaga, <@{item.author_id}>! "
+        await target_channel.send(f"{Emoji.cash} Uwaga, <@{item.author_id}>! "
                                   f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
         tracked_market_items.remove(item)
         save_data_file()
@@ -486,15 +486,15 @@ def create_homework_event(message: discord.Message) -> tuple[bool, str]:
         try:
             message.guild.get_role(group_id)
         except ValueError:
-            return False, ":warning: Trzecim argumentem komendy musi być oznaczenie grupy, dla której jest zadanie."
+            return False, f"{Emoji.warning} Trzecim argumentem komendy musi być oznaczenie grupy, dla której jest zadanie."
         group_text = group_names[group_id] + " "
 
     new_event = HomeworkEvent(title, group_id, author, args[1] + " 17")
     if new_event.serialised in homework_events:
-        return False, f":warning: Takie zadanie już istnieje."
+        return False, f"{Emoji.warning} Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)
     save_data_file()
-    return False, f":white_check_mark: Stworzono zadanie na __{args[1]}__ z tytułem: `{title}` {group_text}" + \
+    return False, f"{Emoji.check} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}` {group_text}" + \
                   "z powiadomieniem na dzień przed o **17:00.**"
 
 
@@ -559,31 +559,30 @@ def process_homework_events_alias(message: discord.Message) -> tuple[bool, str o
     if len(args) == 1:
         return get_homework_events(message)
     elif len(args) < 4:
-        return False, f":warning: Należy napisać po komendzie `{prefix}zad` termin oddania zadania, oznaczenie " + \
+        return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}zad` termin oddania zadania, oznaczenie " + \
             "grupy, dla której jest zadanie oraz jego treść, lub 'del' i ID zadania, którego się chce usunąć."
     return create_homework_event(message)
 
 
 def update_meet_link(message: discord.Message) -> tuple[bool, str]:
     args = message.content.split(" ")
-    if len(args) != 1:
+    if len(args) > 1:
+        lesson_name = get_lesson_name(args[1])
         link = get_lesson_link(args[1])
-        if link:
-            lesson_name = get_lesson_name(args[1])
-            if len(args) == 2:
-                return False, f"{Emoji.info} Link do Meeta dla lekcji " + \
-                    f"'__{lesson_name}__' to <https://meet.google.com/{link}?authuser=0>."
-            else:
-                if not message.channel.permissions_for(message.author).administrator:
-                    return False, ":warning: Nie posiadasz uprawnień do zmieniania linków Google Meet."
-                link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
-                link_is_lookup_format = len(args[2]) == 17 and args[2].startswith("lookup/")
-                if link_is_dash_format or link_is_lookup_format:
-                    # User-given link is valid
-                    lesson_links[args[1]] = args[2]
-                    save_data_file()
-                    return False, f":white_check_mark: Zmieniono link dla lekcji " \
-                                  f"'__{lesson_name}__' z `{link}` na **{args[2]}**."
+        if len(args) == 2:
+            link_desc = f"to <https://meet.google.com/{link}?authuser=0>" if link else "nie jest ustawiony."
+            return False, f"{Emoji.info} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
+        else:
+            if not message.channel.permissions_for(message.author).administrator:
+                return False, f"{Emoji.warning} Nie posiadasz uprawnień do zmieniania linków Google Meet."
+            link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
+            link_is_lookup_format = len(args[2]) == 17 and args[2].startswith("lookup/")
+            if link_is_dash_format or link_is_lookup_format:
+                # User-given link is valid
+                lesson_links[args[1]] = args[2]
+                save_data_file()
+                return False, f"{Emoji.check} Zmieniono link dla lekcji " \
+                                f"'__{lesson_name}__' z `{link}` na **{args[2]}**."
     msg = f"Należy napisać po komendzie `{prefix}meet` kod lekcji, " + \
         "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
         "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
@@ -1097,7 +1096,7 @@ async def on_message(message: discord.Message) -> None:
         return
     if not any(group_role in author_role_names for group_role in ["Grupa 1", "Grupa 2"]):
         await message.channel.send(
-            f":warning: **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej "
+            f"{Emoji.warning} **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej "
             f"ani do grupy drugiej.\nUstaw sobie grupę, do której należysz reagując na wiadomość w kanale "
             f"{client.get_channel(773135499627593738).mention} numerem odpowiedniej grupy.**\n"
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")

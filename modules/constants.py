@@ -22,7 +22,9 @@ class RoleID:
 
 
 class Emoji:
+    cash: str = ":moneybag:"
     check: str = ":white_check_mark:"
+    check_2: str = ":ballot_box_with_check:"
     info: str = ":information_source:"
     warning: str = ":warning:"
 
