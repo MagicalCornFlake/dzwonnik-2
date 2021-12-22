@@ -111,7 +111,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                     data[weekday] = []
                 data[weekday].append(extract_regex(column))
     for key in data:
-        file_management.log(f"'{key}: {len(data[key])}")
+        file_management.log(f"{key}: {len(data[key])}")
         if key in ["Nr", "Godz"]:
             continue
         for period, lessons in enumerate(data[key]):
@@ -129,6 +129,7 @@ def get_lesson_plan(class_id = "2d", force_update = False) -> tuple[dict, bool]:
     """
     plan_id = get_plan_id(class_id)
     update_cache_callback: function = lambda force: parse_html(web_api.get_html(get_plan_link(plan_id), force))
+    file_management.log(f"Getting lesson plan with id {plan_id} for class {class_id} ({force_update = }) ...")
     return file_management.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
 
 
