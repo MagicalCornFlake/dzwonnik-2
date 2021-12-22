@@ -1060,7 +1060,8 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
         await reply_msg.edit(embed=get_homework_events(message, True)[1])
 
 
-async def try_send_message(channel: discord.TextChannel, send_method, send_args: str, on_fail_data, on_fail_msg: str = None) -> discord.message:
+async def try_send_message(message: discord.Message, reply: bool, send_args: str, on_fail_data, on_fail_msg: str = None) -> discord.message:
+    send_method = message.reply if reply else message.channel.send
     try:
         reply_msg = send_method(**send_args)
     except discord.errors.HTTPException:
@@ -1129,7 +1130,7 @@ async def on_message(message: discord.Message) -> None:
                         pass
                 too_long_msg = f"Code executed:\n```py\n>>> {expr}```*Result too long to send in message, attaching file 'result.txt'...*"
                 success_reply = f"Code executed:\n```py\n>>> {expr}\n{result}\n```"
-                await try_send_message(message.channel, message.channel.send, {"content": success_reply }, exec_result, too_long_msg)
+                await try_send_message(message, False, {"content": success_reply }, exec_result, too_long_msg)
             return
 
         if msg_first_word == admin_commands[1]:
@@ -1156,7 +1157,7 @@ async def on_message(message: discord.Message) -> None:
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
-    reply_msg = await try_send_message(message.channel, message.channel.reply, {"embed" if reply_is_embed else "content": reply}, reply)
+    reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
     if msg_first_word == "zadania":
         await wait_for_zadania_reaction(message, reply_msg)
 
