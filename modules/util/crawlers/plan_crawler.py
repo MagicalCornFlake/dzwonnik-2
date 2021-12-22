@@ -60,23 +60,24 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher]) to each weekday name.
     """
 
-    def extract_regex(row: str) -> any:
+    def extract_regex(elem: lxml.html.Element) -> any:
         """Extracts the data from a given table row."""
 
-        if row == "<td class=\"l\">&nbsp;</td>":
-            return []
-        elif row.startswith("<td class=\"nr\">"):
+        elem_str = lxml.html.tostring(elem).decode('UTF-8')
+        if elem.attrib["class"] == "nr":
             # Row containing the lesson period number
-            return int(period_pattern.match(row).groups()[-1])
-        elif row.startswith("<td class=\"g\">"):
+            return int(period_pattern.match(elem_str).groups()[-1])
+        elif elem.attrib["class"] == "g":
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            times = [int(time) for time in duration_pattern.match(row).groups()]
+            times = [int(time) for time in duration_pattern.match(elem_str).groups()]
             return [times[:2], times[2:]]
         else:
             # Row containing lesson information for a given period
+            file_management.log(elem.text)
+            
             tmp: list[dict[str, str]] = []
-            for match in pattern.findall(row):
+            for match in pattern.findall(elem_str):
                 lesson_name, group, groups, teacher, code, room_id = match
                 if group: 
                     if int(groups) == 5:
@@ -103,15 +104,14 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     root = lxml.html.fromstring(html)
     table_element = root.xpath("//html/body/div/table/tr/td/table")[0]
     for table_row in table_element:
-        for i, table_column in enumerate(table_row):
-            column = lxml.html.tostring(table_column).decode('UTF-8')
-            if table_column.tag == "th":
-                headers.append(table_column.text)
-            elif table_column.tag == "td":
+        for i, column in enumerate(table_row):
+            if column.tag == "th":
+                headers.append(column.text)
+            elif column.tag == "td":
                 weekday = headers[i]
                 if weekday not in data:
                     data[weekday] = []
-                file_management.log("Table data:", table_column.tag, table_column.attrib)
+                file_management.log("Table data:", column.tag, column.attrib)
                 data[weekday].append(extract_regex(column))
     return data
 
