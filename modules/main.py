@@ -417,7 +417,7 @@ async def track_api_updates() -> None:
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if not cache_existed:
-            send_log(f"Substitution data updated! New data:\n{substitutions}\nOld data:\n{old_cache}")
+            send_log(f"Substitution data updated! New data:\n{substitutions}\n\nOld data:\n{old_cache}")
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             # await target_channel.send(embed=get_substitutions_embed()[1])
 

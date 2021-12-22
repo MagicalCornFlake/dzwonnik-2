@@ -59,8 +59,10 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
     cache_exists = bool(cache)
     if force_update or not cache_exists:
         cache = callback_function(force_update)
+        json_string = json.dumps(cache, indent=4, ensure_ascii=False)
+        log("Updated cache:\n", )
         with open(f"cache/{cache_name}.json", 'w') as file:
-            json.dump(cache, file, indent=4, ensure_ascii=False)
+            file.write(json_string)
     return cache, cache_exists
 
 
