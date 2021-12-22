@@ -648,14 +648,14 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
     return True, embed
 
 
-def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[list[dict[str, str]]]]:
+def get_next_period(given_time: datetime.datetime) -> tuple[bool, int, int]:
     """Get the information about the next period for a given time.
 
     Arguments:
         given_time -- the start time to base the search off of.
 
     Returns a tuple consisting of a boolean indicating if that day is today, the period number, and the day of the week.
-    If the current time is during a lesson, the periodlesson_names.append(lesson number will be incremented by 10.
+    If the current time is during a lesson, the period number will be incremented by 10.
     """
     log_message(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
@@ -666,8 +666,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
-                    log_message(f"... returning values {current_day_index = }, {period + 10 * is_during_lesson = }")
-                    return True, current_day_index, period + 10 * is_during_lesson
+                    return True, period + 10 * is_during_lesson, current_day_index
                 else:
                     log_message(f"... this is not before {hour:02}:{minute:02} (period {period}). Continuing search.")
         # Could not find any such lesson.
