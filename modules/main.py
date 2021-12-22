@@ -255,12 +255,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     next_period_is_today, next_period, next_lesson_weekday = get_next_period(query_time)
     if next_period_is_today:
         # Get the period of the next lesson
-        for role_code in list(role_codes.keys())[1:]:
-            lesson = get_lesson_by_roles(next_period % 10, next_lesson_weekday, [role_code])
-            if lesson:
-                current_period = lesson['period']
-                log_message("The next lesson is on period", lesson['period'])
-                break
+        lesson = get_lesson_by_roles(next_period % 10, next_lesson_weekday, list(role_codes.keys())[1:])
+        if lesson:
+            current_period = lesson['period']
+            log_message("The next lesson is on period", lesson['period'])
         # Get the period of the first lesson
         for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
             if lessons:
@@ -284,6 +282,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     # No lesson for that group
                     log_message("Skipping lesson:", lesson, "on period", current_period)
                     continue
+                log_message("Using lesson:", lesson)
                 msgs[lesson['group']] = get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
                 if lesson['group'] == "grupa_0":
