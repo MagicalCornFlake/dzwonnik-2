@@ -264,7 +264,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             msgs: dict[str, str] = {}  # Dictionary with lesson group code and lesson name
             for role_code in list(role_codes.keys())[1:]:
                 lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
-                if not lesson:
+                if not lesson or lesson["period"] != current_period:
                     # No lesson for that group
                     continue
                 msgs[lesson['group']] = get_lesson_name(lesson['name'])
@@ -561,7 +561,7 @@ def update_meet_link(message: discord.Message) -> tuple[bool, str]:
     return False, msg
 
 
-def get_help_message(_message: discord.Message) -> tuple[bool, discord.Embed]:
+def get_help_message(_: discord.Message) -> tuple[bool, discord.Embed]:
     embed = discord.Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
     for command_name, command_description in command_descriptions.items():
         if command_description is None:
@@ -662,11 +662,11 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
 
     if current_day_index < Weekday.saturday:
         for period, times in enumerate(lesson_plan["Godz"]):
-            for is_lesson, time in enumerate(times):
+            for is_during_lesson, time in enumerate(times):
                 hour, minute = time
-                if given_time.hour < hour and given_time.minute < minute:
+                if given_time.hour < hour and given_time.minute < minute and lesson_plan[weekday_names[current_day_index]][period]:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
-                    return True, current_day_index, period + 10 * is_lesson
+                    return True, current_day_index, period + 10 * is_during_lesson
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
         next_school_day = (current_day_index + 1) % Weekday.saturday
@@ -682,24 +682,26 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
     return False, first_period, next_school_day
 
 
-def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, discord.Role]) -> dict[str, str] or False:
+def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, discord.Role]) -> dict[str, str]:
     """Get the lesson details for a given period, day and user roles list.
     Arguments:
         query_period -- the period number to look for.
         weekday_index -- the index of the weekday to look at.
         roles -- the roles of the user that the lesson is defined to be intended for.
 
-    Returns a dictionary containing the lesson details, or False if no lesson was found.
+    Returns a dictionary containing the lesson details including the period, or an empty dictionary if no lesson was found.
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     log_message("Looking for lesson with roles:", target_roles)
-    for lesson in lesson_plan[weekday_names[weekday_index]][query_period]:
-        group_code = lesson["group"]
-        if group_code in target_roles or role_codes[group_code] in target_roles:
-            log_message(f"Found lesson '{lesson['name']}' on period {query_period}.")
-            return lesson
+    for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]][query_period:]):
+        for lesson in lessons:
+            group_code = lesson["group"]
+            if group_code in target_roles or role_codes[group_code] in target_roles:
+                log_message(f"Found lesson '{lesson['name']}' on period {query_period}.")
+                lesson["period"] = period
+                return lesson
     log_message(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
-    return False
+    return {}
 
 
 def get_datetime_from_input(message: discord.Message, calling_command: str) -> tuple[bool, str or datetime.datetime]:
