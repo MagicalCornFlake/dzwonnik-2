@@ -256,7 +256,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     if next_period_is_today:
         # Get the period of the next lesson
         for role_code in list(role_codes.keys())[1:]:
-            lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
+            lesson = get_lesson_by_roles(next_period % 10, next_lesson_weekday, [role_code])
             if lesson:
                 next_period = lesson['period']
                 log_message("The next lesson is on period", lesson['period'])
@@ -267,8 +267,8 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 log_message("The first lesson is on period", first_period)
                 break
 
-        current_period = next_period % 10
-        
+        current_period = next_period
+
         if next_period < 10:
             # Currently break time
 
@@ -683,10 +683,10 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, int, int]:
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
-                    log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
+                    log_message(f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
                     return True, period + 10 * is_during_lesson, current_day_index
-                else:
-                    log_message(f"... this is not before {hour:02}:{minute:02} (period {period}). Continuing search.")
+                # else:
+                #     log_message(f"... this is not before {hour:02}:{minute:02} (period {period}). Continuing search.")
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
         next_school_day = (current_day_index + 1) % Weekday.saturday
