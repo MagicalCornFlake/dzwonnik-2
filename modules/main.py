@@ -255,19 +255,23 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     next_period_is_today, next_period, next_lesson_weekday = get_next_period(query_time)
     if next_period_is_today:
         current_period = next_period % 10
+
+        # Get the period of the first lesson
+        for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
+            if lessons:
+                break
+
+        # Get the period of the next lesson
+        for role_code in list(role_codes.keys())[1:]:
+            lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
+            if lesson:
+                current_period = lesson['period']
+                log_message("The next lesson is on period", lesson['period'])
+                break
+
         if next_period < 10:
             # Currently break time
 
-            # Get the period of the next lesson
-            for role_code in list(role_codes.keys())[1:]:
-                lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
-                if lesson:
-                    next_period = lesson['period']
-                    break
-            # Get the period of the first lesson
-            for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
-                if lessons:
-                    break
             if next_period == first_period:
                 # Currently before school
                 new_status_msg = "szkoła o " + get_formatted_period_time(first_period).split('-')[0]
@@ -289,10 +293,9 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     break
             # set(msgs.values()) returns a list of unique lesson names
             lesson_text = "/".join(set(msgs.values()))
-            group_name = list(msgs.keys())[0]
-            if len(msgs) == 1 and group_name != "grupa_0":
+            if len(msgs) == 1 and list(msgs.keys())[0] != "grupa_0":
                 # Specify the group the current lesson is for if only one group has it
-                lesson_text += " " + group_names[group_name]
+                lesson_text += " " + group_names[list(msgs.keys())[0]]
             new_status_msg = f"{lesson_text} do {get_formatted_period_time(current_period).split('-')[1]}"
     else:
         # After the last lesson for the given day
