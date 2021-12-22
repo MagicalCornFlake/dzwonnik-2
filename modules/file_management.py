@@ -58,8 +58,7 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
     cache = check_if_cache_exists(cache_name)
     cache_exists = bool(cache)
     if force_update or not cache_exists:
-        cache.update(callback_function(force_update))
-        log("Found cache:", cache)
+        cache = callback_function(force_update)
         with open(f"cache/{cache_name}.json", 'w') as file:
             json.dump(cache, file, indent=4, ensure_ascii=False)
     return cache, cache_exists
