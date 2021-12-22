@@ -666,6 +666,7 @@ def get_next_period(given_time: datetime.datetime) -> tuple[bool, float, list[li
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
                     log_message(f"... this is before {hour:02}:{minute:02} (period {period}).")
+                    log_message(f"... returning values {current_day_index = }, {period + 10 * is_during_lesson = }")
                     return True, current_day_index, period + 10 * is_during_lesson
                 else:
                     log_message(f"... this is not before {hour:02}:{minute:02} (period {period}). Continuing search.")
@@ -695,7 +696,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     log_message(f"Looking for lesson on day {weekday_index} with roles:", target_roles)
-    for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]][query_period:]):
+    for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]][query_period]):
         for lesson in lessons:
             if lesson["group"] in target_roles or role_codes[lesson["group"]] in target_roles:
                 log_message(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
