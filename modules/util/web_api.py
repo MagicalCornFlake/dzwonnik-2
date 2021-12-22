@@ -2,7 +2,7 @@
 import requests
 import time
 
-from modules import file_management
+from modules import file_manager
 
 
 class TooManyRequestsException(Exception):
@@ -60,6 +60,6 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
 
 
 def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
-    file_management.log("Getting HTML file from URL:", url)
+    file_manager.log("Getting HTML file from URL:", url)
     html = make_request(url, ignore_max_requests_cooldown).content.decode('UTF-8')
     return html.replace("<html><head>", "<html>\n<head>", 1) 

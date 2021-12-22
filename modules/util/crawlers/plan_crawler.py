@@ -6,7 +6,7 @@ import lxml.html
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
 # ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
 from .. import web_api
-from ... import file_management
+from ... import file_manager
 from ... constants import Colour
 
 duration_pattern = re.compile(r"\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)")
@@ -71,13 +71,13 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             times = [int(time) for time in duration_pattern.search(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
-            file_management.log("Element text:", elem.text)
+            file_manager.log("Element text:", elem.text)
             if elem.text == "&nbsp;":
                 return []
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
             matches = lesson_pattern.findall(elem_str)
-            file_management("Regex matches:", matches)
+            file_manager("Regex matches:", matches)
             for match in matches:
                 lesson_name, group, groups, teacher, code, room_id = match
                 if group: 
@@ -133,7 +133,7 @@ def get_lesson_plan(class_id = "2d", force_update = False) -> tuple[dict, bool]:
     plan_id = get_plan_id(class_id)
     update_cache_callback: function = lambda force: parse_html(web_api.get_html(get_plan_link(plan_id), force))
     _log(f"Getting lesson plan with id {plan_id} for class {class_id} ({force_update = }) ...")
-    return file_management.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
+    return file_manager.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
     # return update_cache_callback(force_update), False
 
 
@@ -141,7 +141,7 @@ def _log(*args):
     if __name__ == "__main__":
         print(*args)
     else:
-        file_management.log(*args)
+        file_manager.log(*args)
 
 
 if __name__ == "__main__":

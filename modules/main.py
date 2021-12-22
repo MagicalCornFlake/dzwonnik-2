@@ -16,7 +16,7 @@ import discord.ext.tasks
 from discord.flags import fill_with_flags
 
 # Local application imports
-from modules import file_management
+from modules import file_manager
 from modules.constants import *
 from modules.util import web_api
 from modules.util.api import steam_api, lucky_numbers_api
@@ -407,7 +407,7 @@ async def track_api_updates() -> None:
             await target_channel.send(embed=get_lucky_numbers_embed()[1])
             save_data_file()
     try:
-        old_cache = file_management.check_if_cache_exists("subs")
+        old_cache = file_manager.check_if_cache_exists("subs")
         substitutions, cache_existed = substitutions_crawler.get_substitutions(True)
     except web_api.InvalidResponseException as e:
         # Ping @Konrad
@@ -1135,7 +1135,7 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            file_management.log(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
+            file_manager.log(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()
@@ -1170,7 +1170,7 @@ def send_log(*raw_message, force=False) -> None:
     if not (enable_log_messages or force):
         return
     
-    msg = file_management.log(*raw_message)
+    msg = file_manager.log(*raw_message)
     log_loop = asyncio.get_event_loop()
     log_loop.create_task(send_log_message(msg if len(msg) <= 4000 else f"Log message too long ({len(msg)} characters). Check 'bot.log' file."))
 
@@ -1188,21 +1188,21 @@ def start_bot() -> bool:
     Returns a boolean that indicates if the bot should be restarted.
     """
     # Save the previous log on startup
-    file_management.save_log_file()
+    file_manager.save_log_file()
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (file_management, steam_api, web_api, lucky_numbers_api, plan_crawler, substitutions_crawler):
+    for module in (file_manager, steam_api, web_api, lucky_numbers_api, plan_crawler, substitutions_crawler):
         importlib.reload(module)
     try:
-        file_management.read_env_files()
+        file_manager.read_env_files()
         read_data_file('data.json')
         event_loop = asyncio.get_event_loop()
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            file_management.log("\n    --- CRITICAL ERROR! ---")
-            file_management.log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
+            file_manager.log("\n    --- CRITICAL ERROR! ---")
+            file_manager.log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
             return False
@@ -1216,19 +1216,19 @@ def start_bot() -> bool:
             event_loop.run_until_complete(client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (eg. Ctrl+F2 in PyCharm).
-            file_management.log("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
+            file_manager.log("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
             # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
-            file_management.log("\n    --- Bot execution terminated successfully. ---")
+            file_manager.log("\n    --- Bot execution terminated successfully. ---")
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() method returns any value.
             # Do not send a debug message since the bot is already offline.
             save_data_file(should_log=False)
-            file_management.log("Successfully saved data file 'data.json'. Program exiting.")
+            file_manager.log("Successfully saved data file 'data.json'. Program exiting.")
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
@@ -1236,7 +1236,7 @@ def start_bot() -> bool:
 
 
 if __name__ == "__main__":
-    file_management.log("Started bot from main file! Assuming this is debug behaviour.\n")
+    file_manager.log("Started bot from main file! Assuming this is debug behaviour.\n")
     use_bot_testing = True
     enable_log_messages = True
     start_bot()
