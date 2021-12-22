@@ -18,11 +18,12 @@ def parse_html(html: str) -> dict:
 
     Returns a dictionary.
     """
-
     root = lxml.html.fromstring(html)
     content = root.get_element_by_id("content")
     sidebar = root.get_element_by_id("sidebar")
-    return { "content": dict(content.attrib), "sidebar": dict(sidebar.attrib) }
+    data = { "content": dict(content.attrib), "sidebar": dict(sidebar.attrib) }
+    file_management.log("Data:", data)
+    return data
 
 
 def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
