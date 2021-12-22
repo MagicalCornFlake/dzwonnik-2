@@ -710,8 +710,9 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     Returns a dictionary containing the lesson details including the period, or an empty dictionary if no lesson was found.
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
-    log_message(f"Looking for lesson on day {weekday_index} with roles: {target_roles}\n(original roles: {roles})")
-    for period, lessons in enumerate(lesson_plan[weekday_names[weekday_index]]):
+    weekday_name = weekday_names[weekday_index]
+    log_message(f"Looking for lesson on day {weekday_name} with roles: {target_roles}\n(original roles: {roles})")
+    for period, lessons in enumerate(lesson_plan[weekday_name]):
         if period < query_period:
             continue
         for lesson in lessons:
@@ -822,7 +823,7 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
 
     if next_period_is_today:
-        lesson = get_lesson_by_roles(lesson_period, current_time.weekday, message.author.roles)
+        lesson = get_lesson_by_roles(lesson_period, current_time.weekday(), message.author.roles)
         if not lesson:
             return False, f"{Emoji.info} Już się na dziś skończyły lekcje!"
         break_start_datetime = get_time(lesson['period'], current_time, True)
