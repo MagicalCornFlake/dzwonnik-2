@@ -9,7 +9,7 @@ from .. import web_api
 from ... import file_management
 from ... constants import Colour
 
-duration_pattern = re.compile(r"(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)")
+duration_pattern = re.compile(r"\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)")
 lesson_pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
                             r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
 
@@ -69,8 +69,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         elif elem.attrib["class"] == "g":
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            match = duration_pattern.match(elem.text)
-            file_management.log(match)
+            match = duration_pattern.search(elem.text)
+            file_management.log("Match:", match)
             times = [int(time) for time in match.groups()]
             return [times[:2], times[2:]]
         else:
