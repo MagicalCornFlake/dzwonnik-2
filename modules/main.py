@@ -45,6 +45,9 @@ async def on_ready() -> None:
     track_time_changes.start()
     track_api_updates.start()
 
+    # Populate dictionaries
+    initialise_variables()
+
     # Checks if the bot was just restarted
     for channel_id in [ChannelID.bot_testing, ChannelID.bot_logs]:
         channel = client.get_channel(channel_id)
@@ -155,22 +158,18 @@ homework_events = HomeworkEventContainer()
 tracked_market_items = []
 restart_on_exit = True
 current_period: int = 0
-lesson_plan: dict = plan_crawler.get_lesson_plan(force_update = True)[0]
+lesson_plan: dict[str, list[int] or list[list[int]] or list[list[dict[str, str]]]] = {}
 lesson_links: dict[str, str] = {}
 
-def populate_lesson_links():
-    lesson_names = []
-    for item in lesson_plan:
-        if item not in weekday_names:
-            continue
-        for period in lesson_plan[item]:
+def initialise_variables():
+    lesson_plan = plan_crawler.get_lesson_plan(force_update=True)[0]
+    lesson_names: set[str] = {}
+    for weekday in lesson_plan[2:]:
+        for period in lesson_plan[weekday]:
             for lesson in period:
-                lesson_names.append(lesson["name"])
-    lesson_names.sort()
-    for lesson in lesson_names:
+                lesson_names.add(lesson["name"])
+    for lesson in sorted(lesson_names):
         lesson_links[lesson] = None
-
-populate_lesson_links()
 
 
 def get_formatted_period_time(period: int) -> str:
@@ -1059,9 +1058,9 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
     send_method = user_message.reply if should_reply else user_message.channel.send
     try:
         reply_msg = await send_method(**send_args)
-    except discord.errors.HTTPException as e:
-        send_log(f"{e.text = }\n{e.status = }")
-        send_log("Length of data:", len(on_fail_data))
+    except discord.errors.HTTPException as error:
+        send_log(f"{error.status = }, {error.text = }")
+        send_log("Length of data:", len(str(on_fail_data)))
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
         with open("result.txt", 'w') as file:
             if type(on_fail_data) is discord.Embed:

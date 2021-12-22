@@ -71,11 +71,14 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             times = [int(time) for time in duration_pattern.search(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
+            file_management.log("Element text:", elem.text)
+            if elem.text == "&nbsp;":
+                return []
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
-            # Row containing lesson information for a given period
-            
             tmp: list[dict[str, str]] = []
-            for match in lesson_pattern.findall(elem_str):
+            matches = lesson_pattern.findall(elem_str)
+            file_management("Regex matches:", matches)
+            for match in matches:
                 lesson_name, group, groups, teacher, code, room_id = match
                 if group: 
                     if int(groups) == 5:
