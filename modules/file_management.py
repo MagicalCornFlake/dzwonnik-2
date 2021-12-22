@@ -12,7 +12,7 @@ def clear_log_file(filename: str) -> None:
 
 def log(*raw_message: str) -> str:
     """Writes the message to the current log file, and returns the message formatted with the current time and proper indentation."""
-    timestamp = f"{datetime.datetime.now():%Y-%m-%d @ %H:%M:%S}: "
+    timestamp = f"{datetime.now():%Y-%m-%d @ %H:%M:%S}: "
     # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning 
     message = timestamp + ' '.join(map(str, raw_message)).replace("\n", "\n" + " " * len(timestamp))
     with open("bot.log", 'a') as file:
