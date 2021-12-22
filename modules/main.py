@@ -37,6 +37,9 @@ async def on_ready() -> None:
     send_log(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
     my_server = client.get_guild(my_server_id)
 
+    # Populate dictionaries
+    initialise_variables()
+
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
     await client.change_presence(activity=status)
@@ -44,9 +47,6 @@ async def on_ready() -> None:
     # Starts loops that run continuously
     track_time_changes.start()
     track_api_updates.start()
-
-    # Populate dictionaries
-    initialise_variables()
 
     # Checks if the bot was just restarted
     for channel_id in [ChannelID.bot_testing, ChannelID.bot_logs]:
