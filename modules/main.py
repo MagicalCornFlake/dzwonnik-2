@@ -758,20 +758,19 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
 
     def process(time: datetime.datetime) -> tuple[bool, str, str]:
         next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
-        actual_period = lesson_period % 10
-        lesson = get_lesson_by_roles(actual_period, weekday_index, message.author.roles)
+        lesson = get_lesson_by_roles(lesson_period % 10, weekday_index, message.author.roles)
         if not lesson:
-            return False, f":x: Nie ma żadnych zajęć dla Twojej grupy po {actual_period}-ej lekcji.", ""
+            return False, f":x: Nie ma żadnych zajęć dla Twojej grupy po godz. {time:%H:%M}.", ""
         if next_lesson_is_today:
-            if actual_period != lesson_period:
+            if lesson['period'] > 10:
                 # Currently lesson
-                lesson_end_datetime = get_time(actual_period, current_time, True)
+                lesson_end_datetime = get_time(lesson['period'] - 10, current_time, True)
                 log_message("Lesson ending at:", lesson_end_datetime)
                 # Get the next lesson after the end of this one, recursive call
                 return process(lesson_end_datetime)
             # Currently break
             when = " "
-            lesson_start_datetime = get_time(actual_period, current_time, False)
+            lesson_start_datetime = get_time(lesson['period'], current_time, False)
             log_message("Lesson starting at:", lesson_start_datetime)
             mins = math.ceil((lesson_start_datetime - current_time).seconds / 60)
             countdown = f" (za {(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')})"
