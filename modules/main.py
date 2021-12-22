@@ -418,6 +418,13 @@ def get_lesson_name(lesson_code: str) -> str:
     return lesson_name + " rozszerzona" * lesson_code.startswith('r-')
 
 
+def get_lesson_link(lesson_code: str) -> str:
+    try:
+        return lesson_links[lesson_code]
+    except KeyError:
+        return None
+
+
 def create_homework_event(message: discord.Message) -> tuple[bool, str]:
     args = message.content.split(" ")
     # Args is asserted to have at least 4 elements
@@ -527,8 +534,8 @@ def process_homework_events_alias(message: discord.Message) -> tuple[bool, str o
 def update_meet_link(message: discord.Message) -> tuple[bool, str]:
     args = message.content.split(" ")
     if len(args) != 1:
-        if args[1] in lesson_links:
-            link = lesson_links[args[1]]
+        link = get_lesson_link(args[1])
+        if link:
             lesson_name = get_lesson_name(args[1])
             if len(args) == 2:
                 return False, f"{Emoji.info} Link do Meeta dla lekcji " + \
@@ -567,12 +574,13 @@ def get_help_message(_message: discord.Message) -> tuple[bool, discord.Embed]:
 def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     args = message.content.split(" ")
     today = datetime.datetime.now().weekday()
+    class_lesson_plan = lesson_plan
     if len(args) == 1:
         query_day = today if today < Weekday.saturday else Weekday.monday
     else:
         query_day = -1
+        # This 'try' clause raises RuntimeError if the input is invalid for whatever reason
         try:
-            # This 'try' clause raises RuntimeError if the input is invalid for whatever reason
             try:
                 query_day = {"pn": 0, "śr": 2, "sr": 2, "pt": 4}[args[1]]
             except KeyError:
@@ -597,12 +605,19 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                         # The input is not a valid weekday name.
                         # ValueError can't be used since it has already been caught
                         raise RuntimeError(f"invalid weekday name: {args[1]}")
+            if len(args >= 2):
+                try:
+                    plan_id = plan_crawler.get_plan_id(args[2])
+                except ValueError:
+                    raise RuntimeError(f"invalid class name: {args[2]}")
+                else:
+                    class_lesson_plan = plan_crawler.get_lesson_plan(plan_id)
         except RuntimeError as e:
             log_message(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
-                          f"bądź dzień tygodnia, lub zostawić parametry komendy puste."
+                          f"bądź dzień tygodnia, lub zostawić parametry komendy puste. Drugim opcjonalnym argumentem jest nazwa klasy."
 
-    plan = lesson_plan[weekday_names[query_day]]
+    plan = class_lesson_plan[weekday_names[query_day]]
 
     # The generator expression creates a list that maps each element from 'plan' to the boolean it evaluates to.
     # Empty lists are evaluated as False, non-empty lists are evaluated as True.
@@ -615,14 +630,14 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
     embed = discord.Embed(title="Plan lekcji", description=desc)
     embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
 
-    for period in lesson_plan["Nr"]:
+    for period in class_lesson_plan["Nr"]:
         if not plan[period]:
             # No lesson for the current period
             first_period += 1
             continue
         lesson_texts = []
         for lesson in plan[period]:
-            raw_link = lesson_links[lesson['name']]
+            raw_link = get_lesson_link(lesson['name'])
             link = f"https://meet.google.com/{raw_link}?authuser=0" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
             lesson_texts.append(f"[{get_lesson_name(lesson['name'])} - sala {lesson['room_id']}]({link})")
             if lesson['group'] != "grupa_0":
@@ -760,7 +775,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         next_period_time = get_formatted_period_time(actual_period).split("-")[0]
         group = group_names[lesson['group']] + " " * (lesson['group'] != "grupa_0")
         return True, f"{Emoji.info} Następna lekcja {group}to **{get_lesson_name(lesson['name'])}**" \
-                     f"{when} o godzinie __{next_period_time}__{countdown}.", lesson_links[lesson['name']]
+                     f"{when} o godzinie __{next_period_time}__{countdown}.", get_lesson_link(lesson['name'])
 
     success, msg, raw_link = process(current_time)
     if not success:
@@ -903,12 +918,13 @@ command_descriptions = {
     Przykład: `{p}nb 9 30` - wyświetliłaby się najbliższa przerwa po godzinie 09:30.
     *Domyślnie pokazana jest najbliższa przerwa od aktualnego czasu*""",
 
-    "plan": """Pokazuje plan lekcji dla danego dnia.
-    Parametry: __dzień tygodnia__
+    "plan": """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na dzień dzisiejszy.
+    Parametry: __dzień tygodnia__, __nazwa klasy__
     Przykłady:
     `{p}plan` - wyświetliłby się plan lekcji na dziś/najbliższy dzień szkolny.
     `{p}plan 2` - wyświetliłby się plan lekcji na wtorek (2. dzień tygodnia).
-    `{p}plan pon` - wyświetliłby się plan lekcji na poniedziałek.""",
+    `{p}plan pon` - wyświetliłby się plan lekcji na poniedziałek.
+    `{p}plan pon 1a` - wyświetliłby się plan lekcji na poniedziałek dla klasy 1a.""",
 
     "zadanie": """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
     Natomiast, jeśli w parametrach podane jest hasło 'del' oraz nr zadania, zadanie to zostanie usunięte.

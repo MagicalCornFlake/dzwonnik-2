@@ -27,31 +27,35 @@ class colour:
     UNDERLINE = '\033[4m'
 
 
-def get_plan_id(class_name: str or int = None) -> int:
-    """Gets the plan ID that is used on the school website of a given class."""
+def get_plan_id(class_id: str or int = None) -> int:
+    """Gets the plan ID that is used on the school website of a given class.
+    
+    Arguments:
+        class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
+    """
 
-    if type(class_name) is int and 1 <= class_name <= 16:
-        return class_name
-    class_name = "2d" if class_name is None else class_name
+    if type(class_id) is int and 1 <= class_id <= 16:
+        return class_id
+    class_id = "2d" if class_id is None else class_id
     try:
-        class_year = int(class_name[0])
-        class_letter = class_name[1]
+        class_year = int(class_id[0])
+        class_letter = class_id[1]
         if not 1 <= class_year <= 3:
             raise ValueError
         # 3 is the number of classes in year 3 that are type "g" (gimnazjum)
         # 6 and 5 are the numbers of classes in year 3 and 2, respectively
         # noinspection SpellCheckingInspection
         base_id = "abcde".index(class_letter.lower()) + 1
-        return base_id + ((3 * (class_name[2].lower() == "p")) if class_year == 3 else (6 + 5 * (class_year == 1)))
+        return base_id + ((3 * (class_id[2].lower() == "p")) if class_year == 3 else (6 + 5 * (class_year == 1)))
     except (ValueError, IndexError):
-        raise ValueError(f"Invalid class name: {class_name}.")
+        raise ValueError(f"Invalid class name: {class_id}.")
 
 
 def get_plan_link(class_id: str or int) -> str:
     """Gets the link to a given class' lesson plan.
 
     Arguments:
-        class_id -- can be a string representing the class name or an integer representing the lesson plan ID.
+        class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
     """
     return f"http://www.lo1.gliwice.pl/wp-content/uploads/static/plan/plany/o{get_plan_id(class_id)}.html"
 
@@ -134,11 +138,11 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     return data
 
 
-def get_lesson_plan(class_id: str, force_update = False) -> dict[str, list[list[dict[str, str]]]]:
+def get_lesson_plan(class_id: str or int, force_update = False) -> dict[str, list[list[dict[str, str]]]]:
     """Gets the lesson plan for a given class.
 
     Arguments:
-        class_id -- a string representing the name of the class.
+        class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
     """
     class_id = get_plan_id(class_id)
     filepath = f"cache/plan_{class_id}.json"
