@@ -954,7 +954,7 @@ def get_substitutions_embed(message: discord.Message = None) -> tuple[bool, disc
         return False, get_web_api_error_message(e)
     msg = f"Zastępstwa na {datetime.datetime.now():%m.%d.%Y}:"
     embed = discord.Embed(title="Zastępstwa", description=msg)
-    embed.add_field(name="Sane", value=data, inline=False)
+    embed.add_field(name="Dane", value=data, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}zast, aby pokazać tą wiadomość.")
     return True, embed
 
@@ -1066,9 +1066,7 @@ async def try_send_message(message: discord.Message, reply: bool, send_args: str
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
         with open("result.txt", 'w') as file:
             if type(on_fail_data) is discord.Embed:
-                embed_attributes = on_fail_data.to_dict()
-                # attributes_to_dump = ["title", "description", "fields", "footer"]
-                on_fail_data = { attribute: embed_attributes[attribute] for attribute in list(embed_attributes.keys()).sort(reverse=True) }
+                on_fail_data = on_fail_data.to_dict()
             try:
                 json.dump(on_fail_data, file, indent=2, ensure_ascii=False)
             except TypeError:
