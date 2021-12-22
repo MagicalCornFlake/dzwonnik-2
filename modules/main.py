@@ -417,7 +417,7 @@ async def track_api_updates() -> None:
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
     else:
         if old_cache != substitutions:
-            send_log(f"Substitution data updated! New data: {list(substitutions.keys())}\nOld data {old_cache}")
+            send_log(f"Substitution data updated! New data: {substitutions}\n\nOld data {old_cache}")
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             # await target_channel.send(embed=get_substitutions_embed()[1])
 
@@ -1176,13 +1176,15 @@ def send_log(*raw_message, force=False) -> None:
     if not (enable_log_messages or force):
         return
     
+    msg = file_management.log(*raw_message)
     log_loop = asyncio.get_event_loop()
-    log_loop.create_task(send_log_message(file_management.log(*raw_message)))
+    log_loop.create_task(send_log_message(msg if len(msg) <= 4000 else f"Log message too long ({len(msg)} characters). Check 'bot.log' file."))
 
 
 async def send_log_message(message) -> None:
+    log_channel = client.get_channel(ChannelID.bot_logs)
     await client.wait_until_ready()
-    await client.get_channel(ChannelID.bot_logs).send(f"```py\n{message}\n```")
+    await log_channel.send(f"```py\n{message}\n```")
 
 
 def start_bot() -> bool:
