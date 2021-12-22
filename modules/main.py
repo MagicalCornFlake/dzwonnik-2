@@ -280,6 +280,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 lesson = get_lesson_by_roles(current_period, next_lesson_weekday, [role_code])
                 if not lesson or lesson["period"] > current_period:
                     # No lesson for that group
+                    log_message("Skipping lesson:", lesson, "on period", current_period)
                     continue
                 msgs[lesson['group']] = get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
