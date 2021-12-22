@@ -10,6 +10,9 @@
 # Linux output files
 *.out
 
+# Local log files
+*.log
+
 # Local data files
 data.json
 cache
