@@ -259,6 +259,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         # Get the period of the first lesson
         for first_period, lessons in enumerate(lesson_plan[weekday_names[query_time.weekday()]]):
             if lessons:
+                log_message("Today's first lesson is on period", first_period)
                 break
 
         # Get the period of the next lesson
