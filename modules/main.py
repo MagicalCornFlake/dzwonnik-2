@@ -779,7 +779,7 @@ def get_next_lesson(message: discord.Message) -> tuple[bool, str or discord.Embe
         next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
         lesson = get_lesson_by_roles(lesson_period if lesson_period < 10 else lesson_period - 9, weekday_index, message.author.roles)
         if not lesson:
-            return False, f":x: Nie ma żadnych zajęć dla Twojej grupy po godz. {time:%H:%M}.", ""
+            return False, f"{Emoji.info} Nie ma żadnych zajęć dla Twojej grupy po godz. {time:%H:%M}.", ""
         log_message("Received lesson:", lesson)
         if next_lesson_is_today:
             if lesson['period'] > 10:
@@ -825,7 +825,7 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     if next_period_is_today:
         lesson = get_lesson_by_roles(lesson_period % 10, current_time.weekday(), message.author.roles)
         if not lesson:
-            return False, f"{Emoji.info} Już się na dziś skończyły lekcje!"
+            return False, f"{Emoji.info} Dzisiaj już nie ma dla Ciebie żadnych lekcji!"
         break_start_datetime = get_time(lesson['period'], current_time, True)
         break_countdown = break_start_datetime - current_time
         mins = math.ceil(break_countdown.seconds / 60)
