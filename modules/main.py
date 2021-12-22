@@ -605,7 +605,7 @@ def get_lesson_plan(message: discord.Message) -> tuple[bool, str or discord.Embe
                         # The input is not a valid weekday name.
                         # ValueError can't be used since it has already been caught
                         raise RuntimeError(f"invalid weekday name: {args[1]}")
-            if len(args >= 2):
+            if len(args) >= 2:
                 try:
                     plan_id = plan_crawler.get_plan_id(args[2])
                 except ValueError:
