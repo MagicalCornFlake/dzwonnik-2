@@ -114,8 +114,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         file_management.log(f"'{key}: {len(data[key])}")
         if key in ["Nr", "Godz"]:
             continue
-        for period in data[key]:
-            file_management.log(f"{data[key]}: list with length {len(period)}")
+        for period, lessons in enumerate(data[key]):
+            file_management.log(f"    period {period}: {len(lessons)} lessons")
     return data
 
 
