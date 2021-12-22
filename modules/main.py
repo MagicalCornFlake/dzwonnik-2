@@ -823,7 +823,7 @@ def get_next_break(message: discord.Message) -> tuple[bool, str]:
     next_period_is_today, lesson_period = get_next_period(current_time)[:2]
 
     if next_period_is_today:
-        lesson = get_lesson_by_roles(lesson_period if lesson_period < 10 else lesson_period - 9, current_time.weekday(), message.author.roles)
+        lesson = get_lesson_by_roles(lesson_period % 10, current_time.weekday(), message.author.roles)
         if not lesson:
             return False, f"{Emoji.info} Już się na dziś skończyły lekcje!"
         break_start_datetime = get_time(lesson['period'], current_time, True)
