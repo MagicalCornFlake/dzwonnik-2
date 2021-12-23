@@ -71,7 +71,6 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             times = [int(time) for time in duration_pattern.search(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
-            file_manager.log(f"Element:\n  {elem}\n  text: '{elem.text}'\n  attributes: {elem.attrib}")
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
             for i, child in enumerate(elem, start=1):
@@ -100,19 +99,15 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             #         tmp[-1]["teacher"] = teacher
             return tmp
 
-    data: dict[str, list[list[dict[str, str]]]] = {}
-    headers = []
     root = lxml.html.fromstring(html)
     table_element = root.xpath("//html/body/div/table/tr/td/table")[0]
-    for table_row in table_element:
-        for i, column in enumerate(table_row):
-            if column.tag == "th":
-                headers.append(column.text)
-            elif column.tag == "td":
-                weekday = headers[i]
-                if weekday not in data:
-                    data[weekday] = []
-                data[weekday].append(extract_regex(column))
+    headers = [col.text for col in table_element[0]]
+    data: dict[str, list[list[dict[str, str]]]] = {col: [] for col in headers}
+    for i, table_row in enumerate(table_element[1:], start=1):
+        _log(f"table row {i} has {len(table_row)} elements")
+        for j, table_data in enumerate(table_row):
+            _log(f"  table data {j+1} with class {table_data.attrib['class']} has {len(table_data)} elements")
+            data[headers[j]].append(extract_regex(table_data))
     for key in data:
         _log(f"{key}: {len(data[key])}")
         if key in ["Nr", "Godz"]:
