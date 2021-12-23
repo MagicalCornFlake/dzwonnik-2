@@ -73,15 +73,19 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         else:
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
-            for i, child in enumerate([tag for tag in elem.iter() if tag.tag != 'a'][1:], start=1):
-                if child.tag == "br":
-                    file_manager.log("   next lesson:")
-                    i -= 1
-                else:
-                    file_manager.log(f"    lesson {i}: <{child.tag}>{child.text}</{child.tag}>")
-            a_tags = [tag for tag in elem.iter() if tag.tag == 'a']
-            for x, a_tag in enumerate(a_tags):
-                file_manager.log(f"    {['teacher', 'room'][x % 2]} code: {a_tag.text}")
+            file_manager.log(elem_str)
+            matches = lesson_pattern.findall(elem_str)
+            file_manager.log("Regex matches:", matches)
+            file_manager.log(len(matches) if matches else "no" + " match(es)")
+            # for i, child in enumerate([tag for tag in elem.iter() if tag.tag != 'a'][1:], start=1):
+            #     if child.tag == "br":
+            #         file_manager.log("   next lesson:")
+            #         i -= 1
+            #     else:
+            #         file_manager.log(f"    lesson {i}: <{child.tag}>{child.text}</{child.tag}>")
+            # a_tags = [tag for tag in elem.iter() if tag.tag == 'a']
+            # for x, a_tag in enumerate(a_tags):
+            #     file_manager.log(f"    {['teacher', 'room'][x % 2]} code: {a_tag.text}")
             # matches = lesson_pattern.findall(elem_str)
             # file_manager.log("Regex matches:", matches)
             # for match in matches:
