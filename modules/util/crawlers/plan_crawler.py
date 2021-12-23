@@ -61,7 +61,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
 
     def extract_regex(elem: lxml.html.Element) -> any:
         """Extracts the data from a given table row."""
-
+        _log(f"    {elem.tag = }")
+        _log(f"    {elem.attrib = }")
         if elem.attrib["class"] == "nr":
             # Row containing the lesson period number
             return int(elem.text)
@@ -73,10 +74,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         else:
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
-            file_manager.log(elem_str)
+            _log(f"    {elem_str = }")
             matches = lesson_pattern.findall(elem_str)
-            file_manager.log("Regex matches:", matches)
-            file_manager.log(len(matches) if matches else "no" + " match(es)")
             # for i, child in enumerate([tag for tag in elem.iter() if tag.tag != 'a'][1:], start=1):
             #     if child.tag == "br":
             #         file_manager.log("   next lesson:")
@@ -121,6 +120,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         for col, table_data in enumerate(table_row):
             _log(f"  {headers[col]}")
             data[headers[col]].append(extract_regex(table_data))
+            _log("-" * 64)
+        _log(f"\n{'*' * 128}\n")
     for key in data:
         _log(f"{key}: {len(data[key])}")
         if key in ["Nr", "Godz"]:
