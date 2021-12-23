@@ -268,6 +268,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         if next_period < 10:
             # Currently break time
 
+            file_manager.log(f"{first_period = }, {current_period = }")
             if current_period == first_period:
                 # Currently before school
                 new_status_msg = "szkoła o " + get_formatted_period_time(first_period).split('-')[0]
@@ -721,7 +722,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     weekday_name = weekday_names[weekday_index]
-    send_log(f"Looking for lesson of period {query_period} on day {weekday_name} with roles: {target_roles})")
+    send_log(f"Looking for lesson of period {query_period} on {weekday_name} with roles: {target_roles})")
     for period, lessons in enumerate(lesson_plan[weekday_name]):
         if period < query_period:
             continue
@@ -730,7 +731,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
                 send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
-    send_log(f"Did not find a lesson matching those roles for period {query_period} on day {weekday_index}.", force=True)
+    send_log(f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.", force=True)
     return {}
 
 

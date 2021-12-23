@@ -73,9 +73,15 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         else:
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
-            file_manager.log(f"  parent ({elem.tag}): {elem.text}")
-            for i, child in enumerate(elem.iter(), start=1):
-                file_manager.log(f"    child {i} ({child.tag}): {child.text}")
+            for i, child in enumerate([tag for tag in elem.iter() if tag.tag != 'a'][1:], start=1):
+                if child.tag == "br":
+                    file_manager.log("   next lesson:")
+                    i -= 1
+                else:
+                    file_manager.log(f"    lesson {i}: <{child.tag}>{child.text}</{child.tag}>")
+            a_tags = [tag for tag in elem.iter() if tag.tag == 'a']
+            for x, a_tag in enumerate(a_tags):
+                file_manager.log(f"    {['teacher', 'room'][x % 2]} code: {a_tag.text}")
             # matches = lesson_pattern.findall(elem_str)
             # file_manager.log("Regex matches:", matches)
             # for match in matches:
@@ -102,12 +108,15 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
 
     root = lxml.html.fromstring(html)
     table_element = root.xpath("//html/body/div/table/tr/td/table")[0]
-    headers = [col.text for col in table_element[0]]
-    data: dict[str, list[list[dict[str, str]]]] = {col: [] for col in headers}
-    for i, table_row in enumerate(table_element[1:], start=1):
-        _log(f"table row {i} has {len(table_row)} elements")
-        for j, table_data in enumerate(table_row):
-            data[headers[j]].append(extract_regex(table_data))
+    for period, table_row in enumerate(table_element, start=-1):
+        if period == -1:
+            headers = [col.text for col in table_row]
+            data: dict[str, list[list[dict[str, str]]]] = {col: [] for col in headers}
+            continue
+        _log(f"period {period}")
+        for col, table_data in enumerate(table_row):
+            _log(f"  {headers[col]}")
+            data[headers[col]].append(extract_regex(table_data))
     for key in data:
         _log(f"{key}: {len(data[key])}")
         if key in ["Nr", "Godz"]:
