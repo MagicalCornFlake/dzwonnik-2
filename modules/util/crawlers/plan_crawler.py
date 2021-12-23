@@ -73,6 +73,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         else:
             elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
+            file_manager.log(f"  parent ({elem.tag}): {elem.text}")
             for i, child in enumerate(elem.iter(), start=1):
                 file_manager.log(f"    child {i} ({child.tag}): {child.text}")
             # matches = lesson_pattern.findall(elem_str)
