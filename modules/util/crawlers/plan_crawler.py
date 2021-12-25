@@ -9,7 +9,7 @@ from ... import file_manager
 from ... constants import Colour
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
-duration_pattern = re.compile(r"\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)")
+duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
 lesson_pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
                             r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
 
