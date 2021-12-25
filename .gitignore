@@ -16,3 +16,6 @@
 # Local data files
 data.json
 cache
+
+# Testing files
+test*

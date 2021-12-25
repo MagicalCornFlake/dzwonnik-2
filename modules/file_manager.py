@@ -79,24 +79,31 @@ def clear_cache(cache_path: str = "cache") -> bool:
         return False
 
 
-def read_env_files() -> bool:
-    """Reads the .env files in the current directory and sets their contents in the program's local memory.
+def read_env_file() -> bool:
+    """Reads the .env file in the current directory and sets its contents in the program's local memory.
     Returns a boolean indicating if any system environment variables were set as a result of this.
     """
-    log("\n    --- Processing environment variable (.env) files... ---")
+    if not os.path.isfile(".env"):
+        log("    --- '.env' file not found in program root directory. ---")
+        return False
     return_value = False
-    for filename in os.listdir():
-        if not filename.endswith('.env'):
-            continue
-        env_name = filename.rstrip('.env')
-        if env_name in os.environ:
-            log(f"Environment variable '{env_name}' is already set, ignoring the .env file.")
-            continue
-        return_value = True
-        with open(filename, 'r') as file:
-            env_value = file.read().rstrip('\n')
+    log("\n    --- Processing environment variable (.env) file... ---")
+    with open('.env', 'r') as file:
+        # Loop through each line in file
+        for line in file.readlines():
+            # Line does not contain a variable assignment
+            if '=' not in line:
+                continue
+            # Extract environment variable name and value from each line, stripping them from whitespaces
+            env_name, env_value = [s.strip() for s in line.rstrip('\n').split('=', maxsplit=1)]
+            # Don't reassign value if already set in memory
+            if env_name in os.environ:
+                log(f"Environment variable '{env_name}' is already set, ignoring assignment in .env file.")
+                continue
+            # Actually assign the environment variable value in memory
             os.environ[env_name] = env_value
             log(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
-    # Newline for readability
+            # Make the method return True since there was an env set
+            return_value = True
     log("    --- Finished processing environment variable files. ---\n")
     return return_value

@@ -1195,7 +1195,7 @@ def start_bot() -> bool:
     for module in (file_manager, steam_api, web_api, lucky_numbers_api, plan_crawler, substitutions_crawler):
         importlib.reload(module)
     try:
-        file_manager.read_env_files()
+        file_manager.read_env_file()
         read_data_file('data.json')
         event_loop = asyncio.get_event_loop()
         try:
