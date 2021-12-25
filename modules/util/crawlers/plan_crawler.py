@@ -1,7 +1,6 @@
 """Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details."""
 import json
 import re
-import lxml.html
 
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
 # ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
@@ -9,6 +8,7 @@ from .. import web_api
 from ... import file_manager
 from ... constants import Colour
 
+period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 duration_pattern = re.compile(r"\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)")
 lesson_pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
                             r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
@@ -59,77 +59,73 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher]) to each weekday name.
     """
 
-    def extract_regex(elem: lxml.html.Element) -> any:
+    tag_index = seen_tables = row_number = column_number = 0
+    headers = []
+    data: dict[str, list[list[dict[str, str]]]] = {}
+
+    def extract_regex() -> any:
         """Extracts the data from a given table row."""
-        _log(f"    {elem.tag = }")
-        _log(f"    {elem.attrib = }")
-        if elem.attrib["class"] == "nr":
+
+        if row == "<td class=\"l\">&nbsp;</td>":
+            return []
+        elif row.startswith("<td class=\"nr\">"):
             # Row containing the lesson period number
-            return int(elem.text)
-        elif elem.attrib["class"] == "g":
+            return int(period_pattern.match(row).groups()[-1])
+        elif row.startswith("<td class=\"g\">"):
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            times = [int(time) for time in duration_pattern.search(elem.text).groups()]
+            times = [int(time) for time in duration_pattern.match(row).groups()]
             return [times[:2], times[2:]]
         else:
+            # Row containing lesson information for a given period
             tmp: list[dict[str, str]] = []
-            elem_str = lxml.html.tostring(elem[0]).decode('UTF-8')
-            _log(f"    {elem_str = }")
-            # matches = lesson_pattern.findall(elem_str)
-            # _log(f"    {elem.text = }")
-
-            # for i, child in enumerate([tag for tag in elem.iter() if tag.tag != 'a'][1:], start=1):
-            #     if child.tag == "br":
-            #         file_manager.log("   next lesson:")
-            #         i -= 1
-            #     else:
-            #         file_manager.log(f"    lesson {i}: <{child.tag}>{child.text}</{child.tag}>")
-            # a_tags = [tag for tag in elem.iter() if tag.tag == 'a']
-            # for x, a_tag in enumerate(a_tags):
-            #     file_manager.log(f"    {['teacher', 'room'][x % 2]} code: {a_tag.text}")
-            # matches = lesson_pattern.findall(elem_str)
-            # file_manager.log("Regex matches:", matches)
-            # for match in matches:
-            #     lesson_name, group, groups, teacher, code, room_id = match
-            #     if group: 
-            #         if int(groups) == 5:
-            #             group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
-            #     else:
-            #         # If the group is not specified but the room code is, use that instead
-            #         # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
-            #         # Finally, if none of the above, set the group to 'grupa_0' (whole class)
-            #         group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
-            #     name = lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace('r_', 'r-')
-            #     tmp.append({
-            #         # Replace extended language lessons with the regular variant since there is no practical distinction
-            #         "name": name.replace(' ', '-'),
-            #         "group": "grupa_" + group,
-            #         "room_id": room_id
-            #     })
-            #     if teacher:
-            #         # Add the teacher to the returned lesson info if they are specified in the given data
-            #         tmp[-1]["teacher"] = teacher
+            for match in lesson_pattern.findall(row):
+                lesson_name, group, groups, teacher, code, room_id = match
+                if group: 
+                    if int(groups) == 5:
+                        group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
+                else:
+                    # If the group is not specified but the room code is, use that instead
+                    # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
+                    # Finally, if none of the above, set the group to 'grupa_0' (whole class)
+                    group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
+                name = lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace('r_', 'r-')
+                tmp.append({
+                    # Replace extended language lessons with the regular variant since there is no practical distinction
+                    "name": name.replace(' ', '-'),
+                    "group": "grupa_" + group,
+                    "room_id": room_id
+                })
+                if teacher:
+                    # Add the teacher to the returned lesson info if they are specified in the given data
+                    tmp[-1]["teacher"] = teacher
             return tmp
 
-    root = lxml.html.fromstring(html)
-    table_element = root.xpath("//html/body/div/table/tr/td/table")[0]
-    for period, table_row in enumerate(table_element, start=-1):
-        if period == -1:
-            headers = [col.text for col in table_row]
-            data: dict[str, list[list[dict[str, str]]]] = {col: [] for col in headers}
-            continue
-        _log(f"period {period}")
-        for col, table_data in enumerate(table_row):
-            _log(f"  {headers[col]}")
-            data[headers[col]].append(extract_regex(table_data))
-            _log("-" * 64)
-        _log(f"\n{'*' * 128}\n")
-    for key in data:
-        _log(f"{key}: {len(data[key])}")
-        if key in ["Nr", "Godz"]:
-            continue
-        for period, lessons in enumerate(data[key]):
-            _log(f"    period {period}: {len(lessons)} lesson(s)")
+    # Go through each line in the inputted HTML
+    for row in html.splitlines():
+        # Increment the tag depth if the line introduces a new tag
+        # Decremenet the tag depth if the line contains a closing tag
+        # Ignore tags like '<hr>', '<br>' that are defined above
+        tag_index += row.count("<") - 2 * row.count("</") - sum([row.count(f"<{tag}>") for tag in ignored_tags])
+        if "<table" in row:
+            # Increment the number of tables that have been met so far
+            seen_tables += row.count('<table')
+        # The table containing the lesson plans is the 3rd table 
+        if seen_tables == 3:
+            if row == "<tr>":
+                row_number += 1
+                column_number = 0
+                continue
+            if row_number == 1 and row.startswith("<th>"):
+                headers.append(row.lstrip("<th>").rstrip("</th>"))
+            elif row.startswith("<td"):
+                weekday = headers[column_number]
+                column_number += 1
+                if weekday not in data:
+                    data[weekday] = []
+                data[weekday].append(extract_regex())
+    #             print(f"{colour.OKCYAN}row {row_number}{colour.ENDC}, seen {colour.OKGREEN}{seen_tables} tables {colour.WARNING}| {row}")
+    # print(colour.ENDC)
     return data
 
 
