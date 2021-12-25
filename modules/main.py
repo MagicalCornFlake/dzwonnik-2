@@ -407,7 +407,7 @@ async def track_api_updates() -> None:
             await target_channel.send(embed=get_lucky_numbers_embed()[1])
             save_data_file()
     try:
-        old_cache = file_manager.check_if_cache_exists("subs")
+        old_cache = file_manager.cache_exists("subs")
         substitutions, cache_existed = substitutions_crawler.get_substitutions(True)
     except web_api.InvalidResponseException as e:
         # Ping @Konrad

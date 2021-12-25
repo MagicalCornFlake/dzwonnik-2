@@ -34,7 +34,7 @@ def save_log_file() -> None:
     clear_log_file("bot.log")
 
 
-def check_if_cache_exists(cache_name: str) -> dict:
+def cache_exists(cache_name: str) -> dict:
     """Returns the cached data if it exists, otherwise an empty dictionary."""
     filepath = f"cache/{cache_name}.json"    
     if not os.path.isdir('cache'):
@@ -55,15 +55,15 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
         force_update -- a boolean indicating if the cache should be forcefully updated even if it already exists.
         callback_function -- a lambda function that takes 'force_update' as an argument and returns the new cache.
     """
-    cache = check_if_cache_exists(cache_name)
-    cache_exists = bool(cache)
-    log(f"Cache for {cache_name} was {'not' * (not cache_exists)}found.")
-    if force_update or not cache_exists:
+    cache = cache_exists(cache_name)
+    cache_existed = bool(cache)
+    log(f"Cache for {cache_name} was {'not' * (not cache_existed)}found.")
+    if force_update or not cache_existed:
         cache = callback_function(force_update)
         json_string = json.dumps(cache, indent=4, ensure_ascii=False)
         with open(f"cache/{cache_name}.json", 'w') as file:
             file.write(json_string)
-    return cache, cache_exists
+    return cache, cache_existed
 
 
 def clear_cache(cache_path: str = "cache") -> bool:
