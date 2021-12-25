@@ -124,8 +124,12 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 if weekday not in data:
                     data[weekday] = []
                 data[weekday].append(extract_regex())
-    #             print(f"{colour.OKCYAN}row {row_number}{colour.ENDC}, seen {colour.OKGREEN}{seen_tables} tables {colour.WARNING}| {row}")
-    # print(colour.ENDC)
+    for key in data:
+        _log(f"{key}: {len(data[key])}")
+        if key in ["Nr", "Godz"]:
+            continue
+        for period, lessons in enumerate(data[key]):
+            _log(f"    period {period}: {len(lessons)} lesson(s)")
     return data
 
 
