@@ -16,9 +16,8 @@ def log(*raw_message: str) -> str:
     # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning 
     message = timestamp + ' '.join(map(str, raw_message)).replace("\n", "\n" + " " * len(timestamp))
     with open("bot.log", 'a') as file:
-
         file.write(message + "\n")
-    print(message)
+    # print(message)
     return message
 
 
@@ -73,10 +72,10 @@ def clear_cache(cache_path: str = "cache") -> bool:
         for filename in os.listdir(cache_path):
             os.remove(cache_path + os.path.sep + filename)
         os.rmdir(cache_path)
-        print("Successfully cleared cache at directory: ./" + cache_path)
+        log("Successfully cleared cache at directory: ./" + cache_path)
         return True
     else:
-        print(f"Did not clear cache from directory ./{cache_path}: path does not exist.")
+        log(f"Did not clear cache from directory ./{cache_path}: path does not exist.")
         return False
 
 

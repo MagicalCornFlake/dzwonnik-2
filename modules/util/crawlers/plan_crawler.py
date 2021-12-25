@@ -76,7 +76,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             # elem_str = lxml.html.tostring(elem).decode('UTF-8')
             # _log(f"    {elem_str = }")
             # matches = lesson_pattern.findall(elem_str)
-            _log(f"{elem.text = }")
+            _log(f"    {elem.text = }")
 
             # for i, child in enumerate([tag for tag in elem.iter() if tag.tag != 'a'][1:], start=1):
             #     if child.tag == "br":
