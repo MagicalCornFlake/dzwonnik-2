@@ -248,9 +248,8 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         query_time -- the time to get the status for.
     """
     global current_period
-    if query_time is None:
-        # Default time to check is current time
-        query_time = datetime.datetime.now()
+    # Default time to check is current time
+    query_time = query_time or datetime.datetime.now()
     send_log(f"Updating bot status ...")
     next_period_is_today, next_period, next_lesson_weekday = get_next_period(query_time)
     if next_period_is_today:
@@ -866,7 +865,7 @@ def get_web_api_error_message(e: Exception) -> str:
 
 # Returns the message to send when the user asks for the price of an item on the Steam Community Market
 def get_market_price(message: discord.Message, result_override=None) -> tuple[bool, str]:
-    args: str = message.content.lstrip(f"{prefix}cena ").split(" waluta=") if result_override is None else [message]
+    args: list[str] = message.content[len(f"{prefix}cena "):].split(" waluta=") if result_override is None else [message]
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
         result = steam_api.get_item(args[0], 730, currency) if result_override is None else result_override
@@ -949,7 +948,7 @@ def get_substitutions_embed(message: discord.Message = None) -> tuple[bool, disc
         send_log(f"Error! Received an invalid response from the web request. Exception trace:\n" +
                     ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
         return False, get_web_api_error_message(e)
-    msg = f"Zastępstwa na {datetime.datetime.now():%m.%d.%Y}:"
+    msg = f"Zastępstwa na {datetime.datetime.now():%d.%m.%Y}:"
     embed = discord.Embed(title="Zastępstwa", description=msg)
     embed.add_field(name="Dane", value=data, inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}zast, aby pokazać tą wiadomość.")
@@ -1097,7 +1096,7 @@ async def on_message(message: discord.Message) -> None:
     admin_commands = ["exec", "restart", "quit", "exit"]
     if msg_first_word in admin_commands:
         if message.author != client.get_user(member_ids[8 - 1]):
-            author_name = message.author.name if message.author.nick is None else message.author.nick
+            author_name = message.author.nick or message.author.name
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
         if msg_first_word == admin_commands[0]:

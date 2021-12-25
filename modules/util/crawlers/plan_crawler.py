@@ -72,10 +72,12 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             times = [int(time) for time in duration_pattern.search(elem.text).groups()]
             return [times[:2], times[2:]]
         else:
-            elem_str = lxml.html.tostring(elem).decode('UTF-8')
             tmp: list[dict[str, str]] = []
-            _log(f"    {elem_str = }")
-            matches = lesson_pattern.findall(elem_str)
+            # elem_str = lxml.html.tostring(elem).decode('UTF-8')
+            # _log(f"    {elem_str = }")
+            # matches = lesson_pattern.findall(elem_str)
+            _log(f"{elem.text = }")
+
             # for i, child in enumerate([tag for tag in elem.iter() if tag.tag != 'a'][1:], start=1):
             #     if child.tag == "br":
             #         file_manager.log("   next lesson:")
