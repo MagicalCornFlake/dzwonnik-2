@@ -14,7 +14,7 @@ def get_help_message(_: Message) -> tuple[bool, Embed]:
         command_description = info[command_name]["description"]
         if command_description:
             embed.add_field(name=command_name, value=command_description.format(p=bot.prefix), inline=False)
-    embed.set_footer(text=f"Użyj komendy {bot.prefix}help lub mnie **@oznacz**, aby pokazać tą wiadomość.")
+    embed.set_footer(text=f"Użyj komendy {bot.prefix}help lub mnie @oznacz, aby pokazać tą wiadomość.")
     return True, embed
 
 
