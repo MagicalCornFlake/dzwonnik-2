@@ -8,6 +8,9 @@ from .. import prefix, Emoji, util
 from ..file_manager import save_data_file
 
 
+desc = None
+
+
 def update_meet_link(message: Message) -> tuple[bool, str]:
     args = message.content.split(" ")
     if len(args) > 1:

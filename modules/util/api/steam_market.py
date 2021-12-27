@@ -1,6 +1,6 @@
 """Functionality for accessing the Steam Community web API."""
 import urllib.parse
-from .. import web_api
+from .. import web
 
 
 currency_ids = [
@@ -82,7 +82,7 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bo
     query_encoded = urllib.parse.quote(raw_query)
     # noinspection SpellCheckingInspection
     url = f"{steam_url}priceoverview/?appid={app_id}&currency={currency_id}&market_hash_name={query_encoded}"
-    result = web_api.make_request(url, force).json()
+    result = web.make_request(url, force).json()
     if not result["success"]:
         raise NoSuchItemException(raw_query)
     return result

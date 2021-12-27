@@ -1,4 +1,4 @@
-"""Utility methods for all web APIs."""
+"""Utility functions for all web APIs."""
 
 # Standard library imports
 import requests
@@ -7,7 +7,7 @@ from time import time
 # Local application imports
 # from ..file_manager import log
 from . import send_log
-from .api.steam_api import NoSuchItemException
+from .api.steam_market import NoSuchItemException
 
 
 def get_error_message(e: Exception) -> str:
@@ -76,6 +76,6 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
 
 
 def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
-    send_log("Getting HTML file from URL:", url)
+    send_log(f"Fetching content from {url} ...")
     html = make_request(url, ignore_max_requests_cooldown).content.decode('UTF-8')
     return html.replace("<html><head>", "<html>\n<head>", 1) 

@@ -4,7 +4,7 @@ import re
 
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
 # ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
-from .. import web_api
+from .. import web
 from ... import file_manager
 from ... import Colour
 
@@ -124,12 +124,13 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 if weekday not in data:
                     data[weekday] = []
                 data[weekday].append(extract_regex())
-    for key in data:
-        _log(f"{key}: {len(data[key])}")
-        if key in ["Nr", "Godz"]:
-            continue
-        for period, lessons in enumerate(data[key]):
-            _log(f"    period {period}: {len(lessons)} lesson(s)")
+    # Report summary of scraped data
+    # for key in data:
+    #     _log(f"{key}: {len(data[key])}")
+    #     if key in ["Nr", "Godz"]:
+    #         continue
+    #     for period, lessons in enumerate(data[key]):
+    #         _log(f"    period {period}: {len(lessons)} lesson(s)")
     return data
 
 
@@ -142,7 +143,7 @@ def get_lesson_plan(class_id = "2d", force_update = False) -> tuple[dict, bool]:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     plan_id = get_plan_id(class_id)
-    update_cache_callback: function = lambda force: parse_html(web_api.get_html(get_plan_link(plan_id), force))
+    update_cache_callback: function = lambda force: parse_html(web.get_html(get_plan_link(plan_id), force))
     _log(f"Getting lesson plan with id {plan_id} for class {class_id} ({force_update = }) ...")
     return file_manager.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
     # return update_cache_callback(force_update), False

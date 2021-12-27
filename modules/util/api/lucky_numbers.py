@@ -1,6 +1,6 @@
 """Functionality for getting the lucky numbers from the SU ILO website."""
 from datetime import datetime
-from .. import web_api
+from .. import web
 
 # Data JSON structure:
 # {
@@ -34,5 +34,5 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
     url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
     global cached_data
     old_cache = cached_data
-    cached_data = web_api.make_request(url, ignore_max_requests_cooldown=True).json()
+    cached_data = web.make_request(url, ignore_max_requests_cooldown=True).json()
     return old_cache

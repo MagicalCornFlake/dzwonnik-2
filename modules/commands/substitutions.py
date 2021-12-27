@@ -9,13 +9,16 @@ from discord import Message, Embed
 # Local application imports
 from .. import prefix
 from ..util import format_exception, send_log
-from ..util.web_api import get_error_message
-from ..util.crawlers import substitutions_crawler
+from ..util.web import get_error_message
+from ..util.crawlers import substitutions
+
+
+desc = "Podaje zastępstwa na dany dzień."
 
 
 def get_substitutions_embed(message: Message = None) -> tuple[bool, Embed or str]:
     try:
-        data = substitutions_crawler.get_substitutions(message is None)[0]
+        data = substitutions.get_substitutions(message is None)[0]
     except Exception as e:
         ex: str = format_exception(e)
         send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{ex}", force=True)

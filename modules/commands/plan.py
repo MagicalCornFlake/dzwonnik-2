@@ -9,7 +9,17 @@ from discord import Message, Embed
 # Local application imports
 from .. import Weekday, weekday_names, Emoji, prefix, group_names, current_period, util
 # from ..util import util.send_log, get_lesson_link, get_lesson_name, get_formatted_period_time
-from ..util.crawlers import plan_crawler
+from ..util.crawlers import lesson_plan
+
+
+desc = """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na dzień dzisiejszy.
+    Parametry: __dzień tygodnia__, __nazwa klasy__
+    Przykłady:
+    `{p}plan` - wyświetliłby się plan lekcji na dziś/najbliższy dzień szkolny.
+    `{p}plan 2` - wyświetliłby się plan lekcji na wtorek (2. dzień tygodnia).
+    `{p}plan pon` - wyświetliłby się plan lekcji na poniedziałek.
+    `{p}plan pon 1a` - wyświetliłby się plan lekcji na poniedziałek dla klasy 1a."""
+
 
 def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
     args = message.content.split(" ")
@@ -47,11 +57,11 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                         raise RuntimeError(f"invalid weekday name: {args[1]}")
             if len(args) > 2:
                 try:
-                    plan_id = plan_crawler.get_plan_id(args[2])
+                    plan_id = lesson_plan.get_plan_id(args[2])
                 except ValueError:
                     raise RuntimeError(f"invalid class name: {args[2]}")
                 else:
-                    class_lesson_plan = plan_crawler.get_util.lesson_plan(plan_id)[0]
+                    class_lesson_plan = lesson_plan.get_util.lesson_plan(plan_id)[0]
         except RuntimeError as e:
             util.send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \

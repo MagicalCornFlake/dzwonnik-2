@@ -14,8 +14,8 @@ from discord.ext.tasks import loop
 # Local application imports
 from . import file_manager, commands, util, my_server_id, role_codes, prefix, member_ids, weekday_names, group_names, ChannelID, Emoji, Weekday
 from .commands import help, homework, steam_market
-from .util.api import steam_api, lucky_numbers_api
-from .util.crawlers import plan_crawler, substitutions_crawler
+from .util.api import lucky_numbers, steam_market
+from .util.crawlers import lesson_plan, substitutions
 
 
 my_server = util.client.get_guild(my_server_id)  # Konrad's Discord Server
@@ -32,7 +32,7 @@ async def on_ready() -> None:
     my_server = util.client.get_guild(my_server_id)
 
     # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
-    util.lesson_plan = plan_crawler.get_lesson_plan(force_update=True)[0]
+    util.lesson_plan = lesson_plan.get_lesson_plan(force_update=True)[0]
 
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
@@ -197,10 +197,18 @@ async def track_time_changes() -> None:
 
 @loop(minutes=1)
 async def track_api_updates() -> None:
+    """Routinely fetches data from the various APIs in order to ensure it is up-to-date.
+    Updates:
+        - Steam Community Market item prices
+        - The current lucky numbers from the SU ILO website
+        - The substitutions from the I LO website
+    """
+    
+    # Check if any tracked item's price has exceeded the established boundaries
     for item in steam_market.tracked_market_items:
         await asyncio.sleep(3)
-        result = steam_api.get_item(item.name)
-        price = steam_api.get_item_price(result)
+        result = steam_market.get_item(item.name)
+        price = steam_market.get_item_price(result)
         # Strips the price string of any non-digit characters and returns it as an integer
         price = int(''.join([char if char in "0123456789" else '' for char in price]))
         if item.min_price < price < item.max_price:
@@ -211,23 +219,26 @@ async def track_api_updates() -> None:
         steam_market.tracked_market_items.remove(item)
         file_manager.save_data_file()
     await asyncio.sleep(3)
+
     # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
     try:
-        old_cache = lucky_numbers_api.update_cache()
+        old_cache = lucky_numbers.update_cache()
     except util.web_api.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         exc: str = util.format_exception(e)
         util.send_log(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n{exc}")
     else:
-        if old_cache != lucky_numbers_api.cached_data:
+        if old_cache != lucky_numbers.cached_data:
             util.send_log(f"New lucky numbers data!")
             target_channel = util.client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             await target_channel.send(embed=commands.lucky_numbers.get_lucky_numbers_embed()[1])
             file_manager.save_data_file()
+
+    # Update the substitutions cache, and if it's changed, announce the new data in the specified channel.  
     try:
         old_cache = file_manager.cache_exists("subs")
-        substitutions, cache_existed = substitutions_crawler.get_substitutions(True)
+        new_cache, cache_existed = substitutions.get_substitutions(True)
     except util.web_api.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
@@ -235,7 +246,7 @@ async def track_api_updates() -> None:
         util.send_log(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}")
     else:
         if not cache_existed:
-            util.send_log(f"Substitution data updated! New data:\n{substitutions}\n\nOld data:\n{old_cache}")
+            util.send_log(f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}")
             target_channel = util.client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             # await target_channel.send(embed=get_substitutions_embed()[1])
 
@@ -246,7 +257,6 @@ async def wait_until_ready_before_loops() -> None:
     await util.client.wait_until_ready()
 
 
-# noinspection SpellCheckingInspection
 command_descriptions = {
     "help": "Wyświetla tą wiadomość.",
 
@@ -345,7 +355,7 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
     return reply_msg
 
 
-# This method is called when someone sends a message in the server
+# This function is called when someone sends a message in the server
 @util.client.event
 async def on_message(message: discord.Message) -> None:
     await util.client.wait_until_ready()
@@ -419,9 +429,9 @@ async def on_message(message: discord.Message) -> None:
     # await message.delete()
 
     util.send_log(f"Received command: '{message.content}'", "from user:", message.author)
-    command_method_to_call_when_executed = help.info[msg_first_word]["method"]
+    callback_function = help.info[msg_first_word]["function"]
     try:
-        reply_is_embed, reply = command_method_to_call_when_executed(message)
+        reply_is_embed, reply = callback_function(message)
     except Exception as e:
         util.send_log(util.format_exception(e))
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
@@ -434,7 +444,7 @@ async def on_message(message: discord.Message) -> None:
 
 def start_bot() -> bool:
     """Log in to the Discord bot and start its functionality.
-    This method is blocking -- once the bot is connected, it will run until it's disconnected.
+    This function is blocking -- once the bot is connected, it will run until it's disconnected.
 
     Returns a boolean that indicates if the bot should be restarted.
     """
@@ -443,7 +453,7 @@ def start_bot() -> bool:
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (file_manager, steam_api, util.web_api, lucky_numbers_api, plan_crawler, substitutions_crawler):
+    for module in (file_manager, steam_market, util.web_api, lucky_numbers, lesson_plan, substitutions):
         importlib.reload(module)
     try:
         file_manager.read_env_file()
@@ -476,7 +486,7 @@ def start_bot() -> bool:
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
-            # The file is saved before the start_bot() method returns any value.
+            # The file is saved before the start_bot() function returns.
             # Do not send a debug message since the bot is already offline.
             file_manager.save_data_file(should_log=False)
             file_manager.log("Successfully saved data file 'data.json'. Program exiting.")

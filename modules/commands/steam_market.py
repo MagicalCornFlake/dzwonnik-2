@@ -6,17 +6,32 @@ from discord import Message
 # Local application imports
 from . import TrackedItem, tracked_market_items
 from .. import prefix, Emoji
-from ..util.web_api import get_error_message
-from ..util.api import steam_api
+from ..util.web import get_error_message
+from ..util.api import steam_market
 from ..file_manager import save_data_file
+
+
+desc = """Podaje aktualną cenę dla szukanego przedmiotu na Rynku Społeczności Steam.
+    Parametry: __przedmiot__, __waluta__
+    Przykłady: 
+    `{p}cena Operation Broken Fang Case` - wyświetliłaby się cena dla tego przedmiotu, domyślnie w zł.
+    `{p}cena Operation Broken Fang Case waluta=EUR` - wyświetliłaby się cena dla tego przedmiotu w euro."""
+desc_2 = """Zaczyna śledzić dany przedmiot na Rynku Społeczności Steam \
+    i wysyła powiadomienie, gdy cena wykroczy podaną granicę.
+    Parametry: __nazwa przedmiotu__, __cena minimalna__, __cena maksymalna__,
+    Przykład: `{p}sledz Operation Broken Fang Case min=1.00 max=3.00` - stworzyłoby się zlecenie śledzenia tego\
+    przedmiotu z powiadomieniem, gdy cena się obniży poniżej 1,00zł lub przekroczy 3,00zł."""
+desc_3 = """Przestaje śledzić dany przedmiot na Rynku Społeczności Steam.
+    Parametry: __nazwa przedmiotu__
+    Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny tego przedmiotu."""
 
 # Returns the message to send when the user asks for the price of an item on the Steam Community Market
 def get_market_price(message: Message, result_override=None) -> tuple[bool, str]:
     args: list[str] = message.content[len(f"{prefix}cena "):].split(" waluta=") if result_override is None else [message]
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
-        result = steam_api.get_item(args[0], 730, currency) if result_override is None else result_override
-        return False, f"{Emoji.info} Aktualna cena dla *{args[0]}* to `{steam_api.get_item_price(result)}`."
+        result = steam_market.get_item(args[0], 730, currency) if result_override is None else result_override
+        return False, f"{Emoji.info} Aktualna cena dla *{args[0]}* to `{steam_market.get_item_price(result)}`."
     except Exception as e:
         return False, get_error_message(e)
 
@@ -37,7 +52,7 @@ def start_market_tracking(message: Message):
     else:
         item_name = args[0].rstrip()
         try:
-            result = steam_api.get_item(item_name)
+            result = steam_market.get_item(item_name)
         except Exception as e:
             return False, get_error_message(e)
         else:

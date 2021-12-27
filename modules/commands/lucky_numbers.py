@@ -6,10 +6,12 @@ from discord import Message, Embed
 # Local application imports
 from .. import prefix, member_ids
 from ..util import format_exception
-from ..util.web_api import get_error_message
-from ..util.api.lucky_numbers_api import get_lucky_numbers
+from ..util.web import get_error_message
+from ..util.api.lucky_numbers import get_lucky_numbers
 from ..file_manager import send_log
 
+
+desc = "Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone."
 
 def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     try:

@@ -12,6 +12,13 @@ from . import get_datetime_from_input, get_lesson_by_roles, get_next_period
 from .. import Emoji
 from ..util import get_time, conjugate_numeric, send_log, get_formatted_period_time
 
+
+desc = """Mówi kiedy jest następna przerwa.
+    Parametry: __godzina__, __minuta__
+    Przykład: `{p}nb 9 30` - wyświetliłaby się najbliższa przerwa po godzinie 09:30.
+    *Domyślnie pokazana jest najbliższa przerwa od aktualnego czasu*"""
+
+
 # Calculates the time of the next break
 def get_next_break(message: Message) -> tuple[bool, str]:
     success, result = get_datetime_from_input(message, 'nb')

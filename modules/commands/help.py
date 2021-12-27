@@ -11,68 +11,67 @@ from .. import prefix
 def get_help_message(_: Message) -> tuple[bool, Embed]:
     embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
     for command in info:
-        if command["description"] is None:
-            continue
-        embed.add_field(name=command, value=command["description"].format(p=prefix), inline=False)
+        if command["description"]:
+            embed.add_field(name=command, value=command["description"].format(p=prefix), inline=False)
     embed.set_footer(text=f"Użyj komendy {prefix}help lub mnie **@oznacz**, aby pokazać tą wiadomość.")
     return True, embed
 
 
 info = {
     'help': {
-        "description": "",
-        "method": get_help_message
+        "description": "Wyświetla tą wiadomość.",
+        "function": get_help_message
     },
     'nl': {
-        "description": "",
-        "method": next_lesson.get_next_lesson
+        "description": next_lesson.desc,
+        "function": next_lesson.get_next_lesson
     },
     'nb': {
-        "description": "",
-        "method": next_break.get_next_break
+        "description": next_break.desc,
+        "function": next_break.get_next_break
     },
     'plan': {
-        "description": "",
-        "method": plan.get_lesson_plan
+        "description": plan.desc,
+        "function": plan.get_lesson_plan
     },
     'zad': {
-        "description": "",
-        "method": homework.process_homework_events_alias
+        "description": homework.desc,
+        "function": homework.process_homework_events_alias
     },
     'zadanie': {
-        "description": "",
-        "method": homework.create_homework_event
+        "description": homework.desc_2,
+        "function": homework.create_homework_event
     },
     'zadania': {
-        "description": "",
-        "method": homework.get_homework_events
+        "description": homework.desc_3,
+        "function": homework.get_homework_events
     },
     'meet': {
-        "description": "",
-        "method": meet.update_meet_link
+        "description": meet.desc,
+        "function": meet.update_meet_link
     },
     'cena': {
-        "description": "",
-        "method": steam_market.get_market_price
+        "description": steam_market.desc,
+        "function": steam_market.get_market_price
     },
     'sledz': {
-        "description": "",
-        "method": steam_market.start_market_tracking
+        "description": steam_market.desc_2,
+        "function": steam_market.start_market_tracking
     },
     'odsledz': {
-        "description": "",
-        "method": steam_market.stop_market_tracking
+        "description": steam_market.desc_3,
+        "function": steam_market.stop_market_tracking
     },
     'numerki': {
-        "description": "",
-        "method": lucky_numbers.get_lucky_numbers_embed
+        "description": lucky_numbers.desc,
+        "function": lucky_numbers.get_lucky_numbers_embed
     },
     'num': {
-        "description": "",
-        "method": lucky_numbers.get_lucky_numbers_embed
+        "description": "Alias komendy `{p}numerki`.",
+        "function": lucky_numbers.get_lucky_numbers_embed
     },
     'zast': {
-        "description": "",
-        "method": substitutions.get_substitutions_embed
+        "description": substitutions.desc,
+        "function": substitutions.get_substitutions_embed
     }
 }

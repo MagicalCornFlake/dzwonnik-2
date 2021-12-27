@@ -8,7 +8,7 @@ from datetime import datetime
 # Local application imports
 from .commands import homework_events, HomeworkEvent, HomeworkEventContainer, tracked_market_items, TrackedItem
 from .util import lesson_links, send_log
-from .util.api import lucky_numbers_api
+from .util.api import lucky_numbers
 
 
 def read_data_file(filename: str = "data.json") -> None:
@@ -20,7 +20,7 @@ def read_data_file(filename: str = "data.json") -> None:
                 "lesson_links": {},
                 "homework_events": {},
                 "tracked_market_items": [],
-                "lucky_numbers": lucky_numbers_api.cached_data
+                "lucky_numbers": lucky_numbers.cached_data
             }
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r') as file:
@@ -44,7 +44,7 @@ def read_data_file(filename: str = "data.json") -> None:
         item = TrackedItem(item_name, min_price, max_price, author_id)
         if item not in tracked_market_items:
             tracked_market_items.append(item)
-    lucky_numbers_api.cached_data = data["lucky_numbers"]
+    lucky_numbers.cached_data = data["lucky_numbers"]
 
 
 def save_data_file(filename: str = "data.json", should_log: bool = True) -> None:
@@ -64,7 +64,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         "lesson_links": {code: link for code, link in lesson_links.items() if link},
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
-        "lucky_numbers": lucky_numbers_api.cached_data
+        "lucky_numbers": lucky_numbers.cached_data
     }
 
     # Replaces file content with new data
@@ -173,7 +173,7 @@ def read_env_file() -> bool:
             # Actually assign the environment variable value in memory
             os.environ[env_name] = env_value
             log(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
-            # Make the method return True since there was an env set
+            # Make the function return True since there was an env set
             return_value = True
     log("    --- Finished processing environment variable files. ---\n")
     return return_value

@@ -13,6 +13,13 @@ from .. import prefix, Emoji, group_names, Weekday
 from ..file_manager import send_log
 from ..util import get_time, conjugate_numeric, get_formatted_period_time, get_lesson_link, get_lesson_name
 
+
+desc = """Mówi jaką mamy następną lekcję.
+    Parametry: __godzina__, __minuta__
+    Przykład: `{p}nl 9 30` - wyświetliłaby się najbliższa lekcja po godzinie 09:30.
+    *Domyślnie pokazana jest najbliższa lekcja od aktualnego czasu*"""
+
+
 # Returns the message to send when the user asks for the next lesson
 def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
     success, result = get_datetime_from_input(message, 'nl')

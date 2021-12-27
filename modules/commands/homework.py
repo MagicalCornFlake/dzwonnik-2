@@ -12,6 +12,17 @@ from .. import prefix, Emoji, role_codes, group_names
 from ..file_manager import read_data_file, save_data_file
 
 
+desc = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
+    Natomiast, jeśli w parametrach podane jest hasło 'del' oraz nr zadania, zadanie to zostanie usunięte.
+    Parametry: __data__, __grupa__, __treść__ | 'del', __ID zadania__
+    Przykłady:
+    `{p}zad 31.12.2024 @Grupa 1 Zrób ćwiczenie 5` - stworzyłoby się zadanie na __31.12.2024__\
+    dla grupy **pierwszej** z treścią: *Zrób ćwiczenie 5*.
+    `{p}zad del 4` - usunęłoby się zadanie z ID: *event-id-4*."""
+desc_2 = "Pokazuje wszystkie zadania domowe, które zostały stworzone za pomocą komendy `{p}zad`."
+desc_3 = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
+
+
 def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]:
     args = message.content.split(" ")
     if len(args) == 1:
