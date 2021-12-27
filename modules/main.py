@@ -34,6 +34,7 @@ async def on_ready() -> None:
 
     # Populate dictionaries
     initialise_variables()
+    print(f"{lesson_plan = }")
 
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
