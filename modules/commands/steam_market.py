@@ -5,10 +5,9 @@ from discord import Message
 
 # Local application imports
 from . import TrackedItem, tracked_market_items
-from .. import bot, Emoji
-from ..util.web import get_error_message
-from ..util.api import steam_market
-from ..file_manager import save_data_file
+from .. import bot, util, file_manager, Emoji
+from ..util import web
+from ..util.api import steam_market as steam_market_api
 
 
 desc = """Podaje aktualną cenę dla szukanego przedmiotu na Rynku Społeczności Steam.
@@ -30,10 +29,10 @@ def get_market_price(message: Message, result_override=None) -> tuple[bool, str]
     args: list[str] = message.content[len(f"{bot.prefix}cena "):].split(" waluta=") if result_override is None else [message]
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
-        result = steam_market.get_item(args[0], 730, currency) if result_override is None else result_override
-        return False, f"{Emoji.info} Aktualna cena dla *{args[0]}* to `{steam_market.get_item_price(result)}`."
+        result = steam_market_api.get_item(args[0], 730, currency) if result_override is None else result_override
+        return False, f"{Emoji.info} Aktualna cena dla *{args[0]}* to `{steam_market_api.get_item_price(result)}`."
     except Exception as e:
-        return False, get_error_message(e)
+        return False, web.get_error_message(e)
 
 
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
@@ -52,9 +51,9 @@ def start_market_tracking(message: Message):
     else:
         item_name = args[0].rstrip()
         try:
-            result = steam_market.get_item(item_name)
+            result = steam_market_api.get_item(item_name)
         except Exception as e:
-            return False, get_error_message(e)
+            return False, web.get_error_message(e)
         else:
             author_id = message.author.id
             item = TrackedItem(item_name, min_price, max_price, author_id)
@@ -64,7 +63,7 @@ def start_market_tracking(message: Message):
                         return False, f"{Emoji.warning} Przedmiot *{item.name}* jest już śledzony przez " + \
                                (f"użytkownika <@{item.author_id}>." if item.author_id != author_id else "Ciebie.")
             tracked_market_items.append(item)
-            save_data_file()
+            file_manager.save_data_file()
             return False, f"{Emoji.check} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w przedziale " \
                           f"`{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n" + \
                 get_market_price(item_name, result_override=result)[1]
@@ -77,7 +76,7 @@ def stop_market_tracking(message: Message) -> tuple[bool, str]:
         if item.name.lower() == item_name.lower():
             if item.author_id == message.author.id or message.channel.permissions_for(message.author).administrator:
                 tracked_market_items.remove(item)
-                save_data_file()
+                file_manager.save_data_file()
                 return False, f"{Emoji.check} Zaprzestano śledzenie przedmiotu *{item.name}*."
             return False, f":x: Nie jesteś osobą, która zażyczyła śledzenia tego przedmiotu."
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."

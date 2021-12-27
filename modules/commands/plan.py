@@ -8,7 +8,7 @@ from discord import Message, Embed
 
 # Local application imports
 from .. import Weekday, weekday_names, Emoji, group_names, current_period, util, bot
-from ..util.crawlers import lesson_plan
+from ..util.crawlers import lesson_plan as lesson_plan_crawler
 
 
 desc = """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na dzień dzisiejszy.
@@ -56,11 +56,11 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                         raise RuntimeError(f"invalid weekday name: {args[1]}")
             if len(args) > 2:
                 try:
-                    plan_id = lesson_plan.get_plan_id(args[2])
+                    plan_id = lesson_plan_crawler.get_plan_id(args[2])
                 except ValueError:
                     raise RuntimeError(f"invalid class name: {args[2]}")
                 else:
-                    class_lesson_plan = lesson_plan.get_util.lesson_plan(plan_id)[0]
+                    class_lesson_plan = lesson_plan_crawler.get_lesson_plan(plan_id)[0]
         except RuntimeError as e:
             bot.send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{bot.prefix}plan` numer dnia (1-5) " \

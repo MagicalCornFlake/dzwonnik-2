@@ -10,14 +10,15 @@ from .. import bot
 
 def get_help_message(_: Message) -> tuple[bool, Embed]:
     embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{bot.prefix}`")
-    for command in info:
-        if command["description"]:
-            embed.add_field(name=command, value=command["description"].format(p=bot.prefix), inline=False)
+    for command_name in info:
+        command_description = info[command_name]["description"]
+        if command_description:
+            embed.add_field(name=command_name, value=command_description.format(p=bot.prefix), inline=False)
     embed.set_footer(text=f"Użyj komendy {bot.prefix}help lub mnie **@oznacz**, aby pokazać tą wiadomość.")
     return True, embed
 
 
-info = {
+info: dict[help, dict[str, str or function]] = {
     'help': {
         "description": "Wyświetla tą wiadomość.",
         "function": get_help_message

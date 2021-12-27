@@ -1,5 +1,9 @@
 """Functionality for accessing the Steam Community web API."""
-import urllib.parse
+
+# Standard library imports
+from urllib import parse
+
+# Local application imports
 from .. import web
 
 
@@ -79,7 +83,7 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bo
     """
     steam_url = "https://www.steamcommunity.com/market/"
     currency_id = get_currency_id(currency)
-    query_encoded = urllib.parse.quote(raw_query)
+    query_encoded = parse.quote(raw_query)
     # noinspection SpellCheckingInspection
     url = f"{steam_url}priceoverview/?appid={app_id}&currency={currency_id}&market_hash_name={query_encoded}"
     result = web.make_request(url, force).json()

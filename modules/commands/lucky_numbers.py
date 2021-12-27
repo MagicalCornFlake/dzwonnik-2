@@ -4,21 +4,20 @@
 from discord import Message, Embed
 
 # Local application imports
-from .. import bot, member_ids
-from ..util import format_exception_info
-from ..util.web import get_error_message
-from ..util.api.lucky_numbers import get_lucky_numbers
+from .. import bot, util, member_ids
+from ..util import web
+from ..util.api import lucky_numbers as numbers_api
 
 
 desc = "Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone."
 
 def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     try:
-        data = get_lucky_numbers()
+        data = numbers_api.get_lucky_numbers()
     except Exception as e:
-        exc: str = format_exception_info(e)
+        exc: str = util.format_exception_info(e)
         bot.send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{exc}")
-        return False, get_error_message(e)
+        return False, web.get_error_message(e)
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:

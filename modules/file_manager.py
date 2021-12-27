@@ -6,9 +6,7 @@ import os
 from datetime import datetime
 
 # Local application imports
-from . import bot
-from .commands import homework_events, HomeworkEvent, HomeworkEventContainer, tracked_market_items, TrackedItem
-from .util import lesson_links
+from . import bot, util, commands
 from .util.api import lucky_numbers
 
 
@@ -27,24 +25,24 @@ def read_data_file(filename: str = "data.json") -> None:
     with open(filename, 'r') as file:
         data = json.load(file)
     if "lesson_links" in data:
-        lesson_links.update(data["lesson_links"])
+        util.lesson_links.update(data["lesson_links"])
     # homework_events.clear()  # To ensure there aren't any old instances, not 100% needed though
     # Creates new instances of the HomeworkEvent class with the data from the file
-    new_event_candidates = HomeworkEventContainer()
+    new_event_candidates = commands.HomeworkEventContainer()
     for event_id in data["homework_events"]:
         attributes = data["homework_events"][event_id]
         title, group, author_id, deadline, reminder_date, reminder_is_active = [attributes[attr] for attr in attributes]
-        new_event_candidate = HomeworkEvent(title, group, author_id, deadline, reminder_date, reminder_is_active)
+        new_event_candidate = commands.HomeworkEvent(title, group, author_id, deadline, reminder_date, reminder_is_active)
         new_event_candidates.append(new_event_candidate)
-    homework_events.remove_disjunction(new_event_candidates)
+    commands.homework_events.remove_disjunction(new_event_candidates)
     for new_event_candidate in new_event_candidates:
-        if new_event_candidate.serialised not in homework_events.serialised:
-            new_event_candidate.sort_into_container(homework_events)
+        if new_event_candidate.serialised not in commands.homework_events.serialised:
+            new_event_candidate.sort_into_container(commands.homework_events)
     for item_attributes in data["tracked_market_items"]:
         item_name, min_price, max_price, author_id = [item_attributes[attr] for attr in item_attributes]
-        item = TrackedItem(item_name, min_price, max_price, author_id)
-        if item not in tracked_market_items:
-            tracked_market_items.append(item)
+        item = commands.TrackedItem(item_name, min_price, max_price, author_id)
+        if item not in commands.tracked_market_items:
+            commands.tracked_market_items.append(item)
     lucky_numbers.cached_data = data["lucky_numbers"]
 
 
@@ -58,11 +56,11 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     if should_log:
         bot.send_log("Saving data file", filename)
     # Creates containers with the data to be saved in .json format
-    serialised_homework_events = {event.id_string: event.serialised for event in homework_events}
-    serialised_tracked_market_items = [item.serialised for item in tracked_market_items]
+    serialised_homework_events = {event.id_string: event.serialised for event in commands.homework_events}
+    serialised_tracked_market_items = [item.serialised for item in commands.tracked_market_items]
     # Creates a parent dictionary to save all data that needs to be saved
     data_to_be_saved = {
-        "lesson_links": {code: link for code, link in lesson_links.items() if link},
+        "lesson_links": {code: link for code, link in util.lesson_links.items() if link},
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
         "lucky_numbers": lucky_numbers.cached_data

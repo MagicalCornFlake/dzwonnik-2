@@ -5,7 +5,6 @@ import requests
 from time import time
 
 # Local application imports
-# from ..file_manager import log
 from .. import bot
 from .api.steam_market import NoSuchItemException
 

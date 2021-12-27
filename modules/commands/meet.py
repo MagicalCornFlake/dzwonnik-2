@@ -4,8 +4,7 @@
 from discord import Message
 
 # Local application imports
-from .. import bot, Emoji, util
-from ..file_manager import save_data_file
+from .. import bot, util, file_manager, Emoji
 
 
 desc = None
@@ -27,7 +26,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             if link_is_dash_format or link_is_lookup_format:
                 # User-given link is valid
                 util.lesson_links[args[1]] = args[2]
-                save_data_file()
+                file_manager.save_data_file()
                 return False, f"{Emoji.check} Zmieniono link dla lekcji " \
                                 f"'__{lesson_name}__' z `{link}` na **{args[2]}**."
     msg = f"Należy napisać po komendzie `{bot.prefix}meet` kod lekcji, " + \

@@ -7,10 +7,9 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from .. import bot
-from ..util import format_exception_info
-from ..util.web import get_error_message
-from ..util.crawlers import substitutions
+from .. import bot, util
+from ..util import web
+from ..util.crawlers import substitutions as substitutions_crawler
 
 
 desc = "Podaje zastępstwa na dany dzień."
@@ -18,11 +17,11 @@ desc = "Podaje zastępstwa na dany dzień."
 
 def get_substitutions_embed(message: Message = None) -> tuple[bool, Embed or str]:
     try:
-        data = substitutions.get_substitutions(message is None)[0]
+        data = substitutions_crawler.get_substitutions(message is None)[0]
     except Exception as e:
-        ex: str = format_exception_info(e)
+        ex: str = util.format_exception_info(e)
         bot.send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{ex}", force=True)
-        return False, get_error_message(e)
+        return False, web.get_error_message(e)
     msg = f"Zastępstwa na {datetime.now():%d.%m.%Y}:"
     embed = Embed(title="Zastępstwa", description=msg)
     embed.add_field(name="Dane", value=data, inline=False)

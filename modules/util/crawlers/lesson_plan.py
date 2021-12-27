@@ -1,12 +1,12 @@
 """Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details."""
+
+# Standard library imports
 import json
 import re
 
-# If this script is run manually, it must be done so from a root package with the -m flag. For example:
-# ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
+# Local application imports
 from .. import web
-from ... import file_manager
-from ... import Colour
+from ... import Colour, file_manager
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")

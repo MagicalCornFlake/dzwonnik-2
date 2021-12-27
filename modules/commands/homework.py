@@ -8,8 +8,7 @@ from discord import Message, Embed
 
 # Local application imports
 from . import HomeworkEvent, homework_events
-from .. import bot, Emoji, role_codes, group_names
-from ..file_manager import read_data_file, save_data_file
+from .. import bot, Emoji, file_manager, role_codes, group_names
 
 
 desc = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
@@ -34,7 +33,7 @@ def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]
 
 
 def get_homework_events(message: Message, should_display_event_ids=False) -> tuple[bool, str or Embed]:
-    read_data_file()
+    file_manager.read_data_file()
     amount_of_homeworks = len(homework_events)
     if amount_of_homeworks > 0:
         embed = Embed(title="Zadania", description=f"Lista zadań ({amount_of_homeworks}) jest następująca:")
@@ -110,7 +109,7 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
     if new_event.serialised in homework_events:
         return False, f"{Emoji.warning} Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)
-    save_data_file()
+    file_manager.save_data_file()
     return False, f"{Emoji.check} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}` {group_text}" + \
                   "z powiadomieniem na dzień przed o **17:00.**"
 
@@ -124,6 +123,6 @@ def delete_homework_event(event_id: int) -> str:
     for event in homework_events:
         if event.id == event_id:
             homework_events.remove(event)
-            save_data_file()
+            file_manager.save_data_file()
             return event.title
     raise ValueError

@@ -1,5 +1,9 @@
 """Functionality for getting the lucky numbers from the SU ILO website."""
+
+# Standard library imports
 from datetime import datetime
+
+# Local application imports
 from .. import web
 
 # Data JSON structure:
