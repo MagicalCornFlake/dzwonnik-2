@@ -1,7 +1,7 @@
 """__init__.py file for the web utility-related modules."""
 
 # Standard library imports
-from traceback import format_exception as built_in_format_exception
+from traceback import format_exception
 from datetime import datetime
 
 
@@ -9,8 +9,8 @@ lesson_plan: dict[str, list[int] or list[list[int]] or list[list[dict[str, str]]
 lesson_links: dict[str, str] = {}
 
 
-def format_exception(e: Exception):
-    return ''.join(built_in_format_exception(type(e), e, e.__traceback__))
+def format_exception_info(e: Exception):
+    return ''.join(format_exception(type(e), e, e.__traceback__))
 
 
 def conjugate_numeric(num: int, word: str) -> str:

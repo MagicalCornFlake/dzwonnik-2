@@ -136,7 +136,7 @@ async def on_message(message: discord.Message) -> None:
                         exec(expression)
                 exec_result = locals()['temp'] if "temp" in locals() else "Code executed (return value not specified)."
             except Exception as e:
-                exec_result = util.format_exception(e)
+                exec_result = util.format_exception_info(e)
             if exec_result is None:
                 await message.channel.send("Code executed.")
             else:
@@ -175,7 +175,7 @@ async def on_message(message: discord.Message) -> None:
     try:
         reply_is_embed, reply = callback_function(message)
     except Exception as e:
-        send_log(util.format_exception(e))
+        send_log(util.format_exception_info(e))
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return
@@ -347,7 +347,7 @@ async def track_api_updates() -> None:
     except InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        exc: str = util.format_exception(e)
+        exc: str = util.format_exception_info(e)
         send_log(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n{exc}")
     else:
         if old_cache != lucky_numbers_api.cached_data:
@@ -363,7 +363,7 @@ async def track_api_updates() -> None:
     except InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        exc: str = util.format_exception(e)
+        exc: str = util.format_exception_info(e)
         send_log(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}")
     else:
         if not cache_existed:
