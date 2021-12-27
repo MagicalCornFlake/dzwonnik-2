@@ -6,7 +6,6 @@ import datetime
 import importlib
 import json
 import os
-from sys import modules
 
 # Third-party imports
 import discord
@@ -15,8 +14,8 @@ from discord.ext.tasks import loop
 # Local application imports
 from . import file_manager, commands, util, my_server_id, role_codes, prefix, member_ids, weekday_names, group_names, ChannelID, Emoji, Weekday
 from .commands import help, homework, steam_market
-from .util.api import lucky_numbers, steam_market
-from .util.crawlers import lesson_plan, substitutions
+from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
+from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
 
 
 my_server = util.client.get_guild(my_server_id)  # Konrad's Discord Server
@@ -33,7 +32,7 @@ async def on_ready() -> None:
     my_server = util.client.get_guild(my_server_id)
 
     # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
-    util.lesson_plan = lesson_plan.get_lesson_plan(force_update=True)[0]
+    util.lesson_plan = lesson_plan_crawler.get_lesson_plan(force_update=True)[0]
 
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
@@ -208,8 +207,8 @@ async def track_api_updates() -> None:
     # Check if any tracked item's price has exceeded the established boundaries
     for item in steam_market.tracked_market_items:
         await asyncio.sleep(3)
-        result = steam_market.get_item(item.name)
-        price = steam_market.get_item_price(result)
+        result = steam_api.get_item(item.name)
+        price = steam_api.get_item_price(result)
         # Strips the price string of any non-digit characters and returns it as an integer
         price = int(''.join([char if char in "0123456789" else '' for char in price]))
         if item.min_price < price < item.max_price:
@@ -223,14 +222,14 @@ async def track_api_updates() -> None:
 
     # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
     try:
-        old_cache = lucky_numbers.update_cache()
+        old_cache = lucky_numbers_api.update_cache()
     except util.web.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         exc: str = util.format_exception(e)
         util.send_log(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n{exc}")
     else:
-        if old_cache != lucky_numbers.cached_data:
+        if old_cache != lucky_numbers_api.cached_data:
             util.send_log(f"New lucky numbers data!")
             target_channel = util.client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             await target_channel.send(embed=commands.lucky_numbers.get_lucky_numbers_embed()[1])
@@ -239,7 +238,7 @@ async def track_api_updates() -> None:
     # Update the substitutions cache, and if it's changed, announce the new data in the specified channel.  
     try:
         old_cache = file_manager.cache_exists("subs")
-        new_cache, cache_existed = substitutions.get_substitutions(True)
+        new_cache, cache_existed = substitutions_crawler.get_substitutions(True)
     except util.web.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
@@ -381,7 +380,7 @@ async def on_message(message: discord.Message) -> None:
                             f" Check the bot logs for details.")
         return
     reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
-    if msg_first_word == "zadania":
+    if callback_function is homework.get_homework_events:
         await wait_for_zadania_reaction(message, reply_msg)
 
 
@@ -396,7 +395,11 @@ def start_bot() -> bool:
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in modules.values():
+    for module in (
+        file_manager, commands, util, 
+        help, homework, steam_market,
+        lucky_numbers_api, steam_api,
+        lesson_plan_crawler, substitutions_crawler):
         importlib.reload(module)
     try:
         file_manager.read_env_file()
