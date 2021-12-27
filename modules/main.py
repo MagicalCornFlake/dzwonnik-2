@@ -16,7 +16,7 @@ from discord.ext.tasks import loop
 from . import *
 from . import file_manager, commands
 from .commands import help, homework, steam_market
-from .util import client, send_log, lesson_plan, get_formatted_period_time, web_api
+from .util import client, send_log, lesson_plan, initialise_variables, get_formatted_period_time, web_api
 from .util.api import steam_api, lucky_numbers_api
 from .util.crawlers import plan_crawler, substitutions_crawler
 
@@ -32,6 +32,8 @@ async def on_ready() -> None:
     send_log(f"Successfully logged in as {client.user}\nActive guilds:", guilds, force=True)
     my_server = client.get_guild(my_server_id)
 
+    # Populate dictionaries
+    initialise_variables()
     print(f"{lesson_plan = }")
 
     # Sets status message on bot start
