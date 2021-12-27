@@ -16,6 +16,7 @@
 # Local data files
 data.json
 cache
+bot_logs
 
 # Testing files
 test*

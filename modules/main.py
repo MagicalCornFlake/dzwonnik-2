@@ -395,12 +395,9 @@ def start_bot() -> bool:
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (
-        file_manager, commands, util, 
-        help, homework, steam_market,
-        lucky_numbers_api, steam_api,
-        lesson_plan_crawler, substitutions_crawler):
+    for module in (file_manager, commands, util, help, homework, steam_market, lucky_numbers_api, steam_api, lesson_plan_crawler, substitutions_crawler):
         importlib.reload(module)
+        
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')

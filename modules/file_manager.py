@@ -99,8 +99,9 @@ def save_log_file() -> None:
             if contents.startswith("START TIMESTAMP "):
                 # Extract log creation date from active log
                 log_start_time, log_contents = contents.lstrip("START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
+                log_start_time = log_start_time.rstrip('\n')
                 # Copy active log contents to new file
-                with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n") + ".log", 'w') as file:
+                with open(f"bot_logs{os.path.sep}{log_start_time}.log", 'w') as file:
                     file.write(log_contents)
     except FileNotFoundError:
         # bot.log file does not exist
