@@ -69,6 +69,20 @@ async def on_ready() -> None:
     # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
     util.lesson_plan = lesson_plan_crawler.get_lesson_plan(force_update=True)[0]
 
+    # Intialise array of schooldays
+    schooldays = [key for key in util.lesson_plan if key in weekday_names]
+
+    # Initialise set of unique lesson names
+    lesson_names = set()
+    for schoolday in schooldays:
+        for lessons in util.lesson_plan[schoolday]:
+            for lesson in lessons:
+                lesson_names.add(lesson["name"])
+
+    # Initialise dictionary of lesson links
+    for lesson_name in sorted(lesson_names):
+        util.lesson_links[lesson_name] = None
+
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
     await client.change_presence(activity=status)
