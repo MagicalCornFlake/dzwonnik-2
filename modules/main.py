@@ -329,9 +329,8 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
     send_method = user_message.reply if should_reply else user_message.channel.send
     try:
         reply_msg = await send_method(**send_args)
-    except discord.errors.HTTPException as error:
-        util.send_log(f"{error.status = }, {error.text = }")
-        util.send_log("Length of data:", len(str(on_fail_data)))
+    except discord.errors.HTTPException:
+        util.send_log("Message too long. Length of data:", len(str(on_fail_data)))
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
         with open("result.txt", 'w') as file:
             if type(on_fail_data) is discord.Embed:
