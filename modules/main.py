@@ -6,6 +6,7 @@ import datetime
 import importlib
 import json
 import os
+from sys import modules
 
 # Third-party imports
 import discord
@@ -223,7 +224,7 @@ async def track_api_updates() -> None:
     # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
     try:
         old_cache = lucky_numbers.update_cache()
-    except util.web_api.InvalidResponseException as e:
+    except util.web.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         exc: str = util.format_exception(e)
@@ -239,7 +240,7 @@ async def track_api_updates() -> None:
     try:
         old_cache = file_manager.cache_exists("subs")
         new_cache, cache_existed = substitutions.get_substitutions(True)
-    except util.web_api.InvalidResponseException as e:
+    except util.web.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         exc: str = util.format_exception(e)
@@ -256,64 +257,6 @@ async def track_api_updates() -> None:
 async def wait_until_ready_before_loops() -> None:
     await util.client.wait_until_ready()
 
-
-command_descriptions = {
-    "help": "Wyświetla tą wiadomość.",
-
-    "nl": """Mówi jaką mamy następną lekcję.
-    Parametry: __godzina__, __minuta__
-    Przykład: `{p}nl 9 30` - wyświetliłaby się najbliższa lekcja po godzinie 09:30.
-    *Domyślnie pokazana jest najbliższa lekcja od aktualnego czasu*""",
-
-    "nb": """Mówi kiedy jest następna przerwa.
-    Parametry: __godzina__, __minuta__
-    Przykład: `{p}nb 9 30` - wyświetliłaby się najbliższa przerwa po godzinie 09:30.
-    *Domyślnie pokazana jest najbliższa przerwa od aktualnego czasu*""",
-
-    "plan": """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na dzień dzisiejszy.
-    Parametry: __dzień tygodnia__, __nazwa klasy__
-    Przykłady:
-    `{p}plan` - wyświetliłby się plan lekcji na dziś/najbliższy dzień szkolny.
-    `{p}plan 2` - wyświetliłby się plan lekcji na wtorek (2. dzień tygodnia).
-    `{p}plan pon` - wyświetliłby się plan lekcji na poniedziałek.
-    `{p}plan pon 1a` - wyświetliłby się plan lekcji na poniedziałek dla klasy 1a.""",
-
-    "zadanie": """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
-    Natomiast, jeśli w parametrach podane jest hasło 'del' oraz nr zadania, zadanie to zostanie usunięte.
-    Parametry: __data__, __grupa__, __treść__ | 'del', __ID zadania__
-    Przykłady:
-    `{p}zad 31.12.2024 @Grupa 1 Zrób ćwiczenie 5` - stworzyłoby się zadanie na __31.12.2024__\
-    dla grupy **pierwszej** z treścią: *Zrób ćwiczenie 5*.
-    `{p}zad del 4` - usunęłoby się zadanie z ID: *event-id-4*.""",
-
-    "zadania": "Pokazuje wszystkie zadania domowe, które zostały stworzone za pomocą komendy `{p}zad`.",
-
-    "zad": "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów.",
-
-    "meet": None,
-
-    "cena": """Podaje aktualną cenę dla szukanego przedmiotu na Rynku Społeczności Steam.
-    Parametry: __przedmiot__, __waluta__
-    Przykłady: 
-    `{p}cena Operation Broken Fang Case` - wyświetliłaby się cena dla tego przedmiotu, domyślnie w zł.
-    `{p}cena Operation Broken Fang Case waluta=EUR` - wyświetliłaby się cena dla tego przedmiotu w euro.""",
-
-    "sledz": """Zaczyna śledzić dany przedmiot na Rynku Społeczności Steam \
-    i wysyła powiadomienie, gdy cena wykroczy podaną granicę.
-    Parametry: __nazwa przedmiotu__, __cena minimalna__, __cena maksymalna__,
-    Przykład: `{p}sledz Operation Broken Fang Case min=1.00 max=3.00` - stworzyłoby się zlecenie śledzenia tego\
-    przedmiotu z powiadomieniem, gdy cena się obniży poniżej 1,00zł lub przekroczy 3,00zł.""",
-
-    "odsledz": """Przestaje śledzić dany przedmiot na Rynku Społeczności Steam.
-    Parametry: __nazwa przedmiotu__
-    Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny tego przedmiotu.""",
-
-    "numerki": "Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone.",
-
-    "num": "Alias komendy `{p}numerki`.",
-
-    "zast": "Podaje zastępstwa na dany dzień."
-}
 
 # noinspection SpellCheckingInspection
 automatic_bot_replies = {
@@ -453,7 +396,7 @@ def start_bot() -> bool:
     save_on_exit = True
     # Update each imported module before starting the bot.
     # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (file_manager, steam_market, util.web_api, lucky_numbers, lesson_plan, substitutions):
+    for module in modules.values():
         importlib.reload(module)
     try:
         file_manager.read_env_file()
