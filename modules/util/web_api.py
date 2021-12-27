@@ -1,8 +1,23 @@
 """Utility methods for all web APIs."""
-import requests
-import time
 
-from modules.file_manager import log
+# Standard library imports
+import requests
+from time import time
+
+# Local application imports
+# from ..file_manager import log
+from .api.steam_api import NoSuchItemException
+
+
+def get_error_message(e: Exception) -> str:
+    if type(e) is InvalidResponseException:
+        return f"Nastąpił błąd w połączeniu: {e.status_code}"
+    if type(e) is TooManyRequestsException:
+        return f"Musisz poczekać jeszcze {max_request_cooldown - e.time_since_last_request:.2f}s."
+    if type(e) is NoSuchItemException:
+        return f":x: Nie znaleziono przedmiotu `{e.query}`. Spróbuj ponownie i upewnij się, że nazwa się zgadza."
+    else:
+        raise e
 
 
 class TooManyRequestsException(Exception):
@@ -46,7 +61,7 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
         InvalidResponseException if the request timed out or if it returned an invalid response
     """
     global last_request_time
-    current_time = time.time()
+    current_time = time()
     if current_time - last_request_time < max_request_cooldown and not ignore_max_requests_cooldown:
         raise TooManyRequestsException(int(current_time * 1000 - last_request_time * 1000))
     last_request_time = current_time
@@ -60,6 +75,6 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
 
 
 def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
-    log("Getting HTML file from URL:", url)
+    # log("Getting HTML file from URL:", url)
     html = make_request(url, ignore_max_requests_cooldown).content.decode('UTF-8')
     return html.replace("<html><head>", "<html>\n<head>", 1) 

@@ -78,6 +78,29 @@ class HomeworkEventContainer(list):
 homework_events = HomeworkEventContainer()
 
 
+class TrackedItem:
+    def __init__(self, name, min_price, max_price, author_id):
+        self.name = name
+        self.min_price = min_price
+        self.max_price = max_price
+        self.author_id = author_id
+
+    @property
+    def serialised(self):
+        return {
+            "name": self.name,
+            "min_price": self.min_price,
+            "max_price": self.max_price,
+            "author_id": self.author_id
+        }
+
+    def __eq__(self, other):
+        if type(other) is type(self):
+            return self.name.lower() == other.name.lower()
+        return False
+
+tracked_market_items = []
+
 def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     """Get the information about the next period for a given time.
 

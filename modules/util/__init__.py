@@ -9,8 +9,6 @@ from datetime import datetime
 from discord import Intents, Client
 
 # Local application imports
-from . import web_api
-from .api import steam_api
 from .crawlers import plan_crawler
 from .. import weekday_names, enable_log_messages, file_manager, ChannelID
 
@@ -57,17 +55,6 @@ async def send_log_message(message) -> None:
 
 def format_exception(e: Exception):
     return ''.join(format_exception(type(e), e, e.__traceback__))
-
-
-def get_web_api_error_message(e: Exception) -> str:
-    if type(e) is web_api.InvalidResponseException:
-        return f"Nastąpił błąd w połączeniu: {e.status_code}"
-    if type(e) is web_api.TooManyRequestsException:
-        return f"Musisz poczekać jeszcze {web_api.max_request_cooldown - e.time_since_last_request:.2f}s."
-    if type(e) is steam_api.NoSuchItemException:
-        return f":x: Nie znaleziono przedmiotu `{e.query}`. Spróbuj ponownie i upewnij się, że nazwa się zgadza."
-    else:
-        raise e
 
 
 def conjugate_numeric(num: int, word: str) -> str:

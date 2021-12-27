@@ -5,7 +5,8 @@ from discord import Message, Embed
 
 # Local application imports
 from .. import prefix, member_ids
-from ..util import get_web_api_error_message, format_exception
+from ..util import format_exception
+from ..util.web_api import get_error_message
 from ..util.api.lucky_numbers_api import get_lucky_numbers
 from ..file_manager import send_log
 
@@ -16,7 +17,7 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     except Exception as e:
         exc: str = format_exception(e)
         send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{exc}")
-        return False, get_web_api_error_message(e)
+        return False, get_error_message(e)
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:

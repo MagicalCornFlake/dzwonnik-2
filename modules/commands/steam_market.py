@@ -4,33 +4,11 @@
 from discord import Message
 
 # Local application imports
+from . import TrackedItem, tracked_market_items
 from .. import prefix, Emoji
-from ..util import get_web_api_error_message
+from ..util.web_api import get_error_message
 from ..util.api import steam_api
 from ..file_manager import save_data_file
-
-class TrackedItem:
-    def __init__(self, name, min_price, max_price, author_id):
-        self.name = name
-        self.min_price = min_price
-        self.max_price = max_price
-        self.author_id = author_id
-
-    @property
-    def serialised(self):
-        return {
-            "name": self.name,
-            "min_price": self.min_price,
-            "max_price": self.max_price,
-            "author_id": self.author_id
-        }
-
-    def __eq__(self, other):
-        if type(other) is type(self):
-            return self.name.lower() == other.name.lower()
-        return False
-
-tracked_market_items = []
 
 # Returns the message to send when the user asks for the price of an item on the Steam Community Market
 def get_market_price(message: Message, result_override=None) -> tuple[bool, str]:
@@ -40,7 +18,7 @@ def get_market_price(message: Message, result_override=None) -> tuple[bool, str]
         result = steam_api.get_item(args[0], 730, currency) if result_override is None else result_override
         return False, f"{Emoji.info} Aktualna cena dla *{args[0]}* to `{steam_api.get_item_price(result)}`."
     except Exception as e:
-        return False, get_web_api_error_message(e)
+        return False, get_error_message(e)
 
 
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
@@ -61,7 +39,7 @@ def start_market_tracking(message: Message):
         try:
             result = steam_api.get_item(item_name)
         except Exception as e:
-            return False, get_web_api_error_message(e)
+            return False, get_error_message(e)
         else:
             author_id = message.author.id
             item = TrackedItem(item_name, min_price, max_price, author_id)
