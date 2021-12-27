@@ -7,15 +7,14 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from . import lesson_plan
-from .. import Weekday, weekday_names, Emoji, prefix, group_names, current_period
-from ..util import send_log, get_lesson_link, get_lesson_name, get_formatted_period_time
+from .. import Weekday, weekday_names, Emoji, prefix, group_names, current_period, util
+# from ..util import util.send_log, get_lesson_link, get_lesson_name, get_formatted_period_time
 from ..util.crawlers import plan_crawler
 
 def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
     args = message.content.split(" ")
     today = datetime.now().weekday()
-    class_lesson_plan = lesson_plan
+    class_lesson_plan = util.lesson_plan
     if len(args) == 1:
         query_day = today if today < Weekday.saturday else Weekday.monday
     else:
@@ -52,9 +51,9 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                 except ValueError:
                     raise RuntimeError(f"invalid class name: {args[2]}")
                 else:
-                    class_lesson_plan = plan_crawler.get_lesson_plan(plan_id)[0]
+                    class_lesson_plan = plan_crawler.get_util.lesson_plan(plan_id)[0]
         except RuntimeError as e:
-            send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
+            util.send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste. Drugim opcjonalnym argumentem jest nazwa klasy."
 
@@ -78,12 +77,12 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
             continue
         lesson_texts = []
         for lesson in plan[period]:
-            raw_link = get_lesson_link(lesson['name'])
+            raw_link = util.get_lesson_link(lesson['name'])
             link = f"https://meet.google.com/{raw_link}?authuser=0" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
-            lesson_texts.append(f"[{get_lesson_name(lesson['name'])} - sala {lesson['room_id']}]({link})")
+            lesson_texts.append(f"[{util.get_lesson_name(lesson['name'])} - sala {lesson['room_id']}]({link})")
             if lesson['group'] != "grupa_0":
                 lesson_texts[-1] += f" ({group_names[lesson['group']]})"
-        txt = f"Lekcja {period} ({get_formatted_period_time(period)})"
+        txt = f"Lekcja {period} ({util.get_formatted_period_time(period)})"
         is_current_lesson = query_day == today and period == current_period 
         embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value='\n'.join(lesson_texts), inline=False)
     return True, embed
