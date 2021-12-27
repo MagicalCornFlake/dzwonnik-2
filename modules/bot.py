@@ -165,7 +165,8 @@ async def on_message(message: discord.Message) -> None:
         await set_offline_status()
         await client.close()
         file_manager.log("Bot disconnected.")
-
+        return
+    
     if msg_first_word not in help.info:
         return
 
