@@ -6,7 +6,7 @@ import importlib
 import os
 
 # Local application imports
-from . import file_manager, commands, util, bot
+from . import bot, file_manager, commands, util
 from .commands import help, homework, steam_market
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
