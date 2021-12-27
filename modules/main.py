@@ -13,12 +13,12 @@ import discord
 from discord.ext.tasks import loop
 
 # Local application imports
-from modules import *
-from modules import commands, file_manager
-from modules.commands import help, homework, steam_market
-from modules.util import client, send_log, lesson_plan, initialise_variables, get_formatted_period_time, web_api
-from modules.util.api import steam_api, lucky_numbers_api
-from modules.util.crawlers import plan_crawler, substitutions_crawler
+from . import *
+from . import file_manager, commands
+from .commands import help, homework, steam_market
+from .util import client, send_log, lesson_plan, initialise_variables, get_formatted_period_time, web_api
+from .util.api import steam_api, lucky_numbers_api
+from .util.crawlers import plan_crawler, substitutions_crawler
 
 
 my_server = client.get_guild(my_server_id)  # Konrad's Discord Server
