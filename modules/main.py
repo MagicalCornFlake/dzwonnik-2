@@ -6,15 +6,13 @@ import datetime
 import importlib
 import json
 import os
-import traceback
 
 # Third-party imports
 import discord
 from discord.ext.tasks import loop
 
 # Local application imports
-from . import *
-from . import file_manager, commands, util
+from . import file_manager, commands, util, my_server_id, role_codes, prefix, member_ids, weekday_names, group_names, ChannelID, Emoji, Weekday
 from .commands import help, homework, steam_market
 from .util.api import steam_api, lucky_numbers_api
 from .util.crawlers import plan_crawler, substitutions_crawler
@@ -87,8 +85,6 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
 
         if next_period < 10:
             # Currently break time
-
-            file_manager.log(f"{first_period = }, {current_period = }")
             if current_period == first_period:
                 # Currently before school
                 new_status_msg = "szkoła o " + util.get_formatted_period_time(first_period).split('-')[0]
@@ -219,8 +215,8 @@ async def track_api_updates() -> None:
     except util.web_api.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        util.send_log(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n" +
-                    ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        exc: str = util.format_exception(e)
+        util.send_log(f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n{exc}")
     else:
         if old_cache != lucky_numbers_api.cached_data:
             util.send_log(f"New lucky numbers data!")
@@ -233,8 +229,8 @@ async def track_api_updates() -> None:
     except util.web_api.InvalidResponseException as e:
         # Ping @Konrad
         await util.client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        util.send_log(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n" +
-                    ''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        exc: str = util.format_exception(e)
+        util.send_log(f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}")
     else:
         if not cache_existed:
             util.send_log(f"Substitution data updated! New data:\n{substitutions}\n\nOld data:\n{old_cache}")
@@ -390,7 +386,7 @@ async def on_message(message: discord.Message) -> None:
                         exec(expression)
                 exec_result = locals()['temp'] if "temp" in locals() else "Code executed (return value not specified)."
             except Exception as e:
-                exec_result = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+                exec_result = util.format_exception(e)
             if exec_result is None:
                 await message.channel.send("Code executed.")
             else:
@@ -426,7 +422,7 @@ async def on_message(message: discord.Message) -> None:
     try:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:
-        util.send_log(''.join(traceback.format_exception(type(e), e, e.__traceback__)))
+        util.send_log(util.format_exception(e))
         await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
                             f" Check the bot logs for details.")
         return

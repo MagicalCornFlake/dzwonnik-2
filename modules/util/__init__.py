@@ -32,16 +32,11 @@ def initialise_variables():
         lesson_links[lesson] = None
 
 
-def log(*message) -> None:
-    """Shorthand for sending a message to the log channel and program output file regardless of log settings."""
-    send_log(*message, force=True)
-
-
 def send_log(*raw_message, force=False) -> None:
     """Determine if the message should actually be logged, and if so, generate the string that should be sent."""
     if not (enable_log_messages or force):
         return
-    
+
     msg = file_manager.log(*raw_message)
     log_loop = asyncio.get_event_loop()
     log_loop.create_task(send_log_message(msg if len(msg) <= 4000 else f"Log message too long ({len(msg)} characters). Check 'bot.log' file."))
