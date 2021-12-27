@@ -25,11 +25,11 @@ def start_bot() -> bool:
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')
-        try:
-            event_loop = asyncio.get_event_loop()
-        except RuntimeError:
-            event_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(event_loop)
+        # try:
+        #     event_loop = asyncio.get_event_loop()
+        # except RuntimeError:
+        event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(event_loop)
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
