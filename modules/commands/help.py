@@ -4,14 +4,24 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import help, next_lesson, next_break, plan, homework, meet, steam_market, lucky_numbers, substitutions
+from . import next_lesson, next_break, plan, homework, meet, steam_market, lucky_numbers, substitutions
 from .. import prefix
+
+
+def get_help_message(_: Message) -> tuple[bool, Embed]:
+    embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
+    for command in info:
+        if command["description"] is None:
+            continue
+        embed.add_field(name=command, value=command["description"].format(p=prefix), inline=False)
+    embed.set_footer(text=f"Użyj komendy {prefix}help lub mnie **@oznacz**, aby pokazać tą wiadomość.")
+    return True, embed
 
 
 info = {
     'help': {
         "description": "",
-        "method": help.get_help_message
+        "method": get_help_message
     },
     'nl': {
         "description": "",
@@ -66,13 +76,3 @@ info = {
         "method": substitutions.get_substitutions_embed
     }
 }
-
-
-def get_help_message(_: Message) -> tuple[bool, Embed]:
-    embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
-    for command in info:
-        if command["description"] is None:
-            continue
-        embed.add_field(name=command, value=command["description"].format(p=prefix), inline=False)
-    embed.set_footer(text=f"Użyj komendy {prefix}help lub mnie **@oznacz**, aby pokazać tą wiadomość.")
-    return True, embed
