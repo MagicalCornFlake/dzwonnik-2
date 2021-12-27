@@ -1,6 +1,8 @@
 """Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson substitution details."""
 import json
 import re
+
+# Third-party imports
 import lxml.html
 
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
