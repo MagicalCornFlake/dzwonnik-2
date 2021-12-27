@@ -70,7 +70,8 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     with open(filename, 'w') as file:
         json.dump(data_to_be_saved, file, indent=2)
     if should_log:
-        bot.send_log(f"Successfully saved data file '{filename}'.")
+        bot.send_log(f"Successfully saved data file '{filename}'.\nData:")
+        bot.send_log(data_to_be_saved)
 
 
 def clear_log_file(filename: str) -> None:
