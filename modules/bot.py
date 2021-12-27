@@ -41,7 +41,7 @@ def send_log(*raw_message, force=False) -> None:
     if not (enable_log_messages or force):
         return
 
-    msg = file_manager.log("test!", *raw_message)
+    msg = file_manager.log(*raw_message)
     log_loop = asyncio.get_event_loop()
     log_loop.create_task(send_log_message(msg if len(msg) <= 4000 else f"Log message too long ({len(msg)} characters). Check 'bot.log' file."))
 
