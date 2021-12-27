@@ -1,6 +1,6 @@
 """Functionality for getting the lucky numbers from the SU ILO website."""
 from datetime import datetime
-from ..import web_api
+from .. import web_api
 
 # Data JSON structure:
 # {

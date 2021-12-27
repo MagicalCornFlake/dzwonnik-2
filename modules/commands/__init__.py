@@ -7,8 +7,75 @@ from datetime import datetime
 from discord import Role, Message
 
 # Local application imports
-from ..import Weekday, Emoji, weekday_names, role_codes, prefix
+from .. import Weekday, Emoji, weekday_names, role_codes, prefix
 from ..util import send_log, lesson_plan
+
+
+class HomeworkEvent:
+    def __init__(self, title, group, author_id, deadline, reminder_date=None, reminder_is_active=True):
+        self.id = None
+        self.title = title
+        self.group = group
+        self.author_id = author_id
+        self.deadline = deadline.split(' ')[0]
+        if reminder_date is None:
+            reminder_date = datetime.datetime.strftime(datetime.datetime.strptime(
+                deadline, "%d.%m.%Y %H") - datetime.timedelta(days=1), "%d.%m.%Y %H")
+        self.reminder_date = reminder_date
+        self.reminder_is_active = reminder_is_active
+
+    @property
+    def serialised(self):
+        # Returns a dictionary with all the necessary data for a given instance to be able to save it in a .json file
+        event_details = {
+            'title': self.title,
+            'group': self.group,
+            'author_id': self.author_id,
+            'deadline': self.deadline,
+            'reminder_date': self.reminder_date,
+            'reminder_is_active': self.reminder_is_active,
+        }
+        return event_details
+
+    @property
+    def id_string(self):
+        # Returns a more human-readable version of the id with the 'event-id-' suffix
+        return 'event-id-' + str(self.id)
+
+    def sort_into_container(self, event_container):
+        # Places the the event in chronological order into homework_events
+        try:
+            self.id = event_container[-1].id + 1
+        except (IndexError, TypeError):
+            self.id = 1
+        for comparison_event in event_container:
+            new_event_time = datetime.datetime.strptime(self.deadline, "%d.%m.%Y")
+            old_event_time = datetime.datetime.strptime(comparison_event.deadline, "%d.%m.%Y")
+            # Dumps debugging data
+            if new_event_time < old_event_time:
+                # The new event should be placed chronologically before the one it is currently being compared to
+                # Inserts event id in the place of the one it's being compared to, so every event
+                # after this event (including the comparison one) is pushed one spot ahead in the list
+                event_container.insert(event_container.index(comparison_event), self)
+                return
+            # The new event should not be placed before the one it is currently being compared to, continue evaluating
+        # At this point the algorithm was unable to place the event before any others, so it shall be put at the end
+        event_container.append(self)
+
+
+class HomeworkEventContainer(list):
+    @property
+    def serialised(self):
+        return [event.serialised for event in self]
+
+    def remove_disjunction(self, reference_container):
+        for event in self:
+            if event.serialised not in reference_container.serialised:
+                send_log(f"Removing obsolete event '{event.title}' from container")
+                self.remove(event)
+
+
+homework_events = HomeworkEventContainer()
 
 
 def get_next_period(given_time: datetime) -> tuple[bool, int, int]:

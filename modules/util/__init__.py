@@ -9,10 +9,10 @@ from datetime import datetime
 from discord import Intents, Client
 
 # Local application imports
-from .import web_api
+from . import web_api
 from .api import steam_api
 from .crawlers import plan_crawler
-from ..import weekday_names, enable_log_messages, file_manager, ChannelID
+from .. import weekday_names, enable_log_messages, file_manager, ChannelID
 
 
 intents = Intents.default()

@@ -4,7 +4,7 @@
 from discord import Message
 
 # Local application imports
-from ..import prefix, Emoji
+from .. import prefix, Emoji
 from ..util import get_web_api_error_message
 from ..util.api import steam_api
 from ..file_manager import save_data_file

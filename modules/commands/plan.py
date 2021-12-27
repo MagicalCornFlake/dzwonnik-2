@@ -7,8 +7,8 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from .import lesson_plan
-from ..import Weekday, weekday_names, Emoji, prefix, group_names, current_period
+from . import lesson_plan
+from .. import Weekday, weekday_names, Emoji, prefix, group_names, current_period
 from ..util import send_log, get_lesson_link, get_lesson_name, get_formatted_period_time
 from ..util.crawlers import plan_crawler
 

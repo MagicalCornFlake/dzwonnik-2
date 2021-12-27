@@ -8,8 +8,8 @@ from math import ceil
 from discord import Message
 
 # Local application imports
-from .import get_datetime_from_input, get_lesson_by_roles, get_next_period
-from ..import Emoji
+from . import get_datetime_from_input, get_lesson_by_roles, get_next_period
+from .. import Emoji
 from ..util import get_time, conjugate_numeric, send_log, get_formatted_period_time
 
 # Calculates the time of the next break

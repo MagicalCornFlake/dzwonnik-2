@@ -4,7 +4,7 @@
 from discord import Message, Embed
 
 # Local application imports
-from ..import prefix, member_ids
+from .. import prefix, member_ids
 from ..util import get_web_api_error_message, format_exception
 from ..util.api.lucky_numbers_api import get_lucky_numbers
 from ..file_manager import send_log

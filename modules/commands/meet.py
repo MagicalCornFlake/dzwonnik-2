@@ -5,7 +5,7 @@ from discord import Message
 
 # Local application imports
 from ..util import get_lesson_name, get_lesson_link, lesson_links
-from ..import prefix, Emoji
+from .. import prefix, Emoji
 from ..file_manager import save_data_file
 
 
