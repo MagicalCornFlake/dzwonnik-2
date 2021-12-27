@@ -7,6 +7,7 @@ import json
 
 # Third-party imports
 import discord
+from discord import file
 from discord.ext.tasks import loop
 
 # Local application imports
@@ -32,6 +33,7 @@ my_server_id: int = 766346477874053130
 prefix = '!'  # Prefix used before commands
 enable_log_messages = True
 use_bot_testing = False
+restart_on_exit = True
 
 
 def send_log(*raw_message, force=False) -> None:
@@ -165,6 +167,7 @@ async def on_message(message: discord.Message) -> None:
         track_time_changes.stop()
         track_api_updates.stop()
         await client.close()
+        file_manager.log("Bot disconnected.")
 
     if msg_first_word not in help.info:
         return

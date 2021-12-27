@@ -11,8 +11,6 @@ from .commands import help, homework, steam_market
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
 
-restart_on_exit = True
-
 def start_bot() -> bool:
     """Log in to the Discord bot and start its functionality.
     This function is blocking -- once the bot is connected, it will run until it's disconnected.
@@ -72,7 +70,7 @@ def start_bot() -> bool:
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
-    return restart_on_exit
+    return bot.restart_on_exit
 
 
 if __name__ == "__main__":
