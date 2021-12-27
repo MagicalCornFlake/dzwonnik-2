@@ -21,7 +21,9 @@ def reload() :
             # there are some problems that are swept under the rug here
             pass
 
+
 from modules import main
+
 
 while True:
     reload()
