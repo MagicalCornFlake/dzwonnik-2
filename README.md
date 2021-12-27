@@ -38,7 +38,7 @@ Dzwonnik 2 additionally uses some third-party libraries to complete specific tas
  - lxml (in particular the `HTML` module)
 
 # Usage
-Dzwonnik 2 is a Discord bot intended to be used on Konrad Guzek's school Discord server. The server's ID is hard-coded into the constants file, however with modifications it would be able to run on other severs as well. The default command prefix is `!`, but its usage in the code is extremely organised so with a single modification the prefix could be changed to any string. Note that there is currently no built-in command for changing the prefix, however there is a command for executing python code accessible to the sever owner.
+Dzwonnik 2 is a Discord bot intended to be used on Konrad Guzek's school Discord server. The server's ID is hard-coded into the module constants, however with modifications it would be able to run on other severs as well. The default command prefix is `!`, but its usage in the code is extremely organised so with a single modification the prefix could be changed to any string. Note that there is currently no built-in command for changing the prefix, however there is a command for executing python code accessible to the sever owner.
 
 ## Commands
 Dzwonnik 2 contains a `help` command which outlines all the commands that are available to the general users. The help message may also be sent whenever a user __@mentions__ the bot.
