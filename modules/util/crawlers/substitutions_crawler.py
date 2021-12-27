@@ -8,8 +8,7 @@ import lxml.html
 # If this script is run manually, it must be done so from a root package with the -m flag. For example:
 # ... dzwonnik-2/modules $ python -m util.crawlers.plan_crawler
 from .. import web_api
-from ... import file_manager
-from ... constants import Colour
+from ... import Colour, file_manager
 
 
 def parse_html(html: str) -> dict:

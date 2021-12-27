@@ -1,7 +1,77 @@
 """Functionality for reading the .env files in the program root directory."""
+
+# Standard library imports
 import json
 import os
 from datetime import datetime
+
+# Local application imports
+from util import lesson_links, send_log
+from util.api import lucky_numbers_api
+from commands import homework, steam_market
+
+
+def read_data_file(filename: str = "data.json") -> None:
+    global homework_events
+    # Reads data file and updates settings
+    if not os.path.isfile(filename):
+        with open(filename, 'w') as file:
+            default_settings = {
+                "lesson_links": {},
+                "homework_events": {},
+                "tracked_market_items": [],
+                "lucky_numbers": lucky_numbers_api.cached_data
+            }
+            json.dump(default_settings, file, indent=2)
+    with open(filename, 'r') as file:
+        data = json.load(file)
+    if "lesson_links" in data:
+        lesson_links.update(data["lesson_links"])
+    # homework_events.clear()  # To ensure there aren't any old instances, not 100% needed though
+    # Creates new instances of the HomeworkEvent class with the data from the file
+    new_event_candidates = homework.HomeworkEventContainer()
+    for event_id in data["homework_events"]:
+        attributes = data["homework_events"][event_id]
+        title, group, author_id, deadline, reminder_date, reminder_is_active = [attributes[attr] for attr in attributes]
+        new_event_candidate = homework.HomeworkEvent(title, group, author_id, deadline, reminder_date, reminder_is_active)
+        new_event_candidates.append(new_event_candidate)
+    homework.homework_events.remove_disjunction(new_event_candidates)
+    for new_event_candidate in new_event_candidates:
+        if new_event_candidate.serialised not in homework.homework_events.serialised:
+            new_event_candidate.sort_into_container(homework.homework_events)
+    for item_attributes in data["tracked_market_items"]:
+        item_name, min_price, max_price, author_id = [item_attributes[attr] for attr in item_attributes]
+        item = steam_market.TrackedItem(item_name, min_price, max_price, author_id)
+        if item not in steam_market.tracked_market_items:
+            steam_market.tracked_market_items.append(item)
+    lucky_numbers_api.cached_data = data["lucky_numbers"]
+
+
+def save_data_file(filename: str = "data.json", should_log: bool = True) -> None:
+    """Saves the settings stored in the program's memory to the file provided.
+
+    Arguments:
+        filename -- the name of the file relative to the program root directory to write to (default 'data.json').
+        should_log -- whether or not the save should be logged in the Discord Log and in the console.
+    """
+    if should_log:
+        send_log("Saving data file", filename)
+    # Creates containers with the data to be saved in .json format
+    serialised_homework_events = {event.id_string: event.serialised for event in homework.homework_events}
+    serialised_tracked_market_items = [item.serialised for item in steam_market.tracked_market_items]
+    # Creates a parent dictionary to save all data that needs to be saved
+    data_to_be_saved = {
+        "lesson_links": {code: link for code, link in lesson_links.items() if link},
+        "homework_events": serialised_homework_events,
+        "tracked_market_items": serialised_tracked_market_items,
+        "lucky_numbers": lucky_numbers_api.cached_data
+    }
+
+    # Replaces file content with new data
+    with open(filename, 'w') as file:
+        json.dump(data_to_be_saved, file, indent=2)
+    if should_log:
+        send_log(f"Successfully saved data file '{filename}'.")
 
 
 def clear_log_file(filename: str) -> None:
