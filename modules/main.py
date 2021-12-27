@@ -2,11 +2,11 @@
 
 # Standard library imports
 import asyncio
-from asyncio import events
+import importlib
 import os
 
 # Local application imports
-from . import bot, file_manager
+from . import bot, file_manager, util, commands
 
 def start_bot() -> bool:
     """Log in to the Discord bot and start its functionality.
@@ -18,6 +18,9 @@ def start_bot() -> bool:
     file_manager.save_log_file()
     save_on_exit = True
 
+    for module in (bot, file_manager, util, commands):
+        importlib.reload(module)
+
     if __name__ == "__main__":
         file_manager.log("Started bot from main file! Assuming this is debug behaviour.")
     else:
@@ -25,11 +28,7 @@ def start_bot() -> bool:
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')
-        # try:
-        #     event_loop = asyncio.get_event_loop()
-        # except RuntimeError:
-        event_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(event_loop)
+        event_loop = asyncio.get_event_loop()
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
