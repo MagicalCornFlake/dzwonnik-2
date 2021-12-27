@@ -93,14 +93,18 @@ def log(*raw_message: str) -> str:
 
 def save_log_file() -> None:
     """Copies the active log file to a new file in the bot_logs directory and clears it."""
-    with open("bot.log", 'r') as file:
-        contents = file.read()
-        if contents.startswith("START TIMESTAMP "):
-            # Extract log creation date from active log
-            log_start_time, log_contents = contents.lstrip("START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
-            # Copy active log contents to new file
-            with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n") + ".log", 'w') as file:
-                file.write(log_contents)
+    try:
+        with open("bot.log", 'r') as file:
+            contents = file.read()
+            if contents.startswith("START TIMESTAMP "):
+                # Extract log creation date from active log
+                log_start_time, log_contents = contents.lstrip("START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
+                # Copy active log contents to new file
+                with open("bot_logs" + os.path.sep + log_start_time.rstrip("\n") + ".log", 'w') as file:
+                    file.write(log_contents)
+    except FileNotFoundError:
+        # bot.log file does not exist
+        pass
     clear_log_file("bot.log")
 
 

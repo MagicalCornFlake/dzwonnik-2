@@ -6,5 +6,5 @@ from modules import main
 while True:
     main.importlib.reload(main)
     if not main.start_bot():
-        # start_bot() returns a boolean indicating whether or not the bot should be restarted
+        # function start_bot() returns a boolean indicating whether or not the bot should be restarted
         break
