@@ -162,6 +162,7 @@ async def on_message(message: discord.Message) -> None:
             restart_on_exit = False
         track_time_changes.stop()
         track_api_updates.stop()  
+        await set_offline_status()
         await client.close()
         file_manager.log("Bot disconnected.")
 
