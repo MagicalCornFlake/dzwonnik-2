@@ -6,7 +6,7 @@ from time import time
 
 # Local application imports
 # from ..file_manager import log
-from . import send_log
+from .. import bot
 from .api.steam_market import NoSuchItemException
 
 
@@ -76,6 +76,6 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
 
 
 def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
-    send_log(f"Fetching content from {url} ...")
+    bot.send_log(f"Fetching content from {url} ...")
     html = make_request(url, ignore_max_requests_cooldown).content.decode('UTF-8')
     return html.replace("<html><head>", "<html>\n<head>", 1) 

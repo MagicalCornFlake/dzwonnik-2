@@ -4,7 +4,7 @@
 from discord import Message
 
 # Local application imports
-from .. import prefix, Emoji, util
+from .. import bot, Emoji, util
 from ..file_manager import save_data_file
 
 
@@ -30,7 +30,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
                 save_data_file()
                 return False, f"{Emoji.check} Zmieniono link dla lekcji " \
                                 f"'__{lesson_name}__' z `{link}` na **{args[2]}**."
-    msg = f"Należy napisać po komendzie `{prefix}meet` kod lekcji, " + \
+    msg = f"Należy napisać po komendzie `{bot.prefix}meet` kod lekcji, " + \
         "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
         "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
     for lesson_code, link in util.lesson_links.items():

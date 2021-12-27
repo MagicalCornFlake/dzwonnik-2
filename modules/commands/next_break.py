@@ -9,8 +9,8 @@ from discord import Message
 
 # Local application imports
 from . import get_datetime_from_input, get_lesson_by_roles, get_next_period
-from .. import Emoji
-from ..util import get_time, conjugate_numeric, send_log, get_formatted_period_time
+from .. import Emoji, bot
+from ..util import get_time, conjugate_numeric, get_formatted_period_time
 
 
 desc = """Mówi kiedy jest następna przerwa.
@@ -38,7 +38,7 @@ def get_next_break(message: Message) -> tuple[bool, str]:
         minutes = f"{(conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{conjugate_numeric(mins % 60, 'minut')}"
         msg = f"{Emoji.info} Następna przerwa jest za {minutes} o __{get_formatted_period_time(lesson['period']).split('-')[1]}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
-        send_log("More lessons today:", more_lessons_today)
+        bot.send_log("More lessons today:", more_lessons_today)
         if more_lessons_today:
             break_end_datetime = get_time(next_period, break_start_datetime, False)
             break_length = break_end_datetime - break_start_datetime

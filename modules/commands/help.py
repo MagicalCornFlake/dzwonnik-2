@@ -5,15 +5,15 @@ from discord import Message, Embed
 
 # Local application imports
 from . import next_lesson, next_break, plan, homework, meet, steam_market, lucky_numbers, substitutions
-from .. import prefix
+from .. import bot
 
 
 def get_help_message(_: Message) -> tuple[bool, Embed]:
-    embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{prefix}`")
+    embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{bot.prefix}`")
     for command in info:
         if command["description"]:
-            embed.add_field(name=command, value=command["description"].format(p=prefix), inline=False)
-    embed.set_footer(text=f"Użyj komendy {prefix}help lub mnie **@oznacz**, aby pokazać tą wiadomość.")
+            embed.add_field(name=command, value=command["description"].format(p=bot.prefix), inline=False)
+    embed.set_footer(text=f"Użyj komendy {bot.prefix}help lub mnie **@oznacz**, aby pokazać tą wiadomość.")
     return True, embed
 
 

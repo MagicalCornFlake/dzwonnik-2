@@ -2,22 +2,7 @@
 
 # Definitions for constant values that are used repeatedly in the program.
 
-# __all__ = ["my_server_id", "prefix", "ChannelID", "RoleID", "Emoji",
-#            "Weekday", "weekday_names", "role_codes", "group_names", "member_ids"]
-
-
-my_server_id: int = 766346477874053130
-prefix = '!'  # Prefix used before commands
-enable_log_messages = True
 current_period: int = 0
-
-
-class ChannelID:
-    general: int = 766346477874053132
-    nauka: int = 769098845598515220
-    admini: int = 773137866338336768
-    bot_testing: int = 832700271057698816
-    bot_logs: int = 835561967007432784
 
 
 class RoleID:

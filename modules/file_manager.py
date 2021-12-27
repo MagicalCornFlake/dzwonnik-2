@@ -6,8 +6,9 @@ import os
 from datetime import datetime
 
 # Local application imports
+from . import bot
 from .commands import homework_events, HomeworkEvent, HomeworkEventContainer, tracked_market_items, TrackedItem
-from .util import lesson_links, send_log
+from .util import lesson_links
 from .util.api import lucky_numbers
 
 
@@ -55,7 +56,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         should_log -- whether or not the save should be logged in the Discord Log and in the console.
     """
     if should_log:
-        send_log("Saving data file", filename)
+        bot.send_log("Saving data file", filename)
     # Creates containers with the data to be saved in .json format
     serialised_homework_events = {event.id_string: event.serialised for event in homework_events}
     serialised_tracked_market_items = [item.serialised for item in tracked_market_items]
@@ -71,7 +72,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     with open(filename, 'w') as file:
         json.dump(data_to_be_saved, file, indent=2)
     if should_log:
-        send_log(f"Successfully saved data file '{filename}'.")
+        bot.send_log(f"Successfully saved data file '{filename}'.")
 
 
 def clear_log_file(filename: str) -> None:

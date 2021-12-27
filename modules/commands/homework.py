@@ -8,7 +8,7 @@ from discord import Message, Embed
 
 # Local application imports
 from . import HomeworkEvent, homework_events
-from .. import prefix, Emoji, role_codes, group_names
+from .. import bot, Emoji, role_codes, group_names
 from ..file_manager import read_data_file, save_data_file
 
 
@@ -28,7 +28,7 @@ def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]
     if len(args) == 1:
         return get_homework_events(message)
     elif len(args) < 4:
-        return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}zad` termin oddania zadania, oznaczenie " + \
+        return False, f"{Emoji.warning} Należy napisać po komendzie `{bot.prefix}zad` termin oddania zadania, oznaczenie " + \
             "grupy, dla której jest zadanie oraz jego treść, lub 'del' i ID zadania, którego się chce usunąć."
     return create_homework_event(message)
 
@@ -40,7 +40,7 @@ def get_homework_events(message: Message, should_display_event_ids=False) -> tup
         embed = Embed(title="Zadania", description=f"Lista zadań ({amount_of_homeworks}) jest następująca:")
     else:
         return False, f"{Emoji.info} Nie ma jeszcze żadnych zadań. " + \
-               f"Możesz je tworzyć za pomocą komendy `{prefix}zadanie`."
+               f"Możesz je tworzyć za pomocą komendy `{bot.prefix}zadanie`."
 
     # Adds an embed field for each event
     for homework_event in homework_events:
@@ -71,7 +71,7 @@ def get_homework_events(message: Message, should_display_event_ids=False) -> tup
         if should_display_event_ids:
             field_value += f"\n*ID: event-id-{homework_event.id}*"
         embed.add_field(name=field_name, value=field_value, inline=False)
-    embed.set_footer(text=f"Użyj komendy {prefix}zadania, aby pokazać tą wiadomość.")
+    embed.set_footer(text=f"Użyj komendy {bot.prefix}zadania, aby pokazać tą wiadomość.")
     return True, embed
 
 
@@ -84,7 +84,7 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
             deleted_event = delete_homework_event(int(user_inputted_id))
         except ValueError:
             return False, f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. " + \
-                          f"Wpisz `{prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID."
+                          f"Wpisz `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID."
         return False, f"{Emoji.check} Usunięto zadanie z treścią: `{deleted_event}`"
     try:
         datetime.datetime.strptime(args[1], "%d.%m.%Y")

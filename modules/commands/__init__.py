@@ -7,7 +7,7 @@ from datetime import datetime
 from discord import Role, Message
 
 # Local application imports
-from .. import Weekday, Emoji, weekday_names, role_codes, prefix, util
+from .. import Weekday, Emoji, weekday_names, role_codes, util, bot
 
 
 class HomeworkEvent:
@@ -70,7 +70,7 @@ class HomeworkEventContainer(list):
     def remove_disjunction(self, reference_container):
         for event in self:
             if event.serialised not in reference_container.serialised:
-                util.send_log(f"Removing obsolete event '{event.title}' from container")
+                bot.send_log(f"Removing obsolete event '{event.title}' from container")
                 self.remove(event)
 
 
@@ -109,7 +109,7 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     Returns a tuple consisting of a boolean indicating if that day is today, the period number, and the day of the week.
     If the current time is during a lesson, the period number will be incremented by 10.
     """
-    util.send_log(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
+    bot.send_log(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
 
     if current_day_index < Weekday.saturday:
@@ -117,7 +117,7 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
-                    util.send_log(f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
+                    bot.send_log(f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
                     return True, period + 10 * is_during_lesson, current_day_index
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
@@ -126,7 +126,7 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
         next_school_day = Weekday.monday
 
     # If it's currently weekend or after the last lesson for the day
-    util.send_log(f"... there are no more lessons today. Next school day: {next_school_day}")
+    bot.send_log(f"... there are no more lessons today. Next school day: {next_school_day}")
     for first_period, lessons in enumerate(util.lesson_plan[weekday_names[next_school_day]]):
         # Stop incrementing 'first_period' when the 'lessons' object is a non-empty list
         if lessons:
@@ -145,16 +145,16 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     """
     target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
     weekday_name = weekday_names[weekday_index]
-    util.send_log(f"Looking for lesson of period {query_period} on {weekday_name} with roles: {target_roles})")
+    bot.send_log(f"Looking for lesson of period {query_period} on {weekday_name} with roles: {target_roles})")
     for period, lessons in enumerate(util.lesson_plan[weekday_name]):
         if period < query_period:
             continue
         for lesson in lessons:
             if lesson["group"] in target_roles or role_codes[lesson["group"]] in target_roles:
-                util.send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
+                bot.send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
-    util.send_log(f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.", force=True)
+    bot.send_log(f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.", force=True)
     return {}
 
 
@@ -177,7 +177,7 @@ def get_datetime_from_input(message: Message, calling_command: str) -> tuple[boo
                 # NaN
                 raise RuntimeError(f"`{':'.join(args[1:])}` nie jest godziną.")
         except RuntimeError as e:
-            msg = f"{Emoji.warning} {e}\nNależy napisać po komendzie `{prefix}{calling_command}` godzinę" \
+            msg = f"{Emoji.warning} {e}\nNależy napisać po komendzie `{bot.prefix}{calling_command}` godzinę" \
                   f" i ewentualnie minutę oddzieloną spacją, lub zostawić parametry komendy puste. "
             return False, msg
         current_time = current_time.replace(hour=int(args[1]), minute=int(args[2]), second=0, microsecond=0)

@@ -7,8 +7,7 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from .. import Weekday, weekday_names, Emoji, prefix, group_names, current_period, util
-# from ..util import util.send_log, get_lesson_link, get_lesson_name, get_formatted_period_time
+from .. import Weekday, weekday_names, Emoji, group_names, current_period, util, bot
 from ..util.crawlers import lesson_plan
 
 
@@ -63,8 +62,8 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                 else:
                     class_lesson_plan = lesson_plan.get_util.lesson_plan(plan_id)[0]
         except RuntimeError as e:
-            util.send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
-            return False, f"{Emoji.warning} Należy napisać po komendzie `{prefix}plan` numer dnia (1-5) " \
+            bot.send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
+            return False, f"{Emoji.warning} Należy napisać po komendzie `{bot.prefix}plan` numer dnia (1-5) " \
                           f"bądź dzień tygodnia, lub zostawić parametry komendy puste. Drugim opcjonalnym argumentem jest nazwa klasy."
 
     plan = class_lesson_plan[weekday_names[query_day]]
@@ -78,7 +77,7 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
 
     desc = f"Plan lekcji na **{weekday_names[query_day].lower().replace('środa', 'środę')}** ({periods} lekcji) jest następujący:"
     embed = Embed(title="Plan lekcji", description=desc)
-    embed.set_footer(text=f"Użyj komendy {prefix}plan, aby pokazać tą wiadomość.")
+    embed.set_footer(text=f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość.")
 
     for period in class_lesson_plan["Nr"]:
         if not plan[period]:

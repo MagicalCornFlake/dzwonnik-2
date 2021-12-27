@@ -5,7 +5,7 @@ from discord import Message
 
 # Local application imports
 from . import TrackedItem, tracked_market_items
-from .. import prefix, Emoji
+from .. import bot, Emoji
 from ..util.web import get_error_message
 from ..util.api import steam_market
 from ..file_manager import save_data_file
@@ -27,7 +27,7 @@ desc_3 = """Przestaje śledzić dany przedmiot na Rynku Społeczności Steam.
 
 # Returns the message to send when the user asks for the price of an item on the Steam Community Market
 def get_market_price(message: Message, result_override=None) -> tuple[bool, str]:
-    args: list[str] = message.content[len(f"{prefix}cena "):].split(" waluta=") if result_override is None else [message]
+    args: list[str] = message.content[len(f"{bot.prefix}cena "):].split(" waluta=") if result_override is None else [message]
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
         result = steam_market.get_item(args[0], 730, currency) if result_override is None else result_override
@@ -39,7 +39,7 @@ def get_market_price(message: Message, result_override=None) -> tuple[bool, str]
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
 def start_market_tracking(message: Message):
     # noinspection SpellCheckingInspection
-    args = message.content.lstrip(f"{prefix}sledz ").split(" min=")
+    args = message.content.lstrip(f"{bot.prefix}sledz ").split(" min=")
     min_price = args[-1].split(" max=")[0].strip()
     max_price = args[-1].split(" max=")[-1].strip()
     try:
@@ -48,7 +48,7 @@ def start_market_tracking(message: Message):
     except ValueError:
         # noinspection SpellCheckingInspection
         return False, f"{Emoji.warning} Należy wpisać po nazwie przedmiotu cenę minimalną oraz cenę maksymalną. " \
-                      f"Przykład: `{prefix}sledz Operation Broken Fang Case min=1 max=3`."
+                      f"Przykład: `{bot.prefix}sledz Operation Broken Fang Case min=1 max=3`."
     else:
         item_name = args[0].rstrip()
         try:
@@ -72,7 +72,7 @@ def start_market_tracking(message: Message):
 
 def stop_market_tracking(message: Message) -> tuple[bool, str]:
     # noinspection SpellCheckingInspection
-    item_name = message.content.lstrip(f"{prefix}odsledz ")
+    item_name = message.content.lstrip(f"{bot.prefix}odsledz ")
     for item in tracked_market_items:
         if item.name.lower() == item_name.lower():
             if item.author_id == message.author.id or message.channel.permissions_for(message.author).administrator:

@@ -4,11 +4,10 @@
 from discord import Message, Embed
 
 # Local application imports
-from .. import prefix, member_ids
+from .. import bot, member_ids
 from ..util import format_exception
 from ..util.web import get_error_message
 from ..util.api.lucky_numbers import get_lucky_numbers
-from ..file_manager import send_log
 
 
 desc = "Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone."
@@ -18,7 +17,7 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
         data = get_lucky_numbers()
     except Exception as e:
         exc: str = format_exception(e)
-        send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{exc}")
+        bot.send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{exc}")
         return False, get_error_message(e)
     msg = f"Szczęśliwe numerki na {data['date']}:"
     embed = Embed(title="Szczęśliwe numerki", description=msg)
@@ -29,5 +28,5 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     # embed.add_field(name="\u200B", value="\u200B", inline=False)
     excluded_classes = ", ".join(data["excludedClasses"]) if len(data["excludedClasses"]) > 0 else "*Brak*"
     embed.add_field(name="Wykluczone klasy", value=excluded_classes, inline=False)
-    embed.set_footer(text=f"Użyj komendy {prefix}numerki, aby pokazać tą wiadomość.")
+    embed.set_footer(text=f"Użyj komendy {bot.prefix}numerki, aby pokazać tą wiadomość.")
     return True, embed
