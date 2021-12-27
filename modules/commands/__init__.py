@@ -1,4 +1,5 @@
 """__init__.py file for all modules responsible for functionality behind each user command."""
+
 # Standard library imports
 from datetime import datetime
 
@@ -6,69 +7,8 @@ from datetime import datetime
 from discord import Role, Message
 
 # Local application imports
-from . import help, next_lesson, next_break, plan, homework, meet, steam_market, lucky_numbers, substitutions
 from .. import Weekday, Emoji, weekday_names, role_codes, prefix
 from .. util import send_log, lesson_plan
-
-
-info = {
-    'help': {
-        "description": "",
-        "method": help.get_help_message
-    },
-    'nl': {
-        "description": "",
-        "method": next_lesson.get_next_lesson
-    },
-    'nb': {
-        "description": "",
-        "method": next_break.get_next_break
-    },
-    'plan': {
-        "description": "",
-        "method": plan.get_lesson_plan
-    },
-    'zad': {
-        "description": "",
-        "method": homework.process_homework_events_alias
-    },
-    'zadanie': {
-        "description": "",
-        "method": homework.create_homework_event
-    },
-    'zadania': {
-        "description": "",
-        "method": homework.get_homework_events
-    },
-    'meet': {
-        "description": "",
-        "method": meet.update_meet_link
-    },
-    'cena': {
-        "description": "",
-        "method": steam_market.get_market_price
-    },
-    'sledz': {
-        "description": "",
-        "method": steam_market.start_market_tracking
-    },
-    'odsledz': {
-        "description": "",
-        "method": steam_market.stop_market_tracking
-    },
-    'numerki': {
-        "description": "",
-        "method": lucky_numbers.get_lucky_numbers_embed
-    },
-    'num': {
-        "description": "",
-        "method": lucky_numbers.get_lucky_numbers_embed
-    },
-    'zast': {
-        "description": "",
-        "method": substitutions.get_substitutions_embed
-    }
-}
 
 
 def get_next_period(given_time: datetime) -> tuple[bool, int, int]:

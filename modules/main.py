@@ -15,6 +15,7 @@ from discord.ext.tasks import loop
 # Local application imports
 from modules import *
 from modules import commands, file_manager
+from modules.commands import help, homework, steam_market
 from modules.util import client, send_log, lesson_plan, initialise_variables, get_formatted_period_time, web_api
 from modules.util.api import steam_api, lucky_numbers_api
 from modules.util.crawlers import plan_crawler, substitutions_crawler
@@ -123,7 +124,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     return new_status_msg
 
 
-async def remind_about_homework_event(event: commands.homework.HomeworkEvent, tense: str) -> None:
+async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str) -> None:
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
     for role in role_codes:
@@ -180,7 +181,7 @@ async def track_time_changes() -> None:
             status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
             await client.change_presence(activity=status)
     # Checks if the bot should make a reminder about due homework
-    for event in commands.homework.homework_events:
+    for event in homework.homework_events:
         reminder_time = datetime.datetime.strptime(event.reminder_date, "%d.%m.%Y %H")
         event_time = datetime.datetime.strptime(event.deadline, "%d.%m.%Y")
         # If this piece of homework has already had a reminder issued, ignore it
@@ -199,7 +200,7 @@ async def track_time_changes() -> None:
 
 @loop(minutes=1)
 async def track_api_updates() -> None:
-    for item in commands.steam_market.tracked_market_items:
+    for item in steam_market.tracked_market_items:
         await asyncio.sleep(3)
         result = steam_api.get_item(item.name)
         price = steam_api.get_item_price(result)
@@ -210,7 +211,7 @@ async def track_api_updates() -> None:
         target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.admini)
         await target_channel.send(f"{Emoji.cash} Uwaga, <@{item.author_id}>! "
                                   f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
-        commands.steam_market.tracked_market_items.remove(item)
+        steam_market.tracked_market_items.remove(item)
         file_manager.save_data_file()
     await asyncio.sleep(3)
     # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
@@ -326,7 +327,7 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
     else:
         # Someone has added detective reaction to message
         await reply_msg.clear_reactions()
-        await reply_msg.edit(embed=commands.homework.get_homework_events(message, True)[1])
+        await reply_msg.edit(embed=homework.get_homework_events(message, True)[1])
 
 
 async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict, on_fail_data, on_fail_msg: str = None) -> discord.message:
@@ -417,12 +418,12 @@ async def on_message(message: discord.Message) -> None:
         track_api_updates.stop()
         await client.close()
 
-    if msg_first_word not in commands.info:
+    if msg_first_word not in help.info:
         return
     # await message.delete()
 
     send_log(f"Received command: '{message.content}'", "from user:", message.author)
-    command_method_to_call_when_executed = commands.info[msg_first_word]["method"]
+    command_method_to_call_when_executed = help.info[msg_first_word]["method"]
     try:
         reply_is_embed, reply = command_method_to_call_when_executed(message)
     except Exception as e:

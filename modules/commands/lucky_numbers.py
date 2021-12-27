@@ -4,10 +4,11 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import send_log
 from .. import prefix, member_ids
 from .. util import get_web_api_error_message, format_exception
 from .. util.api.lucky_numbers_api import get_lucky_numbers
+from .. file_manager import send_log
+
 
 def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     try:
