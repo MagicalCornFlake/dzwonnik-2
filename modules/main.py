@@ -32,6 +32,7 @@ async def on_ready() -> None:
     my_server = util.client.get_guild(my_server_id)
 
     # Populate dictionaries
+    util.initialise_variables()
     print(f"{util.lesson_plan = }")
 
     # Sets status message on bot start
