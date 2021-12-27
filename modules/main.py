@@ -6,10 +6,7 @@ import importlib
 import os
 
 # Local application imports
-from . import bot, file_manager, commands, util
-from .commands import help, homework, steam_market
-from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
-from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
+from . import bot, file_manager
 
 def start_bot() -> bool:
     """Log in to the Discord bot and start its functionality.
@@ -22,11 +19,13 @@ def start_bot() -> bool:
     save_on_exit = True
     # # Update each imported module before starting the bot.
     # # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (file_manager, commands, util, help, homework, steam_market, lucky_numbers_api, steam_api, lesson_plan_crawler, substitutions_crawler):
+    for module in (bot, file_manager):
         importlib.reload(module)
 
     if __name__ == "__main__":
         file_manager.log("Started bot from main file! Assuming this is debug behaviour.")
+    else:
+        file_manager.log("Program starting...")
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')

@@ -7,12 +7,12 @@ import json
 
 # Third-party imports
 import discord
-from discord import file
 from discord.ext.tasks import loop
 
 # Local application imports
 from . import file_manager, commands, util, role_codes, member_ids, weekday_names, group_names, Emoji, Weekday
 from .commands import help, homework, steam_market
+from .util.web import InvalidResponseException
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
 
@@ -47,14 +47,13 @@ def send_log(*raw_message, force=False) -> None:
 
 
 async def send_log_message(message) -> None:
-    log_channel = client.get_channel(ChannelID.bot_logs)
+    log_channel: discord.TextChannel = client.get_channel(ChannelID.bot_logs)
     await client.wait_until_ready()
     await log_channel.send(f"```py\n{message}\n```")
-    
-    
 
 
 my_server: discord.Guild = None
+
 
 # This function is called when the bot comes online
 @client.event
@@ -93,9 +92,6 @@ async def on_ready() -> None:
                     await last_test_message.edit(content="Restarted bot!")
             else:
                 send_log(f"Last message in channel {channel.name} was not sent by me.")
-
-
-
 
 
 # This function is called when someone sends a message in the server
@@ -171,7 +167,6 @@ async def on_message(message: discord.Message) -> None:
 
     if msg_first_word not in help.info:
         return
-    # await message.delete()
 
     send_log(f"Received command: '{message.content}'", "from user:", message.author)
     callback_function = help.info[msg_first_word]["function"]
@@ -347,7 +342,7 @@ async def track_api_updates() -> None:
     # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
     try:
         old_cache = lucky_numbers_api.update_cache()
-    except util.web.InvalidResponseException as e:
+    except InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         exc: str = util.format_exception(e)
@@ -363,7 +358,7 @@ async def track_api_updates() -> None:
     try:
         old_cache = file_manager.cache_exists("subs")
         new_cache, cache_existed = substitutions_crawler.get_substitutions(True)
-    except util.web.InvalidResponseException as e:
+    except InvalidResponseException as e:
         # Ping @Konrad
         await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
         exc: str = util.format_exception(e)
@@ -419,4 +414,3 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
                 file.write(str(on_fail_data))
         await user_message.channel.send(file=discord.File("result.txt"))
     return reply_msg
-
