@@ -378,7 +378,6 @@ async def wait_until_ready_before_loops() -> None:
     await client.wait_until_ready()
 
 
-@track_time_changes.after_loop
 async def set_offline_status() -> None:
     await client.change_presence(status=discord.Status.offline)
 
