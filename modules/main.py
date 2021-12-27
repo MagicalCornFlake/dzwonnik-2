@@ -4,9 +4,11 @@
 import asyncio
 import importlib
 import os
+import sys
+sys.modules.clear()
 
 # Local application imports
-from . import bot, file_manager
+from . import bot, file_manager, util
 
 def start_bot() -> bool:
     """Log in to the Discord bot and start its functionality.
@@ -19,7 +21,7 @@ def start_bot() -> bool:
     save_on_exit = True
     # # Update each imported module before starting the bot.
     # # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (bot, file_manager):
+    for module in (bot, file_manager, util):
         importlib.reload(module)
 
     if __name__ == "__main__":
