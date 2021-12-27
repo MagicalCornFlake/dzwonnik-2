@@ -1,11 +1,33 @@
 """Dzwonnik 2, a Discord bot, by Konrad Guzek."""
 
-# Standard library imports
-import asyncio
-import importlib
-import os
-import sys
-sys.modules.clear()
+PRELOADED_MODULES = set()
+
+
+def init():
+    # Standard library imports
+    import asyncio
+    import importlib
+    import os
+    from sys import modules
+
+    global PRELOADED_MODULES
+
+    # sys and importlib are ignored here too
+    PRELOADED_MODULES = set(modules.values())
+
+
+def reload() :
+    from sys import modules
+    import importlib
+
+    for module in set(modules.values()) - PRELOADED_MODULES:
+        try:
+            importlib.reload(module)
+        except:
+            # there are some problems that are swept under the rug here
+            pass
+
+init()
 
 # Local application imports
 from . import bot, file_manager, util
@@ -21,8 +43,7 @@ def start_bot() -> bool:
     save_on_exit = True
     # # Update each imported module before starting the bot.
     # # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (bot, file_manager, util):
-        importlib.reload(module)
+    reload()
 
     if __name__ == "__main__":
         file_manager.log("Started bot from main file! Assuming this is debug behaviour.")
