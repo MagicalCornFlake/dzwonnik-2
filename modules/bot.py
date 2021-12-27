@@ -161,7 +161,7 @@ async def on_message(message: discord.Message) -> None:
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()
-        track_api_updates.stop()
+        track_api_updates.stop()  
         await client.close()
         file_manager.log("Bot disconnected.")
 
@@ -374,6 +374,12 @@ async def track_api_updates() -> None:
 @track_time_changes.before_loop
 async def wait_until_ready_before_loops() -> None:
     await client.wait_until_ready()
+
+
+@track_time_changes.after_loop
+async def set_offline_status() -> None:
+    offline_status = discord.Activity(status=discord.Status.offline)
+    await client.change_presence(activity=offline_status)
 
 
 # noinspection SpellCheckingInspection
