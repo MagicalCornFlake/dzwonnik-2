@@ -62,7 +62,7 @@ class HomeworkEvent:
         event_container.append(self)
 
 
-class HomeworkEventContainer(list):
+class HomeworkEventContainer(list[HomeworkEvent]):
     @property
     def serialised(self):
         return [event.serialised for event in self]
@@ -98,7 +98,7 @@ class TrackedItem:
             return self.name.lower() == other.name.lower()
         return False
 
-tracked_market_items = []
+tracked_market_items: list[TrackedItem] = []
 
 def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     """Get the information about the next period for a given time.

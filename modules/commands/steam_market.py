@@ -5,7 +5,7 @@ from discord import Message
 
 # Local application imports
 from . import TrackedItem, tracked_market_items
-from .. import bot, util, file_manager, Emoji
+from .. import bot, file_manager, Emoji
 from ..util import web
 from ..util.api import steam_market as steam_market_api
 

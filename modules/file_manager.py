@@ -6,12 +6,11 @@ import os
 from datetime import datetime
 
 # Local application imports
-from . import bot, util, commands
+from . import bot, commands, util
 from .util.api import lucky_numbers
 
 
 def read_data_file(filename: str = "data.json") -> None:
-    global homework_events
     # Reads data file and updates settings
     if not os.path.isfile(filename):
         with open(filename, 'w') as file:
@@ -26,6 +25,7 @@ def read_data_file(filename: str = "data.json") -> None:
         data = json.load(file)
     if "lesson_links" in data:
         util.lesson_links.update(data["lesson_links"])
+        log("Lesson links has been updated:", util.lesson_links)
     # homework_events.clear()  # To ensure there aren't any old instances, not 100% needed though
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
