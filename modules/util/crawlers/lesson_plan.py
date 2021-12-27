@@ -144,7 +144,7 @@ def get_lesson_plan(class_id = "2d", force_update = False) -> tuple[dict, bool]:
     """
     plan_id = get_plan_id(class_id)
     update_cache_callback: function = lambda force: parse_html(web.get_html(get_plan_link(plan_id), force))
-    _log(f"Getting lesson plan with id {plan_id} for class {class_id} ({force_update = }) ...")
+    _log(f"Getting lesson plan with ID {plan_id} for class '{class_id}' ({force_update=}) ...")
     return file_manager.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
     # return update_cache_callback(force_update), False
 

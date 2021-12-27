@@ -85,9 +85,9 @@ def log(*raw_message: str) -> str:
     timestamp = f"{datetime.now():%Y-%m-%d @ %H:%M:%S}: "
     # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning 
     message = timestamp + ' '.join(map(str, raw_message)).replace("\n", "\n" + " " * len(timestamp))
-    with open("bot.log", 'a') as file:
+    with open("bot.log", 'a', encoding="UTF-8") as file:
         file.write(message + "\n")
-    # print(message)
+    print(message)
     return message
 
 
@@ -116,7 +116,7 @@ def cache_exists(cache_name: str) -> dict:
         os.mkdir('cache')
     if not os.path.isfile(filepath):
         return {}
-    with open(filepath, 'r') as file:
+    with open(filepath, 'r', encoding="UTF-8") as file:
         return json.load(file)
 
 
@@ -132,11 +132,11 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
     """
     cache = cache_exists(cache_name)
     cache_existed = bool(cache)
-    log(f"Cache for {cache_name} was {'not' * (not cache_existed)}found.")
+    log(f"Cache for {cache_name} was {'not ' * (not cache_existed)}found.")
     if force_update or not cache_existed:
         cache = callback_function(force_update)
         json_string = json.dumps(cache, indent=4, ensure_ascii=False)
-        with open(f"cache/{cache_name}.json", 'w') as file:
+        with open(f"cache/{cache_name}.json", 'w', encoding="UTF-8") as file:
             file.write(json_string)
     return cache, cache_existed
 
@@ -162,7 +162,8 @@ def read_env_file() -> bool:
         log("    --- '.env' file not found in program root directory. ---")
         return False
     return_value = False
-    log("\n    --- Processing environment variable (.env) file... ---")
+    log()
+    log("    --- Processing environment variable (.env) file... ---")
     with open('.env', 'r') as file:
         # Loop through each line in file
         for line in file.readlines():
@@ -180,5 +181,6 @@ def read_env_file() -> bool:
             log(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
             # Make the function return True since there was an env set
             return_value = True
-    log("    --- Finished processing environment variable files. ---\n")
+    log("    --- Finished processing environment variable files. ---")
+    log()
     return return_value

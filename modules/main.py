@@ -18,18 +18,18 @@ from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
 
 
-my_server = util.client.get_guild(my_server_id)  # Konrad's Discord Server
+my_server: discord.Guild = None
 
-# This method is called when the bot comes online
+# This function is called when the bot comes online
 @util.client.event
 async def on_ready() -> None:
     # Report information about logged in guilds
     guilds = {guild.id: guild.name for guild in util.client.guilds}
-    util.send_log(f"Successfully logged in as {util.client.user}\nActive guilds:", guilds, force=True)
+    util.send_log(f"Successfully connected as {util.client.user}.\nActive guilds:", guilds, force=True)
     
     # Initialise server reference
     global my_server
-    my_server = util.client.get_guild(my_server_id)
+    my_server = util.client.get_guild(my_server_id)  # Konrad's Discord Server
 
     # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
     util.lesson_plan = lesson_plan_crawler.get_lesson_plan(force_update=True)[0]
@@ -359,7 +359,8 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            file_manager.log(f"\n    --- Program manually closed by user ('{msg_first_word}' command). ---")
+            file_manager.log()
+            file_manager.log(f"    --- Program manually closed by user ('{msg_first_word}' command). ---")
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()
@@ -393,11 +394,13 @@ def start_bot() -> bool:
     # Save the previous log on startup
     file_manager.save_log_file()
     save_on_exit = True
-    # Update each imported module before starting the bot.
-    # The point of restarting the bot is to update the code without having to manually stop and start the script.
-    for module in (file_manager, commands, util, help, homework, steam_market, lucky_numbers_api, steam_api, lesson_plan_crawler, substitutions_crawler):
-        importlib.reload(module)
-        
+    # # Update each imported module before starting the bot.
+    # # The point of restarting the bot is to update the code without having to manually stop and start the script.
+    # for module in (file_manager, commands, util, help, homework, steam_market, lucky_numbers_api, steam_api, lesson_plan_crawler, substitutions_crawler):
+    #     importlib.reload(module)
+
+    if __name__ == "__main__":
+        file_manager.log("Started bot from main file! Assuming this is debug behaviour.")
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')
@@ -405,7 +408,8 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            file_manager.log("\n    --- CRITICAL ERROR! ---")
+            file_manager.log()
+            file_manager.log("    --- CRITICAL ERROR! ---")
             file_manager.log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
@@ -413,19 +417,23 @@ def start_bot() -> bool:
         else:
             # No problems finding OS variable containing bot token. Can login successfully.
             event_loop.run_until_complete(util.client.login(token))
+            file_manager.log("Bot logged in!")
         # Bot has been logged in, continue with attempt to connect
         try:
             # Blocking call:
             # The program will stay on this line until the bot is disconnected.
+            file_manager.log("Connecting to Discord...")
             event_loop.run_until_complete(util.client.connect())
         except KeyboardInterrupt:
-            # Raised when the program is forcefully closed (eg. Ctrl+F2 in PyCharm).
-            file_manager.log("\n    --- Program manually closed by user (KeyboardInterrupt exception). ---")
+            # Raised when the program is forcefully closed (eg. Ctrl+C in terminal).
+            file_manager.log()
+            file_manager.log("    --- Program manually closed by user (KeyboardInterrupt exception). ---")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
             # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
-            file_manager.log("\n    --- Bot execution terminated successfully. ---")
+            file_manager.log()
+            file_manager.log("    --- Bot execution terminated successfully. ---")
     finally:
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
@@ -440,7 +448,6 @@ def start_bot() -> bool:
 
 
 if __name__ == "__main__":
-    file_manager.log("Started bot from main file! Assuming this is debug behaviour.\n")
     use_bot_testing = True
     enable_log_messages = True
     start_bot()
