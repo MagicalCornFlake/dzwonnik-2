@@ -8,10 +8,10 @@ from math import ceil
 from discord import Message, Embed
 
 # Local application imports
-from . import get_datetime_from_input, get_next_period, get_lesson_by_roles
-from .. import prefix, Emoji, group_names, Weekday
-from .. file_manager import send_log
-from .. util import get_time, conjugate_numeric, get_formatted_period_time, get_lesson_link, get_lesson_name
+from .import get_datetime_from_input, get_next_period, get_lesson_by_roles
+from ..import prefix, Emoji, group_names, Weekday
+from ..file_manager import send_log
+from ..util import get_time, conjugate_numeric, get_formatted_period_time, get_lesson_link, get_lesson_name
 
 # Returns the message to send when the user asks for the next lesson
 def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:

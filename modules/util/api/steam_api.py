@@ -1,6 +1,6 @@
 """Functionality for accessing the Steam Community web API."""
 import urllib.parse
-from .. import web_api
+from ..import web_api
 
 
 currency_ids = [

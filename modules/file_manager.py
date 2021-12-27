@@ -6,9 +6,9 @@ import os
 from datetime import datetime
 
 # Local application imports
-from util import lesson_links, send_log
-from util.api import lucky_numbers_api
-from commands import homework, steam_market
+from .util import lesson_links, send_log
+from .util.api import lucky_numbers_api
+from .commands import homework, steam_market
 
 
 def read_data_file(filename: str = "data.json") -> None:

@@ -4,9 +4,9 @@
 from discord import Message
 
 # Local application imports
-from .. util import get_lesson_name, get_lesson_link, lesson_links
-from .. import prefix, Emoji
-from .. file_manager import save_data_file
+from ..util import get_lesson_name, get_lesson_link, lesson_links
+from ..import prefix, Emoji
+from ..file_manager import save_data_file
 
 
 def update_meet_link(message: Message) -> tuple[bool, str]:

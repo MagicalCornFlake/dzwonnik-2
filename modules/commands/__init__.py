@@ -7,8 +7,8 @@ from datetime import datetime
 from discord import Role, Message
 
 # Local application imports
-from .. import Weekday, Emoji, weekday_names, role_codes, prefix
-from .. util import send_log, lesson_plan
+from ..import Weekday, Emoji, weekday_names, role_codes, prefix
+from ..util import send_log, lesson_plan
 
 
 def get_next_period(given_time: datetime) -> tuple[bool, int, int]:

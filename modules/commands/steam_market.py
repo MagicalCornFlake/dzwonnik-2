@@ -4,10 +4,10 @@
 from discord import Message
 
 # Local application imports
-from .. import prefix, Emoji
-from .. util import get_web_api_error_message
-from .. util.api import steam_api
-from .. file_manager import save_data_file
+from ..import prefix, Emoji
+from ..util import get_web_api_error_message
+from ..util.api import steam_api
+from ..file_manager import save_data_file
 
 class TrackedItem:
     def __init__(self, name, min_price, max_price, author_id):

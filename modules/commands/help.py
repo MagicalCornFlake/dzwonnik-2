@@ -4,8 +4,8 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import help, next_lesson, next_break, plan, homework, meet, steam_market, lucky_numbers, substitutions
-from .. import prefix
+from .import help, next_lesson, next_break, plan, homework, meet, steam_market, lucky_numbers, substitutions
+from ..import prefix
 
 
 info = {

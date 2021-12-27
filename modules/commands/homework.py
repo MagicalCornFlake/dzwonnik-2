@@ -7,9 +7,9 @@ import datetime
 from discord import Message, Embed
 
 # Local application imports
-from .. import prefix, Emoji, role_codes, group_names
-from .. file_manager import read_data_file, save_data_file
-from .. util import send_log
+from ..import prefix, Emoji, role_codes, group_names
+from ..file_manager import read_data_file, save_data_file
+from ..util import send_log
 
 class HomeworkEvent:
     def __init__(self, title, group, author_id, deadline, reminder_date=None, reminder_is_active=True):

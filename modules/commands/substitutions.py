@@ -7,10 +7,10 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from . import send_log
-from .. import prefix
-from .. util import format_exception, get_web_api_error_message
-from .. util.crawlers import substitutions_crawler
+from .import send_log
+from ..import prefix
+from ..util import format_exception, get_web_api_error_message
+from ..util.crawlers import substitutions_crawler
 
 
 def get_substitutions_embed(message: Message = None) -> tuple[bool, Embed or str]:
