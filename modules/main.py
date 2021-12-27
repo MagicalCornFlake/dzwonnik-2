@@ -23,14 +23,16 @@ my_server = util.client.get_guild(my_server_id)  # Konrad's Discord Server
 # This method is called when the bot comes online
 @util.client.event
 async def on_ready() -> None:
-    global my_server
-
+    # Report information about logged in guilds
     guilds = {guild.id: guild.name for guild in util.client.guilds}
     util.send_log(f"Successfully logged in as {util.client.user}\nActive guilds:", guilds, force=True)
+    
+    # Initialise server reference
+    global my_server
     my_server = util.client.get_guild(my_server_id)
 
-    # Populate dictionaries
-    util.initialise_variables()
+    # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
+    util.lesson_plan = plan_crawler.get_lesson_plan(force_update=True)[0]
 
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())

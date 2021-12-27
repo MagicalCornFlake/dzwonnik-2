@@ -9,8 +9,7 @@ from datetime import datetime
 from discord import Intents, Client
 
 # Local application imports
-from .crawlers import plan_crawler
-from .. import weekday_names, enable_log_messages, file_manager, ChannelID
+from .. import enable_log_messages, file_manager, ChannelID
 
 
 intents = Intents.default()
@@ -18,18 +17,6 @@ intents.members = True
 client = Client(intents=intents)
 lesson_plan: dict[str, list[int] or list[list[int]] or list[list[dict[str, str]]]] = {}
 lesson_links: dict[str, str] = {}
-
-
-def initialise_variables():
-    global lesson_plan, lesson_links
-    lesson_plan = plan_crawler.get_lesson_plan(force_update=True)[0]
-    lesson_names: set[str] = set()
-    for weekday in [key for key in lesson_plan.keys() if key in weekday_names]:
-        for period in lesson_plan[weekday]:
-            for lesson in period:
-                lesson_names.add(lesson["name"])
-    for lesson in sorted(lesson_names):
-        lesson_links[lesson] = None
 
 
 def send_log(*raw_message, force=False) -> None:
@@ -89,10 +76,9 @@ def get_lesson_name(lesson_code: str) -> str:
 
 
 def get_lesson_link(lesson_code: str) -> str:
-    try:
-        return lesson_links[lesson_code]
-    except KeyError:
-        return None
+    if lesson_code not in lesson_links:
+        lesson_links[lesson_code] = None
+    return lesson_links[lesson_code]
 
 
 def get_formatted_period_time(period: int) -> str:
