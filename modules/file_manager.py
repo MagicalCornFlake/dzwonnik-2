@@ -13,6 +13,7 @@ from .util.api import lucky_numbers
 def read_data_file(filename: str = "data.json") -> None:
     # Reads data file and updates settings
     if not os.path.isfile(filename):
+        log("Data file not found. Writing default values.")
         with open(filename, 'w') as file:
             default_settings = {
                 "lesson_links": {},
@@ -23,10 +24,11 @@ def read_data_file(filename: str = "data.json") -> None:
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r') as file:
         data = json.load(file)
-    if "lesson_links" in data:
+    try:
         util.lesson_links.update(data["lesson_links"])
         log("Lesson links has been updated:", util.lesson_links)
-    # homework_events.clear()  # To ensure there aren't any old instances, not 100% needed though
+    except KeyError:
+        log("Lesson links not found in data file. Using blank values.")
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
     for event_id in data["homework_events"]:
@@ -38,6 +40,7 @@ def read_data_file(filename: str = "data.json") -> None:
     for new_event_candidate in new_event_candidates:
         if new_event_candidate.serialised not in commands.homework_events.serialised:
             new_event_candidate.sort_into_container(commands.homework_events)
+
     for item_attributes in data["tracked_market_items"]:
         item_name, min_price, max_price, author_id = [item_attributes[attr] for attr in item_attributes]
         item = commands.TrackedItem(item_name, min_price, max_price, author_id)
