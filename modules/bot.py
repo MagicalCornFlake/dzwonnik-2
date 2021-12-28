@@ -81,7 +81,7 @@ async def on_ready() -> None:
 
     # Initialise dictionary of lesson links
     for lesson_name in sorted(lesson_names):
-        util.lesson_links[lesson_name] = None
+        util.lesson_links.setdefault(lesson_name, None)
 
     # Sets status message on bot start
     status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
