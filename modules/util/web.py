@@ -65,16 +65,16 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
     if current_time - last_request_time < max_request_cooldown and not ignore_max_requests_cooldown:
         raise TooManyRequestsException(int(current_time * 1000 - last_request_time * 1000))
     last_request_time = current_time
+    bot.send_log(f"Fetching content from {url} ...")
     try:
         response = requests.get(url, timeout=10)  # Waits 10s for response
     except requests.exceptions.ReadTimeout:
         raise InvalidResponseException(408)
-    if response.status_code not in [requests.codes.ok, 500]:
+    if not 200 <= response.status_code < 300:
         raise InvalidResponseException(response.status_code)
     return response
 
 
 def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
-    bot.send_log(f"Fetching content from {url} ...")
     html = make_request(url, ignore_max_requests_cooldown).content.decode('UTF-8')
     return html.replace("<html><head>", "<html>\n<head>", 1) 
