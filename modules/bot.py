@@ -305,9 +305,10 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
 @loop(seconds=1)
 async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)  # Today's date + 1 day
-    # Checks if current time is in list of key times
+    tomorrow = current_time.date() + datetime.timedelta(days=1)  # Today's date + 1 day
+    # Makes the bot update the status only on the first second of each minute
     if current_time.second == 0:
+        # Check if the current hour and minute is in any time slot for the lesson plan timetable
         if any([current_time.hour, current_time.minute] in times for times in util.lesson_plan["Godz"]):
             # Check is successful, bot updates Discord status
             status = discord.Activity(type=discord.ActivityType.watching, name=get_new_status_msg())
