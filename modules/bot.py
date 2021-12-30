@@ -237,7 +237,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                     send_log("Skipping lesson:", lesson, "on period", current_period)
                     continue
                 send_log("Validated lesson:", lesson)
-                msgs[lesson['group']] = commands.get_lesson_name(lesson['name'])
+                msgs[lesson['group']] = util.get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
                 if lesson['group'] == "grupa_0":
                     send_log("Found lesson for entire class, skipping checking individual groups.")
