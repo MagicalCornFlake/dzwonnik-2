@@ -164,11 +164,10 @@ async def on_message(message: discord.Message) -> None:
                                         json.dumps(returned_value, indent=4, ensure_ascii=False))
                     except (TypeError, OverflowError):
                         results.append(returned_value)
-                template = f"Code executed:\n```py\n>>> {expression.replace('\n', '\n>>> ')}"
+                template = "Code executed:\n```py\n>>>" + expression.replace("\n", "\n>>> ")
                 too_long_msg = template + "```*Result too long to send in message, attaching file 'result.txt'...*"
-                result = '\n'.join(results)
-                success_reply = f"{template}\n{result}\n```"
-                await try_send_message(message, False, {"content": success_reply}, exec_result, on_fail_msg=too_long_msg)
+                success_msg = template + "\n" + "\n".join(results) + "```"
+                await try_send_message(message, False, {"content": success_msg}, exec_result, on_fail_msg=too_long_msg)
             else:
                 await message.channel.send("Code executed (return value not specified).")
             return
