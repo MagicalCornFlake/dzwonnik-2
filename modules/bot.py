@@ -128,27 +128,26 @@ async def on_message(message: discord.Message) -> None:
             f"{client.get_channel(773135499627593738).mention} numerem odpowiedniej grupy.**\n"
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
-    admin_commands = ["exec", "restart", "quit", "exit"]
+    admin_commands = ["exec", "exec_async", "restart", "quit", "exit"]
     if msg_first_word in admin_commands:
         if message.author != client.get_user(member_ids[8 - 1]):
             author_name = message.author.nick or message.author.name
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
-        if msg_first_word == admin_commands[0]:
-            if not message.content.startswith(prefix + "exec "):
+        if msg_first_word in admin_commands[:2]:
+            command_template = f"{prefix}{msg_first_word} "
+            if not message.content.startswith(command_template):
                 await message.channel.send("Type an expression or command to execute.")
                 return
-            expression = message.content[len(prefix + "exec "):]
+            expression = message.content[len(command_template):]
             send_log("Executing code:", expression)
             try:
-                if "return " in expression:
-                    exec(expression.replace("return ", "locals()['temp'] = "))
-                else:
-                    try:
-                        exec(f"""locals()['temp'] = {expression}""")
-                    except SyntaxError:
-                        exec(expression)
-                exec_result = locals()['temp'] if "temp" in locals() else "Code executed (return value not specified)."
+                expression_to_be_executed = f"""[]\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
+                try:
+                    exec(f"locals()['temp'] = {expression_to_be_executed}")
+                except SyntaxError:
+                    exec(expression)
+                exec_result = locals().get("temp") or "Code executed (return value not specified)."
             except Exception as e:
                 exec_result = util.format_exception_info(e)
             if exec_result is None:
@@ -166,7 +165,7 @@ async def on_message(message: discord.Message) -> None:
                 await try_send_message(message, False, {"content": success_reply }, exec_result, on_fail_msg=too_long_msg)
             return
 
-        if msg_first_word == admin_commands[1]:
+        if msg_first_word == admin_commands[2]:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")

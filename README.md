@@ -79,6 +79,5 @@ The `exec` command allows the calling user to execute valid Python code as if it
 Dzwonnik 2's main functionality is fully implemented, however there are always ways to improve a program.
 
 * Implement a command for changing the bot command prefix
-* General refactorings to separate `main.py` into many smaller modules
 * Finish README.md (commands list is incomplete)
 * Add better docstrings and general commented documentation in the source code
