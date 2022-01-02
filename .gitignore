@@ -3,6 +3,7 @@
 
 # Python cache for files generated during compilation
 *.pyc
+__pycache__
 
 # Environment variable files
 *.env
