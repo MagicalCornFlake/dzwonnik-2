@@ -49,9 +49,15 @@ def read_data_file(filename: str = "data.json") -> None:
         item = commands.TrackedItem(item_name, min_price, max_price, author_id)
         if item not in commands.tracked_market_items:
             commands.tracked_market_items.append(item)
-    data_timestamp: datetime = datetime.strptime(
-        data["lucky_numbers"], "%Y-%m-%d")
-    lucky_numbers.cached_data = data_timestamp.date()
+    try:
+        # Make datetime object from saved lucky numbers data
+        data_timestamp: datetime = datetime.strptime(
+            data["lucky_numbers"], "%Y-%m-%d")
+    except ValueError:
+        # Saved lucky numbers data is not a date; don't update cache
+        pass
+    else:
+        lucky_numbers.cached_data = data_timestamp.date()
 
 
 def save_data_file(filename: str = "data.json", should_log: bool = True) -> None:
