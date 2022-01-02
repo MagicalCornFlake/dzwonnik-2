@@ -42,6 +42,6 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
     cached_data = web.make_request(
         url, ignore_max_requests_cooldown=True).json()
     if cached_data["date"]:
-        data_timestamp: datetime = datetime.strptime(cached_data["date"], "%-d/%-m/%Y")
+        data_timestamp: datetime = datetime.strptime(cached_data["date"], "%d/%m/%Y")
         cached_data["date"] = data_timestamp.date()
     return old_cache
