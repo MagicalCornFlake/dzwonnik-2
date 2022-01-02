@@ -33,8 +33,10 @@ def read_data_file(filename: str = "data.json") -> None:
     new_event_candidates = commands.HomeworkEventContainer()
     for event_id in data["homework_events"]:
         attributes = data["homework_events"][event_id]
-        title, group, author_id, deadline, reminder_date, reminder_is_active = [attributes[attr] for attr in attributes]
-        new_event_candidate = commands.HomeworkEvent(title, group, author_id, deadline, reminder_date, reminder_is_active)
+        title, group, author_id, deadline, reminder_date, reminder_is_active = [
+            attributes[attr] for attr in attributes]
+        new_event_candidate = commands.HomeworkEvent(
+            title, group, author_id, deadline, reminder_date, reminder_is_active)
         new_event_candidates.append(new_event_candidate)
     commands.homework_events.remove_disjunction(new_event_candidates)
     for new_event_candidate in new_event_candidates:
@@ -42,11 +44,14 @@ def read_data_file(filename: str = "data.json") -> None:
             new_event_candidate.sort_into_container(commands.homework_events)
 
     for item_attributes in data["tracked_market_items"]:
-        item_name, min_price, max_price, author_id = [item_attributes[attr] for attr in item_attributes]
+        item_name, min_price, max_price, author_id = [
+            item_attributes[attr] for attr in item_attributes]
         item = commands.TrackedItem(item_name, min_price, max_price, author_id)
         if item not in commands.tracked_market_items:
             commands.tracked_market_items.append(item)
-    lucky_numbers.cached_data = data["lucky_numbers"]
+    data_timestamp: datetime = datetime.strptime(
+        data["lucky_numbers"], "%Y-%m-%d")
+    lucky_numbers.cached_data = data_timestamp.date()
 
 
 def save_data_file(filename: str = "data.json", should_log: bool = True) -> None:
@@ -59,14 +64,16 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     if should_log:
         bot.send_log("Saving data file", filename)
     # Creates containers with the data to be saved in .json format
-    serialised_homework_events = {event.id_string: event.serialised for event in commands.homework_events}
-    serialised_tracked_market_items = [item.serialised for item in commands.tracked_market_items]
+    serialised_homework_events = {
+        event.id_string: event.serialised for event in commands.homework_events}
+    serialised_tracked_market_items = [
+        item.serialised for item in commands.tracked_market_items]
     # Creates a parent dictionary to save all data that needs to be saved
     data_to_be_saved = {
         "lesson_links": {code: link for code, link in util.lesson_links.items() if link},
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
-        "lucky_numbers": lucky_numbers.cached_data
+        "lucky_numbers": str(lucky_numbers.cached_data)
     }
 
     # Replaces file content with new data
@@ -80,14 +87,17 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
 def clear_log_file(filename: str) -> None:
     """Truncates the given file and writes to it a log header to identify when the log was started."""
     with open(filename, 'w') as file:
-        file.write(f"START TIMESTAMP {datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP Started bot log.\n")
+        file.write(
+            f"START TIMESTAMP {datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP Started bot log.\n")
 
 
 def log(*raw_message: str) -> str:
     """Writes the message to the current log file, and returns the message formatted with the current time and proper indentation."""
     timestamp = f"{datetime.now():%Y-%m-%d @ %H:%M:%S}: "
-    # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning 
-    message = timestamp + ' '.join(map(str, raw_message)).replace("\n", "\n" + " " * len(timestamp))
+    # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning
+    message = timestamp + \
+        ' '.join(map(str, raw_message)).replace(
+            "\n", "\n" + " " * len(timestamp))
     with open("bot.log", 'a', encoding="UTF-8") as file:
         file.write(message + "\n")
     print(message)
@@ -101,7 +111,8 @@ def save_log_file() -> None:
             contents = file.read()
             if contents.startswith("START TIMESTAMP "):
                 # Extract log creation date from active log
-                log_start_time, log_contents = contents.lstrip("START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
+                log_start_time, log_contents = contents.lstrip(
+                    "START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
                 log_start_time = log_start_time.rstrip('\n')
                 # Copy active log contents to new file
                 with open(f"bot_logs{os.path.sep}{log_start_time}.log", 'w') as file:
@@ -114,7 +125,7 @@ def save_log_file() -> None:
 
 def cache_exists(cache_name: str) -> dict:
     """Returns the cached data if it exists, otherwise an empty dictionary."""
-    filepath = f"cache/{cache_name}.json"    
+    filepath = f"cache/{cache_name}.json"
     if not os.path.isdir('cache'):
         os.mkdir('cache')
     if not os.path.isfile(filepath):
@@ -153,7 +164,8 @@ def clear_cache(cache_path: str = "cache") -> bool:
         log("Successfully cleared cache at directory: ./" + cache_path)
         return True
     else:
-        log(f"Did not clear cache from directory ./{cache_path}: path does not exist.")
+        log(
+            f"Did not clear cache from directory ./{cache_path}: path does not exist.")
         return False
 
 
@@ -174,14 +186,17 @@ def read_env_file() -> bool:
             if '=' not in line:
                 continue
             # Extract environment variable name and value from each line, stripping them from whitespaces
-            env_name, env_value = [s.strip() for s in line.rstrip('\n').split('=', maxsplit=1)]
+            env_name, env_value = [
+                s.strip() for s in line.rstrip('\n').split('=', maxsplit=1)]
             # Don't reassign value if already set in memory
             if env_name in os.environ:
-                log(f"Environment variable '{env_name}' is already set, ignoring assignment in .env file.")
+                log(
+                    f"Environment variable '{env_name}' is already set, ignoring assignment in .env file.")
                 continue
             # Actually assign the environment variable value in memory
             os.environ[env_name] = env_value
-            log(f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
+            log(
+                f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
             # Make the function return True since there was an env set
             return_value = True
     log("    --- Finished processing environment variable files. ---")

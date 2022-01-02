@@ -11,7 +11,7 @@ from discord.ext.tasks import loop
 
 # Local application imports
 from . import file_manager, commands, util, role_codes, member_ids, weekday_names, group_names, Emoji, Weekday
-from .commands import help, homework, steam_market
+from .commands import help, homework, steam_market, lucky_numbers
 from .util.web import InvalidResponseException
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
@@ -368,7 +368,7 @@ async def track_api_updates() -> None:
         if old_cache != lucky_numbers_api.cached_data:
             send_log(f"New lucky numbers data!")
             target_channel = client.get_channel(ChannelID.bot_testing if use_bot_testing else ChannelID.general)
-            await target_channel.send(embed=commands.lucky_numbers.get_lucky_numbers_embed()[1])
+            await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
             file_manager.save_data_file()
 
     # Update the substitutions cache, and if it's changed, announce the new data in the specified channel.  

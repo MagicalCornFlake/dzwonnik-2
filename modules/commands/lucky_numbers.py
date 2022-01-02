@@ -1,5 +1,8 @@
 """Module containing code relating to the 'num' command."""
 
+# Standard library imports
+from datetime import datetime
+
 # Third-party imports
 from discord import Message, Embed
 
@@ -18,7 +21,8 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
         exc: str = util.format_exception_info(e)
         bot.send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{exc}")
         return False, web.get_error_message(e)
-    msg = f"Szczęśliwe numerki na {data['date']}:"
+    date_str: str = datetime.strftime(data["date"], "%d.%m.%Y")
+    msg = f"Szczęśliwe numerki na {date_str}:"
     embed = Embed(title="Szczęśliwe numerki", description=msg)
     for n in data["luckyNumbers"]:
         member_text = f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*" if n > len(member_ids) else \
