@@ -58,7 +58,7 @@ def read_data_file(filename: str = "data.json") -> None:
         bot.send_log(f"Invalid lucky numbers:", data["lucky_numbers"])
         bot.send_log(util.format_exception_info(e))
     else:
-        lucky_numbers.cached_data = data_timestamp.date()
+        lucky_numbers.cached_data["date"] = data_timestamp.date()
 
 
 def save_data_file(filename: str = "data.json", should_log: bool = True) -> None:
