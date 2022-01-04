@@ -2,6 +2,7 @@
 
 # Standard library imports
 from datetime import date, datetime
+import json
 
 # Local application imports
 from .. import web
@@ -45,3 +46,16 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
         data_timestamp: datetime = datetime.strptime(cached_data["date"], "%d/%m/%Y")
         cached_data["date"] = data_timestamp.date()
     return old_cache
+
+
+def serialised_cached_data():
+    """Returns the cached data as a JSON-serialisable dictionary."""
+    temp: dict = {}
+    for key, value in cached_data.items():
+        try:
+            json.dumps(value)
+        except TypeError:
+            temp[key] = str(value)
+        else:
+            temp[key] = value
+    return temp

@@ -19,7 +19,7 @@ def read_data_file(filename: str = "data.json") -> None:
                 "lesson_links": {},
                 "homework_events": {},
                 "tracked_market_items": [],
-                "lucky_numbers": lucky_numbers.cached_data
+                "lucky_numbers": lucky_numbers.serialised_cached_data()
             }
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r') as file:
@@ -53,9 +53,10 @@ def read_data_file(filename: str = "data.json") -> None:
         # Make datetime object from saved lucky numbers data
         data_timestamp: datetime = datetime.strptime(
             data["lucky_numbers"]["date"], "%Y-%m-%d")
-    except (KeyError, ValueError):
+    except Exception as e:
         # Saved lucky numbers data contains an invalid date; don't update cache
-        bot.send_log("Invalid lucky numbers:", data["lucky_numbers"])
+        bot.send_log(f"Invalid lucky numbers:", data["lucky_numbers"])
+        bot.send_log(util.format_exception_info(e))
     else:
         lucky_numbers.cached_data = data_timestamp.date()
 
@@ -79,7 +80,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         "lesson_links": {code: link for code, link in util.lesson_links.items() if link},
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
-        "lucky_numbers": str(lucky_numbers.cached_data)
+        "lucky_numbers": lucky_numbers.serialised_cached_data()
     }
 
     # Replaces file content with new data
