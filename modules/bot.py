@@ -477,6 +477,8 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
 
 async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict, on_fail_data, on_fail_msg: str = None) -> discord.message:
     send_method = user_message.reply if should_reply else user_message.channel.send
+    await send_log_message("Sending:")
+    await send_log_message(send_args)
     try:
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException:
