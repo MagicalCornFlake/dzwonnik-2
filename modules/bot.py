@@ -187,7 +187,7 @@ async def on_message(message: discord.Message) -> None:
                 too_long_msg = template + \
                     "```*Result too long to send in message, attaching file 'result.txt'...*"
                 success_msg = template + "\n" + "\n".join(results) + "```"
-                await try_send_message(message, False, {"content": success_msg}, exec_result, on_fail_msg=too_long_msg)
+                await try_send_message(message, False, {"content": success_msg}, results, on_fail_msg=too_long_msg)
             else:
                 await message.channel.send("Code executed (return value not specified).")
             return
