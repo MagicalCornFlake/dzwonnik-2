@@ -478,14 +478,17 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
     except discord.errors.HTTPException:
         send_log("Message too long. Length of data:", len(str(on_fail_data)))
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
-        with open("result.txt", 'a') as file:
-            file.truncate()
+        with open("result.txt", 'a+') as file:
+            file.truncate(0)
             for element in on_fail_data if on_fail_msg else [on_fail_data]:
                 if type(on_fail_data) is discord.Embed:
                     on_fail_data = on_fail_data.to_dict()
                 try:
                     json.dump(element, file, indent=2, ensure_ascii=False)
                 except TypeError:
-                    file.write(str(element))
+                    try:
+                        file.write(on_fail_data.decode('UTF-8'))
+                    except AttributeError:
+                        file.write(str(on_fail_data))
         await user_message.channel.send(file=discord.File("result.txt"))
     return reply_msg
