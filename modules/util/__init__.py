@@ -30,18 +30,24 @@ def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tup
 
 
 def get_lesson_name(lesson_code: str) -> str:
+    # Mappings contain a boolean indicating if the entire word should be mapped or only if it starts with the phrase
     mappings: dict[str, tuple[bool, str]] = {
-        "zaj.z-wych": (False, "zajęcia z wychowawcą"),
+        "zaj.z-wych.": (False, "zajęcia z wychowawcą"),
         "WF": (False, "wychowanie fizyczne"),
         "WOS": (False, "wiedza o społeczeństwie"),
         "TOK": (False, "theory of knowledge"),
-        "mat": (False, "matematyka"),
         "j.": (False, "język "),
-        "hiszp": (True, "hiszpański"),
-        "ang": (True, "angielski"),
-        "przedsięb": (True, "przedsiębiorczość")
+        "hiszp.": (True, "hiszpański"),
+        "ang.": (True, "angielski"),
+        "przedsięb.": (True, "przedsiębiorczość")
     }
-    lesson_name = lesson_code.rstrip('.')[2 * lesson_code.startswith('r-'):]
+    # Handle edge cases
+    if lesson_code in ["mat", "r-mat"]:
+        return "matematyka rozszerzona"
+    if lesson_code == "mat.":
+        return "matematyka"
+    # Remove trailing '.' and leading 'r-'
+    lesson_name = lesson_code[2 * lesson_code.startswith('r-'):]
     for abbreviation, behaviour in mappings.items():
         map_entire_word, mapping = behaviour
         if map_entire_word or lesson_name.startswith(abbreviation):
