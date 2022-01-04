@@ -114,6 +114,15 @@ async def on_ready() -> None:
                     f"Last message in channel {channel.name} was not sent by me.")
 
 
+class ExecResultList(list):
+    def __init__(self):
+        super().__init__(self)
+        
+    def __iadd__(self, __x):
+        self.append(__x)
+        return self
+
+
 # This function is called when someone sends a message in the server
 @client.event
 async def on_message(message: discord.Message) -> None:
@@ -147,10 +156,10 @@ async def on_message(message: discord.Message) -> None:
                 return
             expression = message.content[len(command_template):]
             try:
-                expression_to_be_executed = f"""[]\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
+                expression_to_be_executed = f"""ExecResultList()\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
                 try:
                     exec("locals()['temp'] = " + expression_to_be_executed)
-                    send_log("Executing injected code:", expression_to_be_executed)
+                    send_log("Executing injected code: locals()['temp'] = ", expression_to_be_executed)
                 except SyntaxError as e:
                     send_log("Caught SyntaxError in 'exec' command:")
                     send_log(util.format_exception_info(e))
