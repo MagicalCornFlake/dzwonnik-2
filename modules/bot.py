@@ -146,14 +146,15 @@ async def on_message(message: discord.Message) -> None:
                 await message.channel.send("Type an expression or command to execute.")
                 return
             expression = message.content[len(command_template):]
-            send_log("Executing code:", expression)
             try:
                 expression_to_be_executed = f"""[]\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
                 try:
                     exec("locals()['temp'] = " + expression_to_be_executed)
+                    send_log("Executing injected code:", expression_to_be_executed)
                 except SyntaxError as e:
                     send_log("Caught SyntaxError in 'exec' command:")
                     send_log(util.format_exception_info(e))
+                    send_log("Executing raw code:", expression)
                     exec(expression)
             except Exception as e:
                 exec_result = util.format_exception_info(e)
