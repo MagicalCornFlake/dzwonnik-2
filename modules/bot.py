@@ -483,11 +483,16 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
         with open("result.txt", 'w') as file:
             temp: list[str] = []
             for element in on_fail_data if on_fail_msg else [on_fail_data]:
-                try:
-                    temp.append(json.dumps(element, file, indent=2, ensure_ascii=False))
-                except TypeError:
-                    send_log("Processing element with type", type(element))
-                    temp.append(element.decode('UTF-8') if type(element) is bytes else str(element))
+                elem_type = type(element)
+                send_log("Processing element with type", elem_type)
+                if elem_type in [list, dict]:
+                    try:
+                        temp.append(json.dumps(element, file, indent=2, ensure_ascii=False))
+                    except TypeError:
+                        pass
+                    else:
+                        continue
+                temp.append(element.decode('UTF-8') if elem_type is bytes else str(element))
             file.write("\n".join(temp))
         await user_message.channel.send(file=discord.File("result.txt"))
     return reply_msg
