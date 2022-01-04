@@ -63,23 +63,37 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     headers = []
     data: dict[str, list[list[dict[str, str]]]] = {}
 
-    def extract_regex() -> any:
+    def extract_regex(raw_line: str) -> any:
         """Extracts the data from a given table row."""
 
-        if row == "<td class=\"l\">&nbsp;</td>":
+        # Return an empty list if the current cell is empty
+        if raw_line == "<td class=\"l\">&nbsp;</td>":
             return []
-        elif row.startswith("<td class=\"nr\">"):
+        elif raw_line.startswith("<td class=\"nr\">"):
             # Row containing the lesson period number
-            return int(period_pattern.match(row).groups()[-1])
-        elif row.startswith("<td class=\"g\">"):
+            return int(period_pattern.match(raw_line).groups()[-1])
+        elif raw_line.startswith("<td class=\"g\">"):
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            times = [int(time) for time in duration_pattern.match(row).groups()]
-            return [times[:2], times[2:]]
+            times = [int(time) for time in duration_pattern.match(raw_line).groups()]
+            # Check if the start hour of the lesson is less than 12:00 (i.e. old timetable is still relevant)
+            lesson_start_hour = times[0]
+            if lesson_start_hour < 12:
+                return [times[:2], times[2:]]
+            # The lesson is after or 12:00
+            # We must manually change the returned values since the timetable is not up-to-date on the website
+            # After 12:00, the breaks last 5 minutes instead of 10.
+            new_times = {
+                12: [[12, 50], [13, 35]],
+                13: [[13, 40], [14, 25]],
+                14: [[14, 30], [15, 15]],
+                15: [[15, 20], [16, 5]]
+            }
+            return new_times[lesson_start_hour]
         else:
             # Row containing lesson information for a given period
             tmp: list[dict[str, str]] = []
-            for match in lesson_pattern.findall(row):
+            for match in lesson_pattern.findall(raw_line):
                 lesson_name, group, groups, teacher, code, room_id = match
                 if group: 
                     if int(groups) == 5:
@@ -123,7 +137,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                 column_number += 1
                 if weekday not in data:
                     data[weekday] = []
-                data[weekday].append(extract_regex())
+                data[weekday].append(extract_regex(row))
     # Report summary of scraped data
     # for key in data:
     #     _log(f"{key}: {len(data[key])}")
