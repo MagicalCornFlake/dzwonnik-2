@@ -176,19 +176,15 @@ async def on_message(message: discord.Message) -> None:
                 for returned_value in exec_result if type(exec_result) is ExecResultList else [exec_result]:
                     if type(returned_value) in [list, dict]:
                         try:
-                            send_log("Appending (valid JSON):", returned_value)
                             results.append("```\nDetected JSON content:```json\n" +
                                            json.dumps(returned_value, indent=4, ensure_ascii=False))
                         except (TypeError, OverflowError):
-                            send_log("Appending (bad JSON):", returned_value)
                             results.append(returned_value)
                     else:
-                        send_log("Appending (not JSON):", returned_value)
                         results.append(returned_value)
-                send_log("Final returned results:", results)
                 template = "Code executed:\n```py\n>>> " + \
                     expression.replace("\n", "\n>>> ")
-                msg = template + "\n" + "\n".join(results) + "```"
+                msg = template + "\n" + "\n".join([str(r) for r in results]) + "```"
                 too_long_msg = template + \
                     "```*Result too long to send in message, attaching file 'result.txt'...*"
                 await try_send_message(message, False, {"content": msg}, results, on_fail_msg=too_long_msg)
@@ -477,8 +473,6 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
 
 async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict, on_fail_data, on_fail_msg: str = None) -> discord.message:
     send_method = user_message.reply if should_reply else user_message.channel.send
-    await send_log_message("Sending:")
-    await send_log_message(send_args)
     try:
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException:
