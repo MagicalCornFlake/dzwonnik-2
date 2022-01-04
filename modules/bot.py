@@ -151,11 +151,14 @@ async def on_message(message: discord.Message) -> None:
                 expression_to_be_executed = f"""[]\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
                 try:
                     exec("locals()['temp'] = " + expression_to_be_executed)
-                except SyntaxError:
+                except SyntaxError as e:
+                    send_log("Caught SyntaxError in 'exec' command:")
+                    send_log(util.format_exception_info(e))
                     exec(expression)
             except Exception as e:
                 exec_result = util.format_exception_info(e)
             exec_result = locals().get("temp")
+            send_log(f"Temp variable: '{exec_result}'")
             if exec_result:
                 results = []
                 for returned_value in exec_result if type(exec_result) is list else [exec_result]:
@@ -164,7 +167,7 @@ async def on_message(message: discord.Message) -> None:
                                         json.dumps(returned_value, indent=4, ensure_ascii=False))
                     except (TypeError, OverflowError):
                         results.append(returned_value)
-                template = "Code executed:\n```py\n>>>" + expression.replace("\n", "\n>>> ")
+                template = "Code executed:\n```py\n>>> " + expression.replace("\n", "\n>>> ")
                 too_long_msg = template + "```*Result too long to send in message, attaching file 'result.txt'...*"
                 success_msg = template + "\n" + "\n".join(results) + "```"
                 await try_send_message(message, False, {"content": success_msg}, exec_result, on_fail_msg=too_long_msg)
