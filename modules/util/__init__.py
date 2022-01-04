@@ -62,6 +62,8 @@ def get_lesson_link(lesson_code: str) -> str:
 
 
 def get_formatted_period_time(period: int) -> str:
+    """Get a string representing the start and end times for a given period, according to the lesson plan.
+    e.g. [[8, 0], [8, 45]] -> "08:00-08:45
+    """
     times: list[list[int]] = lesson_plan["Godz"][period]
-    # e.g. [[8, 0], [8, 45]] -> "08:00-08:45"
     return "-".join([':'.join([f"{t:02}" for t in time]) for time in times])
