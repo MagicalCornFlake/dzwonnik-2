@@ -117,7 +117,7 @@ async def on_ready() -> None:
 class ExecResultList(list):
     def __init__(self):
         super().__init__(self)
-        
+
     def __iadd__(self, __x):
         self.append(__x)
         return self
@@ -159,7 +159,8 @@ async def on_message(message: discord.Message) -> None:
                 expression_to_be_executed = f"""ExecResultList()\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
                 try:
                     exec("locals()['temp'] = " + expression_to_be_executed)
-                    send_log("Executing injected code:\nlocals()['temp'] =", expression_to_be_executed)
+                    send_log(
+                        "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed)
                 except SyntaxError as e:
                     send_log("Caught SyntaxError in 'exec' command:")
                     send_log(util.format_exception_info(e))
@@ -174,12 +175,17 @@ async def on_message(message: discord.Message) -> None:
                 results = []
                 for returned_value in exec_result if type(exec_result) is ExecResultList else [exec_result]:
                     try:
-                        results.append("```\nDetected JSON content:```json\n" +
-                                        json.dumps(returned_value, indent=4, ensure_ascii=False))
+                        if type(returned_value) in [list, dict]:
+                            results.append("```\nDetected JSON content:```json\n" +
+                                           json.dumps(returned_value, indent=4, ensure_ascii=False))
+                        else:
+                            raise TypeError
                     except (TypeError, OverflowError):
                         results.append(returned_value)
-                template = "Code executed:\n```py\n>>> " + expression.replace("\n", "\n>>> ")
-                too_long_msg = template + "```*Result too long to send in message, attaching file 'result.txt'...*"
+                template = "Code executed:\n```py\n>>> " + \
+                    expression.replace("\n", "\n>>> ")
+                too_long_msg = template + \
+                    "```*Result too long to send in message, attaching file 'result.txt'...*"
                 success_msg = template + "\n" + "\n".join(results) + "```"
                 await try_send_message(message, False, {"content": success_msg}, exec_result, on_fail_msg=too_long_msg)
             else:
