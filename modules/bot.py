@@ -11,7 +11,7 @@ from discord.ext.tasks import loop
 
 # Local application imports
 from . import file_manager, commands, util, role_codes, member_ids, weekday_names, group_names, Emoji, Weekday
-from .commands import help, homework, steam_market, lucky_numbers
+from .commands import help, homework, steam_market, lucky_numbers, substitutions
 from .util.web import InvalidResponseException
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
@@ -437,9 +437,8 @@ async def track_api_updates() -> None:
         if not cache_existed:
             send_log(
                 f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}")
-            target_channel = client.get_channel(
-                ChannelID.bot_testing if use_bot_testing else ChannelID.general)
-            # await target_channel.send(embed=get_substitutions_embed()[1])
+            target_channel = client.get_channel(ChannelID.bot_testing if True else ChannelID.general)
+            await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
 
 
 @track_api_updates.before_loop
