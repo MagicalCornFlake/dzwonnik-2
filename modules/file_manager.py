@@ -52,10 +52,10 @@ def read_data_file(filename: str = "data.json") -> None:
     try:
         # Make datetime object from saved lucky numbers data
         data_timestamp: datetime = datetime.strptime(
-            data["lucky_numbers"], "%Y-%m-%d")
-    except ValueError:
-        # Saved lucky numbers data is not a date; don't update cache
-        pass
+            data["lucky_numbers"]["date"], "%Y-%m-%d")
+    except (KeyError, ValueError):
+        # Saved lucky numbers data contains an invalid date; don't update cache
+        bot.send_log("Invalid lucky numbers:", data["lucky_numbers"])
     else:
         lucky_numbers.cached_data = data_timestamp.date()
 
