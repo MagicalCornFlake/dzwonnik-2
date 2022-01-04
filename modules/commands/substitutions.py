@@ -15,9 +15,10 @@ from ..util.crawlers import substitutions as substitutions_crawler
 desc = "Podaje zastępstwa na dany dzień."
 
 
-def get_substitutions_embed(message: Message = None) -> tuple[bool, Embed or str]:
+def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
     try:
-        data = substitutions_crawler.get_substitutions(message is None)[0]
+        # No need to set the force argument if the function is called from the API update loop since the cache has already been updated
+        data = substitutions_crawler.get_substitutions()[0]
     except Exception as e:
         ex: str = util.format_exception_info(e)
         bot.send_log(f"Error! Received an invalid response from the web request. Exception trace:\n{ex}", force=True)
