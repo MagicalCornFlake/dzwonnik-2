@@ -83,12 +83,16 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         "lucky_numbers": lucky_numbers.serialised_cached_data()
     }
 
+    # Format the data to be JSON-serialisable
+    formatted_data: str = json.dumps(data_to_be_saved, indent=2)
+
     # Replaces file content with new data
     with open(filename, 'w') as file:
-        json.dump(data_to_be_saved, file, indent=2)
+        file.write(formatted_data)
+        
+    # Sends a log with the formatted data
     if should_log:
-        bot.send_log(f"Successfully saved data file '{filename}'.\nData:")
-        bot.send_log(data_to_be_saved)
+        bot.send_log(f"Successfully saved data file '{filename}'.\nData:\n{formatted_data}")
 
 
 def clear_log_file(filename: str) -> None:
