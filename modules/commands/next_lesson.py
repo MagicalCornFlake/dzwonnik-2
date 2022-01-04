@@ -48,7 +48,10 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
             when = " w poniedziałek" if Weekday.friday <= current_time.weekday() <= Weekday.saturday else " jutro"
             countdown = ""
         next_period_time = util.get_formatted_period_time(lesson["period"]).split("-")[0]
-        group = group_names[lesson['group']] + " " * (lesson['group'] != "grupa_0")
+        # Check if the group name has been mapped to a more user-friendly version; otherwise use the group code
+        group_name: str = group_names.get(lesson['group'], lesson['group'])
+        # Append a space if the group is not the entire class
+        group = group_name + " " * (lesson['group'] != "grupa_0")
         return True, f"{Emoji.info} Następna lekcja {group}to **{util.get_lesson_name(lesson['name'])}**" \
                      f"{when} o godzinie __{next_period_time}__{countdown}.", util.get_lesson_link(lesson['name'])
 
