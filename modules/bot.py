@@ -176,11 +176,14 @@ async def on_message(message: discord.Message) -> None:
                 for returned_value in exec_result if type(exec_result) is ExecResultList else [exec_result]:
                     if type(returned_value) in [list, dict]:
                         try:
+                            send_log("Appending (valid JSON):", returned_value)
                             results.append("```\nDetected JSON content:```json\n" +
                                            json.dumps(returned_value, indent=4, ensure_ascii=False))
                         except (TypeError, OverflowError):
+                            send_log("Appending (invalid JSON):", returned_value)
                             results.append(returned_value)
                     else:
+                        send_log("Appending (not JSON):", returned_value)
                         results.append(returned_value)
                 template = "Code executed:\n```py\n>>> " + \
                     expression.replace("\n", "\n>>> ")
