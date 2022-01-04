@@ -159,19 +159,19 @@ async def on_message(message: discord.Message) -> None:
                 expression_to_be_executed = f"""ExecResultList()\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
                 try:
                     exec("locals()['temp'] = " + expression_to_be_executed)
-                    send_log("Executing injected code: locals()['temp'] = ", expression_to_be_executed)
+                    send_log("Executing injected code:\nlocals()['temp'] =", expression_to_be_executed)
                 except SyntaxError as e:
                     send_log("Caught SyntaxError in 'exec' command:")
                     send_log(util.format_exception_info(e))
-                    send_log("Executing raw code:", expression)
+                    send_log("Executing raw code:\n" + expression)
                     exec(expression)
             except Exception as e:
                 exec_result = util.format_exception_info(e)
             exec_result = locals().get("temp")
-            send_log(f"Temp variable: '{exec_result}'")
+            send_log(f"Temp variable: {exec_result}")
             if exec_result:
                 results = []
-                for returned_value in exec_result if type(exec_result) is list else [exec_result]:
+                for returned_value in exec_result if type(exec_result) is ExecResultList else [exec_result]:
                     try:
                         results.append("```\nDetected JSON content:```json\n" +
                                         json.dumps(returned_value, indent=4, ensure_ascii=False))
