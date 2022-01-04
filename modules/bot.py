@@ -172,22 +172,21 @@ async def on_message(message: discord.Message) -> None:
                 exec_result = locals().get("temp")
             send_log(f"Temp variable: {exec_result}")
             if exec_result:
-                results = []
+                res_msg = []
                 for returned_value in exec_result if type(exec_result) is ExecResultList else [exec_result]:
                     if type(returned_value) in [list, dict]:
                         try:
-                            results.append("```\nDetected JSON content:```json\n" +
+                            res_msg.append("```\nDetected JSON content:```json\n" +
                                            json.dumps(returned_value, indent=4, ensure_ascii=False))
                         except (TypeError, OverflowError):
-                            results.append(returned_value)
+                            res_msg.append(returned_value)
                     else:
-                        results.append(returned_value)
+                        res_msg.append(returned_value)
                 template = "Code executed:\n```py\n>>> " + \
                     expression.replace("\n", "\n>>> ")
-                msg = template + "\n" + "\n".join([str(r) for r in results]) + "```"
-                too_long_msg = template + \
-                    "```*Result too long to send in message, attaching file 'result.txt'...*"
-                await try_send_message(message, False, {"content": msg}, results, on_fail_msg=too_long_msg)
+                res_msg = "\n".join([str(r) for r in res_msg])
+                too_long_msg = f"{template}```*Result too long to send in message, attaching file 'result.txt'...*"
+                await try_send_message(message, False, {"content": f"{template}\n{res_msg}```"}, res_msg, on_fail_msg=too_long_msg)
             else:
                 await message.channel.send("Code executed (return value not specified).")
             return
@@ -252,14 +251,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
 
         if next_period < 10:
             # Currently break time
+            time = util.get_formatted_period_time(current_period).split('-')[0]
             if current_period == first_period:
                 # Currently before school
-                new_status_msg = "szkoła o " + \
-                    util.get_formatted_period_time(first_period).split('-')[0]
+                new_status_msg = "szkoła o " + time
             else:
-                new_status_msg = "przerwa do " + \
-                    util.get_formatted_period_time(
-                        current_period).split('-')[0]
+                new_status_msg = "przerwa do " + time
         else:
             # Currently lesson
             # Dictionary with lesson group code and lesson name
@@ -437,7 +434,8 @@ async def track_api_updates() -> None:
         if not cache_existed:
             send_log(
                 f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}")
-            target_channel = client.get_channel(ChannelID.bot_testing if True else ChannelID.general)
+            target_channel = client.get_channel(
+                ChannelID.bot_testing if True else ChannelID.general)
             await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
 
 
@@ -489,12 +487,14 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
                 send_log("Processing element with type", elem_type)
                 if elem_type in [list, dict]:
                     try:
-                        temp.append(json.dumps(element, file, indent=2, ensure_ascii=False))
+                        temp.append(json.dumps(element, file,
+                                    indent=2, ensure_ascii=False))
                     except TypeError:
                         pass
                     else:
                         continue
-                temp.append(element.decode('UTF-8') if elem_type is bytes else str(element))
+                temp.append(element.decode('UTF-8')
+                            if elem_type is bytes else str(element))
             file.write("\n".join(temp))
         await user_message.channel.send(file=discord.File("result.txt"))
     return reply_msg
