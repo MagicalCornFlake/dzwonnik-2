@@ -50,7 +50,7 @@ last_request_time: int = 0
 max_request_cooldown: int = 3  # Must wait 3s since last request
 
 
-def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> requests.Response:
+def make_request(url: str, ignore_request_limit: bool = False) -> requests.Response:
     """Make a web request.
 
     Arguments:
@@ -62,7 +62,7 @@ def make_request(url: str, ignore_max_requests_cooldown: bool = False) -> reques
     """
     global last_request_time
     current_time = time()
-    if current_time - last_request_time < max_request_cooldown and not ignore_max_requests_cooldown:
+    if current_time - last_request_time < max_request_cooldown and not ignore_request_limit:
         raise TooManyRequestsException(int(current_time * 1000 - last_request_time * 1000))
     last_request_time = current_time
     bot.send_log(f"Fetching content from {url} ...")

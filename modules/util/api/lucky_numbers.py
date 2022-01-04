@@ -32,7 +32,7 @@ def get_lucky_numbers() -> dict[str, str or list[int or str]]:
     return cached_data
 
 
-def update_cache() -> dict[str, str or list[int or str]] or bool:
+def update_cache() -> dict[str, str or list[int or str]]:
     """Updates the cache with current data from the SU ILO website.
 
     Returns the old cache so that it can be compared with the new one.
@@ -40,8 +40,7 @@ def update_cache() -> dict[str, str or list[int or str]] or bool:
     url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
     global cached_data
     old_cache = cached_data
-    cached_data = web.make_request(
-        url, ignore_max_requests_cooldown=True).json()
+    cached_data = web.make_request(url, ignore_request_limit=True).json()
     if cached_data["date"]:
         data_timestamp: datetime = datetime.strptime(cached_data["date"], "%d/%m/%Y")
         cached_data["date"] = data_timestamp.date()
