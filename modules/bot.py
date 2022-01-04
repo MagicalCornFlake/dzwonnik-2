@@ -150,7 +150,7 @@ async def on_message(message: discord.Message) -> None:
             try:
                 expression_to_be_executed = f"""[]\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
                 try:
-                    exec(f"locals()['temp'] = {expression_to_be_executed}")
+                    exec("locals()['temp'] = " + expression_to_be_executed)
                 except SyntaxError:
                     exec(expression)
             except Exception as e:
@@ -158,7 +158,7 @@ async def on_message(message: discord.Message) -> None:
             exec_result = locals().get("temp")
             if exec_result:
                 results = []
-                for returned_value in exec_result:
+                for returned_value in exec_result if type(exec_result) is list else [exec_result]:
                     try:
                         results.append("```\nDetected JSON content:```json\n" +
                                         json.dumps(returned_value, indent=4, ensure_ascii=False))
