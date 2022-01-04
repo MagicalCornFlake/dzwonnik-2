@@ -167,7 +167,8 @@ async def on_message(message: discord.Message) -> None:
                     exec(expression)
             except Exception as e:
                 exec_result = util.format_exception_info(e)
-            exec_result = locals().get("temp")
+            else:
+                exec_result = locals().get("temp")
             send_log(f"Temp variable: {exec_result}")
             if exec_result:
                 results = []
