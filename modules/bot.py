@@ -373,8 +373,7 @@ async def track_time_changes() -> None:
     # Check if the lucky numbers data is outdated
     try:
         # Try to parse the lucky numbers data date
-        cached_datetime: datetime.datetime = lucky_numbers_api.cached_data["date"]
-        cached_date = cached_datetime.date()
+        cached_date: datetime.datetime = lucky_numbers_api.cached_data["date"]
     except (KeyError, AttributeError) as e:
         # Lucky numbers data does not contain a date
         send_log("Initial lucky numbers API update...")
