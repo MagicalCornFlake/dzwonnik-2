@@ -356,7 +356,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
     file_manager.save_data_file()
 
 
-@loop(seconds=1)
+@loop(seconds=5)
 async def track_time_changes() -> None:
     """Tracks time changes for non-resource intensive tasks that do not connect to APIs.
     For example, checks if the current lesson period has changed using cached lesson plan data and updates the bot status accordingly.
@@ -366,7 +366,7 @@ async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
     await check_for_due_homework(current_time)
 
-    if current_time.second == 0:
+    if current_time.second < 5:
         # Update the status only on the first second of each minute
         await check_for_status_updates(current_time)
 
@@ -375,10 +375,11 @@ async def track_time_changes() -> None:
         # Try to parse the lucky numbers data date
         cached_datetime: datetime.datetime = lucky_numbers_api.cached_data["date"]
         cached_date = cached_datetime.date()
-    except (KeyError, AttributeError):
+    except (KeyError, AttributeError) as e:
         # Lucky numbers data does not contain a date
         send_log("Initial lucky numbers API update...")
-        await check_for_lucky_numbers_updates()
+        # await check_for_lucky_numbers_updates()
+        send_log(util.format_exception_info(e))
     else:
         # Lucky numbers data contains a valid date
         if cached_date != current_time.date() and current_time.hour >= 1:
