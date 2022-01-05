@@ -45,8 +45,8 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
                 groups = sub_info.get("groups")
                 group_text = f"(gr. {', '.join(groups)}) — " if groups else ""
                 sub_msgs.append(f"{group_text}*{sub_info['details']}*")
-            class_msg = f"{class_name}: {' | '.join(sub_msgs)}"
-            formatted_class_msg = f"__**{class_msg}**__" if class_name == "IID" else class_msg
+            class_msg = f"**{class_name}**: {' | '.join(sub_msgs)}"
+            formatted_class_msg = f"[{class_msg}]({substitutions_crawler.substitutions_link})" if class_name == "IID" else class_msg
             class_msgs.append(formatted_class_msg)
         time = util.get_formatted_period_time(period)
         field_args = {
