@@ -232,7 +232,8 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            send_log(f"    --- Program manually closed by user ('{msg_first_word}' command). ---")
+            log_msg = f"    --- Program manually closed by user ('{msg_first_word}' command). ---"
+            send_log(log_msg)
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()
@@ -273,8 +274,9 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         query_time)
     if next_period_is_today:
         # Get the period of the next lesson
-        lesson = commands.get_lesson_by_roles(
-            next_period % 10, next_lesson_weekday, list(role_codes.keys())[1:])
+        roles = list(role_codes.keys())[1:]
+        params = next_period % 10, next_lesson_weekday, roles
+        lesson = commands.get_lesson_by_roles(*params)
         if lesson:
             current_period = lesson['period']
             send_log("The next lesson is on period", lesson['period'])
@@ -289,6 +291,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             time = util.get_formatted_period_time(current_period).split('-')[0]
             if current_period == first_period:
                 # Currently before school
+                current_period = -1
                 new_status_msg = "szkoła o " + time
             else:
                 new_status_msg = "przerwa do " + time
@@ -297,12 +300,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             # Dictionary with lesson group code and lesson name
             msgs: dict[str, str] = {}
             for role_code in list(role_codes.keys())[1:]:
-                lesson = commands.get_lesson_by_roles(
-                    current_period, next_lesson_weekday, [role_code])
+                params = current_period, next_lesson_weekday, [role_code]
+                lesson = commands.get_lesson_by_roles(*params)
                 if not lesson or lesson["period"] > current_period:
                     # No lesson for that group
-                    send_log("Skipping lesson:", lesson,
-                             "on period", current_period)
+                    log_msg = f"Skipping lesson: {lesson} on period {current_period}."
+                    send_log(log_msg)
                     continue
                 send_log("Validated lesson:", lesson)
                 msgs[lesson['group']] = util.get_lesson_name(lesson['name'])
@@ -320,9 +323,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     else:
         # After the last lesson for the given day
         current_period = -1
-        new_status_msg = "koniec lekcji!" if query_time.weekday(
-        ) < Weekday.friday else "weekend!"
+        is_weekend = query_time.weekday() >= Weekday.friday
+        new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
     send_log(f"... new status message is '{new_status_msg}'.")
+    send_log(f"Current period: {current_period}")
     return new_status_msg
 
 
