@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import importlib
-from . import modules
-from . modules import main
+import modules
+from modules import main
 
 
 while True:
