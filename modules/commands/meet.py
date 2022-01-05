@@ -14,6 +14,14 @@ desc = None
 link_pattern = re.compile(r"^[a-z]{3}-[a-z]{4}-[a-z]{3}|lookup/[a-z]{10}$")
 
 
+class InvalidFormatException(Exception):
+    """Raised when the user-inputted Google Meet link is of invalid format."""
+
+    def init(self, link):
+        self.message = "Invalid Googe Meet link: " + link
+        super.__init__(self.message)
+
+
 def update_meet_link(message: Message) -> tuple[bool, str]:
     args = message.content.split(" ")[1:]
     try:
@@ -33,7 +41,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
                 raise bot.MissingPermissionsException
             if not (re.match(link_pattern, args[1])):
                 # Display codes list if the specified link is of invalid format
-                raise ValueError
+                raise InvalidFormatException(args[1])
             # User-given link is valid
             util.lesson_links[args[0]] = args[1]
             file_manager.save_data_file()
@@ -41,12 +49,14 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
                 f"'__{lesson_name}__' z `{link}` na **{args[1]}**."
     except bot.MissingPermissionsException:
         return False, f"{Emoji.warning} Nie posiadasz uprawnień do zmieniania linków Google Meet."
+    except InvalidFormatException:
+        # noinspection SpellCheckingInspection
+        msg_first_line = ":warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
+        return False, msg_first_line + f"\nArgument '{args[1]}' nie spełnia tego wymogu."
     except ValueError:
         msg = f"Należy napisać po komendzie `{bot.prefix}meet` kod lekcji, " + \
             "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
             "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
         for lesson_code, link in util.lesson_links.items():
             msg += f"\n# {lesson_code} [{util.get_lesson_name(lesson_code)}]({link or 'brak'})"
-        # noinspection SpellCheckingInspection
-        msg += "```\n:warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
         return False, msg
