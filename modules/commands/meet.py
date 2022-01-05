@@ -25,7 +25,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             raise ValueError
         lesson_name = util.get_lesson_name(args[0])
         link = util.get_lesson_link(args[0])
-        if len(args) == 2:
+        if len(args) == 1:
             link_desc = f"to <https://meet.google.com/{link}>" if link else "nie jest ustawiony"
             return False, f"{Emoji.info} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
         else:
