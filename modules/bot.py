@@ -376,8 +376,7 @@ async def track_time_changes() -> None:
         cached_date: datetime.datetime = lucky_numbers_api.cached_data["date"]
     except (KeyError, AttributeError) as e:
         # Lucky numbers data does not contain a date
-        send_log("Initial lucky numbers API update...")
-        # await check_for_lucky_numbers_updates()
+        await ping_konrad()
         send_log(util.format_exception_info(e))
     else:
         # Lucky numbers data contains a valid date
@@ -438,8 +437,7 @@ async def check_for_lucky_numbers_updates() -> None:
     try:
         old_cache = lucky_numbers_api.update_cache()
     except InvalidResponseException as e:
-        # Ping @Konrad
-        await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
+        await ping_konrad()
         exc: str = util.format_exception_info(e)
         send_log(
             f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n{exc}")
@@ -484,8 +482,7 @@ async def check_for_substitutions_updates() -> None:
         if e.status_code == 403:
             send_log("Suppressing 403 Forbidden on substitutions page.")
         else:
-            # Ping @Konrad
-            await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
+            await ping_konrad()
             exc: str = util.format_exception_info(e)
             exception_message = f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}"
             send_log(exception_message)
@@ -501,6 +498,10 @@ async def check_for_substitutions_updates() -> None:
 async def set_offline_status() -> None:
     await client.change_presence(status=discord.Status.offline)
 
+
+async def ping_konrad() -> None:
+    """Sends a message to the bot log channel mentioning MagicalCornFlake#0520"""
+    await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
 
 # noinspection SpellCheckingInspection
 automatic_bot_replies = {
