@@ -25,8 +25,10 @@ def start_bot() -> bool:
         file_manager.log("Started bot from main file! Assuming this is debug behaviour.")
     else:
         file_manager.log("Program starting...")
-    result = subprocess.run(["pyclean", "."], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    file_manager.log(result.stdout)
+    result = subprocess.run(["pyclean", "."], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    file_manager.log(f"Pyclean: {result.stdout}")
+    if result.stdout:
+        file_manager.log(f"    Error: {result.stderr}")
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')
