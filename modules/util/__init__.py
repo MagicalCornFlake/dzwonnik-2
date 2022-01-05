@@ -14,6 +14,12 @@ def format_exception_info(e: Exception):
 
 
 def conjugate_numeric(num: int, word: str) -> str:
+    """Inputs a number and base noun and returns the correctly conjugated string in Polish.
+    
+    Arguments:
+        num -- the quantity, integer
+        word -- the base noun, e.g. 'godzin' or 'minut'
+    """
     if num == 1:
         suffix = "ę"
     else:
