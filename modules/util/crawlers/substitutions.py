@@ -51,7 +51,7 @@ def parse_html(html: str) -> dict:
         except IndexError:
             subs_text: str = p_elem.text
             if subs_text.endswith(" są odwołane."):
-                subs_data["ib"] = subs_text
+                subs_data["cancelled"] = subs_text
                 continue
             separator = " - " if " - " in subs_text else " – "
             lessons, info = subs_text.split(separator, maxsplit=1)
@@ -91,13 +91,9 @@ def parse_html(html: str) -> dict:
                     continue
                 if not (child_elem.text and child_elem.text.strip()):
                     # Skip blank child elements
-                    print(f"Skipping element {i}: only whitespace child")
                     continue
                 tables.append({"heading": child_elem.text})
                 continue
-
-    # Sort the lesson substitutions by period number in ascending order
-    # subs_data["lessons"] = {l: sorted(subs) for l, subs in sorted(lesson_list.items())}
 
     # Add the list of tables to the data
     subs_data["tables"] = tables
