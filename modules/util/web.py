@@ -1,8 +1,9 @@
 """Utility functions for all web APIs."""
 
 # Standard library imports
+import importlib
 import requests
-from time import time
+import time
 
 # Local application imports
 from .api.steam_market import NoSuchItemException
@@ -81,7 +82,7 @@ def make_request(url: str, ignore_request_limit: bool = False) -> requests.Respo
         InvalidResponseException if the request timed out or if it returned an invalid response
     """
     global last_request_time
-    current_time = time()
+    current_time = time.time()
     if current_time - last_request_time < max_request_cooldown and not ignore_request_limit:
         raise TooManyRequestsException(
             int(current_time * 1000 - last_request_time * 1000))
