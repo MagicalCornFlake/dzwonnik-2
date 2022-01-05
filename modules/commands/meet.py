@@ -52,7 +52,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
     except InvalidFormatException:
         # noinspection SpellCheckingInspection
         msg_first_line = ":warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
-        return False, msg_first_line + f"\nArgument '{args[1]}' nie spełnia tego wymogu."
+        return False, msg_first_line + f"\nArgument '__{args[1]}__' nie spełnia tego wymogu."
     except ValueError:
         msg = f"Należy napisać po komendzie `{bot.prefix}meet` kod lekcji, " + \
             "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \
