@@ -384,7 +384,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
     file_manager.save_data_file()
 
 
-@loop(seconds=5)
+@loop(seconds=1)
 async def track_time_changes() -> None:
     """Tracks time changes for non-resource intensive tasks that do not connect to APIs.
     For example, checks if the current lesson period has changed using cached lesson plan data and updates the bot status accordingly.
@@ -394,7 +394,7 @@ async def track_time_changes() -> None:
     current_time = datetime.datetime.now()  # Today's time
     await check_for_due_homework(current_time)
 
-    if current_time.second < 5:
+    if current_time.second == 0:
         # Update the status only on the first second of each minute
         await check_for_status_updates(current_time)
 
