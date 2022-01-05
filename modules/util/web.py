@@ -98,6 +98,6 @@ def make_request(url: str, ignore_request_limit: bool = False) -> requests.Respo
 
 
 def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
-    html = make_request(
-        url, ignore_max_requests_cooldown).content.decode('UTF-8')
+    res = make_request(url, ignore_max_requests_cooldown)
+    html = res.content.decode('UTF-8')
     return html.replace("<html><head>", "<html>\n<head>", 1)

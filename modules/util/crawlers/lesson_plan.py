@@ -9,7 +9,8 @@ from .. import web
 from ... import Colour, file_manager
 
 period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
-duration_pattern = re.compile(r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
+duration_pattern = re.compile(
+    r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
 lesson_pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
                             r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
 
@@ -19,7 +20,7 @@ ignored_tags = ["hr", "br"]
 
 def get_plan_id(class_id: str or int = None) -> int:
     """Gets the plan ID that is used on the school website of a given class.
-    
+
     Arguments:
         class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
     """
@@ -75,7 +76,8 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         elif raw_line.startswith("<td class=\"g\">"):
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            times = [int(time) for time in duration_pattern.match(raw_line).groups()]
+            times = [int(time)
+                     for time in duration_pattern.match(raw_line).groups()]
             # Check if the start hour of the lesson is less than 12:00 (i.e. old timetable is still relevant)
             lesson_start_hour = times[0]
             if lesson_start_hour < 12:
@@ -95,15 +97,17 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             tmp: list[dict[str, str]] = []
             for match in lesson_pattern.findall(raw_line):
                 lesson_name, group, groups, teacher, code, room_id = match
-                if group: 
+                if group:
                     if int(groups) == 5:
                         group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
                 else:
                     # If the group is not specified but the room code is, use that instead
                     # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
                     # Finally, if none of the above, set the group to 'grupa_0' (whole class)
-                    group = code.lstrip('#') if code else 'rel' if lesson_name == "religia" else '0'
-                name = lesson_name.replace("r_j.", "j.").replace(" DW", "").replace("j. ", "j.").replace('r_', 'r-')
+                    group = code.lstrip(
+                        '#') if code else 'rel' if lesson_name == "religia" else '0'
+                name = lesson_name.replace("r_j.", "j.").replace(
+                    " DW", "").replace("j. ", "j.").replace('r_', 'r-')
                 if name == "mat":
                     name = "r-mat"
                 elif name in ["mat.", "matematyka"]:
@@ -124,11 +128,12 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         # Increment the tag depth if the line introduces a new tag
         # Decremenet the tag depth if the line contains a closing tag
         # Ignore tags like '<hr>', '<br>' that are defined above
-        tag_index += row.count("<") - 2 * row.count("</") - sum([row.count(f"<{tag}>") for tag in ignored_tags])
+        tag_index += row.count("<") - 2 * row.count("</") - \
+            sum([row.count(f"<{tag}>") for tag in ignored_tags])
         if "<table" in row:
             # Increment the number of tables that have been met so far
             seen_tables += row.count('<table')
-        # The table containing the lesson plans is the 3rd table 
+        # The table containing the lesson plans is the 3rd table
         if seen_tables == 3:
             if row == "<tr>":
                 row_number += 1
@@ -152,7 +157,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     return data
 
 
-def get_lesson_plan(class_id = "2d", force_update = False) -> tuple[dict, bool]:
+def get_lesson_plan(class_id="2d", force_update=False) -> tuple[dict, bool]:
     """Gets the lesson plan for a given class.
     Returns the data itself and a tuple containing a boolean indicating if the cache already existed.
 
@@ -161,8 +166,12 @@ def get_lesson_plan(class_id = "2d", force_update = False) -> tuple[dict, bool]:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     plan_id = get_plan_id(class_id)
-    update_cache_callback: function = lambda force: parse_html(web.get_html(get_plan_link(plan_id), force))
-    _log(f"Getting lesson plan with ID {plan_id} for class '{class_id}' ({force_update=}) ...")
+
+    def update_cache_callback(force):
+        parse_html(web.get_html(get_plan_link(plan_id), force))
+
+    log_msg = f"Getting lesson plan with ID {plan_id} for class '{class_id}' ({force_update=}) ..."
+    _log(log_msg)
     return file_manager.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
     # return update_cache_callback(force_update), False
 
@@ -183,7 +192,8 @@ if __name__ == "__main__":
     input_msg = f"{Colour.OKBLUE}Enter {Colour.OKGREEN}{Colour.UNDERLINE}class name{Colour.ENDC}{Colour.OKBLUE}...\n{Colour.WARNING}> "
     try:
         while True:
-            plan = json.dumps(get_lesson_plan(input(input_msg), force_update=True)[0], indent=2, ensure_ascii=False)
+            data = get_lesson_plan(input(input_msg), force_update=True)[0]
+            plan = json.dumps(data, indent=2, ensure_ascii=False)
             print(Colour.ENDC)
             # _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:

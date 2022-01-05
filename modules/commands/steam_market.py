@@ -24,12 +24,15 @@ desc_3 = """Przestaje śledzić dany przedmiot na Rynku Społeczności Steam.
     Parametry: __nazwa przedmiotu__
     Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny tego przedmiotu."""
 
-# Returns the message to send when the user asks for the price of an item on the Steam Community Market
+
 def get_market_price(message: Message, result_override=None) -> tuple[bool, str]:
-    args: list[str] = message.content[len(f"{bot.prefix}cena "):].split(" waluta=") if result_override is None else [message]
+    """Returns the message to send when the user asks for the price of an item on the Steam Community Market"""
+    raw_args = message.content[len(f"{bot.prefix}cena "):].split(" waluta=")
+    args: list[str] = [message] if result_override else raw_args
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
-        result = steam_market_api.get_item(args[0], 730, currency) if result_override is None else result_override
+        params = args[0], 730, currency
+        result = result_override or steam_market_api.get_item(*params)
         return False, f"{Emoji.info} Aktualna cena dla *{args[0]}* to `{steam_market_api.get_item_price(result)}`."
     except Exception as e:
         return False, web.get_error_message(e)
@@ -60,8 +63,8 @@ def start_market_tracking(message: Message):
             if item in tracked_market_items:
                 for item in tracked_market_items:
                     if item.name.lower() == item_name.lower():
-                        return False, f"{Emoji.warning} Przedmiot *{item.name}* jest już śledzony przez " + \
-                               (f"użytkownika <@{item.author_id}>." if item.author_id != author_id else "Ciebie.")
+                        who = f"użytkownika <@{item.author_id}>" if item.author_id != author_id else "Ciebie"
+                        return False, f"{Emoji.warning} Przedmiot *{item.name}* jest już śledzony przez {who}."
             tracked_market_items.append(item)
             file_manager.save_data_file()
             return False, f"{Emoji.check} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w przedziale " \

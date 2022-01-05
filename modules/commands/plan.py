@@ -8,6 +8,7 @@ from discord import Message, Embed
 
 # Local application imports
 from .. import Weekday, weekday_names, Emoji, group_names, current_period, util, bot
+from ..util import web
 from ..util.crawlers import lesson_plan as lesson_plan_crawler
 
 
@@ -62,7 +63,11 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                     raise RuntimeError(f"invalid class name: {args[2]}")
                 else:
                     class_code = args[2]
-                    class_lesson_plan = lesson_plan_crawler.get_lesson_plan(plan_id)[0]
+                    try:
+                        class_lesson_plan = lesson_plan_crawler.get_lesson_plan(plan_id)[0]
+                    except Exception as e:
+                        # Invalid web response; if the exception is something else, it is raised again
+                        return False, web.get_error_message(e)
         except RuntimeError as e:
             bot.send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
             return False, f"{Emoji.warning} Należy napisać po komendzie `{bot.prefix}plan` numer dnia (1-5) " \

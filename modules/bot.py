@@ -52,6 +52,9 @@ restart_on_exit = True
 testing_channel = None
 
 
+invalid_response_template = "Error! Received an invalid response when performing the web request. Exception trace: "
+
+
 def send_log(*raw_message, force=False) -> None:
     """Determine if the message should actually be logged, and if so, generate the string that should be sent."""
     if not (enable_log_messages or force):
@@ -77,7 +80,7 @@ my_server: discord.Guild = None
 async def on_ready() -> None:
     # Enable the circular reference in the 'web' module, since it only works when called from this module.
     web.enable_circular_reference()
-    
+
     # Report information about logged in guilds
     guilds = {guild.id: guild.name for guild in client.guilds}
     send_log(
@@ -88,8 +91,13 @@ async def on_ready() -> None:
     my_server = client.get_guild(my_server_id)  # Konrad's Discord Server
 
     # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
-    util.lesson_plan = lesson_plan_crawler.get_lesson_plan(force_update=True)[
-        0]
+    try:
+        result = lesson_plan_crawler.get_lesson_plan(force_update=True)
+    except web.InvalidResponseException as e:
+        exc = util.format_exception_info(e)
+        send_log(invalid_response_template + exc)
+    else:
+        util.lesson_plan = result[0]
 
     # Intialise array of schooldays
     schooldays = [key for key in util.lesson_plan if key in weekday_names]
@@ -450,8 +458,7 @@ async def check_for_lucky_numbers_updates() -> None:
     except web.InvalidResponseException as e:
         await ping_konrad()
         exc: str = util.format_exception_info(e)
-        send_log(
-            f"Error! Received an invalid response from the web request (lucky numbers cache update). Exception trace:\n{exc}")
+        send_log(f"Lucky numbers update: {invalid_response_template}\n{exc}")
     else:
         if old_cache != lucky_numbers_api.cached_data:
             send_log(f"New lucky numbers data!")
@@ -468,8 +475,13 @@ async def check_for_steam_market_updates() -> None:
     """Checks if any tracked item's price has exceeded the established boundaries."""
     for item in steam_market.tracked_market_items:
         await asyncio.sleep(3)
-        result = steam_api.get_item(item.name)
-        price = steam_api.get_item_price(result)
+        try:
+            result = steam_api.get_item(item.name)
+            price = steam_api.get_item_price(result)
+        except Exception as http_exc:
+            await ping_konrad()
+            send_log(web.get_error_message(http_exc))
+            return
         # Strips the price string of any non-digit characters and returns it as an integer
         char_list = [char if char in "0123456789" else '' for char in price]
         price = int(''.join(char_list))
@@ -497,7 +509,7 @@ async def check_for_substitutions_updates() -> None:
             send_log("Suppressing 403 Forbidden on substitutions page.")
             return
         exc: str = util.format_exception_info(e)
-        exception_message = f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}"
+        exception_message = f"Substitutions update: {invalid_response_template}\n{exc}"
     except RuntimeError as err_desc:
         # The HTML parser returned an error; log the error details
         exc: str = new_cache.get("error")

@@ -30,7 +30,11 @@ def get_lucky_numbers() -> dict[str, str or list[int or str]]:
             raise ValueError()
     except (KeyError, ValueError):
         # If the cache is empty or too old
-        update_cache()
+        try:
+            update_cache()
+        except web.InvalidResponseException:
+            # Do not update the cache if new data could not be fetched
+            pass
     return cached_data
 
 
