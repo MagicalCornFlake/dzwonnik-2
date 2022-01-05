@@ -34,8 +34,7 @@ class MissingPermissionsException(Exception):
         message -- explanation of the error
     """
     _message = "The user does not have the appropriate permissions to perform that action."
-    
-    
+
     def __init__(self, message=_message):
         self.message = message
         super().__init__(self.message)
@@ -359,23 +358,52 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
 
 @loop(seconds=1)
 async def track_time_changes() -> None:
+    """Tracks time changes for non-resource intensive tasks that do not connect to APIs.
+    For example, checks if the current lesson period has changed using cached lesson plan data and updates the bot status accordingly.
+    Additionally, this checks if any locally stored homework events are due.
+    Also, if the lucky numbers data is outdated and it's past 1 AM, the bot tries to update it.
+    """
     current_time = datetime.datetime.now()  # Today's time
-    tomorrow = current_time.date() + datetime.timedelta(days=1)  # Today's date + 1 day
-    # Makes the bot update the status only on the first second of each minute
+    await check_for_due_homework(current_time)
+
     if current_time.second == 0:
-        # Check if the current hour and minute is in any time slot for the lesson plan timetable
-        if any([current_time.hour, current_time.minute] in times for times in util.lesson_plan["Godz"]):
-            # Check is successful, bot updates Discord status
-            status = discord.Activity(
-                type=discord.ActivityType.watching, name=get_new_status_msg())
-            await client.change_presence(activity=status)
-    # Checks if the bot should make a reminder about due homework
+        # Update the status only on the first second of each minute
+        await check_for_status_updates(current_time)
+
+    # Check if the lucky numbers data is outdated
+    try:
+        # Try to parse the lucky numbers data date
+        cached_datetime: datetime.datetime = lucky_numbers_api.cached_data["date"]
+        cached_date = cached_datetime.date()
+    except (KeyError, AttributeError):
+        # Lucky numbers data does not contain a date
+        send_log("Initial lucky numbers API update...")
+        await check_for_lucky_numbers_updates()
+    else:
+        # Lucky numbers data contains a valid date
+        if cached_date != current_time.date() and current_time.hour >= 1:
+            # Lucky numbers data is not current; update it
+            await check_for_lucky_numbers_updates()
+
+
+async def check_for_status_updates(current_time: datetime.datetime) -> None:
+    """Checks if the current hour and minute is in any time slot for the lesson plan timetable."""
+    if any([current_time.hour, current_time.minute] in times for times in util.lesson_plan["Godz"]):
+        # Check is successful, bot updates Discord status
+        msg: str = get_new_status_msg()
+        status = discord.Activity(type=discord.ActivityType.watching, name=msg)
+        await client.change_presence(activity=status)
+
+
+async def check_for_due_homework(current_time: datetime.datetime) -> None:
+    """Checks if the bot should make a reminder about due homework"""
+    tomorrow = current_time.date() + datetime.timedelta(days=1)  # Today's date + 1 day
     for event in homework.homework_events:
         reminder_time = datetime.datetime.strptime(
             event.reminder_date, "%d.%m.%Y %H")
         event_time = datetime.datetime.strptime(event.deadline, "%d.%m.%Y")
-        # If this piece of homework has already had a reminder issued, ignore it
         if not event.reminder_is_active or reminder_time > current_time:
+            # This piece of homework has already had a reminder issued; ignore it
             continue
         if event_time.date() > tomorrow:
             tense = "future"
@@ -388,33 +416,25 @@ async def track_time_changes() -> None:
         await remind_about_homework_event(event, tense)
 
 
-@loop(minutes=1)
+@loop(minutes=10)
 async def track_api_updates() -> None:
     """Routinely fetches data from the various APIs in order to ensure it is up-to-date.
     Updates:
         - Steam Community Market item prices
-        - The current lucky numbers from the SU ILO website
         - The substitutions from the I LO website
     """
+    await check_for_steam_market_updates()
+    await check_for_substitutions_updates()
 
-    # Check if any tracked item's price has exceeded the established boundaries
-    for item in steam_market.tracked_market_items:
-        await asyncio.sleep(3)
-        result = steam_api.get_item(item.name)
-        price = steam_api.get_item_price(result)
-        # Strips the price string of any non-digit characters and returns it as an integer
-        price = int(
-            ''.join([char if char in "0123456789" else '' for char in price]))
-        if item.min_price < price < item.max_price:
-            continue
-        target_channel = client.get_channel(
-            testing_channel or ChannelID.admini)
-        await target_channel.send(f"{Emoji.cash} Uwaga, <@{item.author_id}>! "
-                                  f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
-        steam_market.tracked_market_items.remove(item)
-        file_manager.save_data_file()
-    await asyncio.sleep(3)
-    # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
+
+@track_api_updates.before_loop
+@track_time_changes.before_loop
+async def wait_until_ready_before_loops() -> None:
+    await client.wait_until_ready()
+
+
+async def check_for_lucky_numbers_updates() -> None:
+    """Updates the lucky numbers cache and announces announces the new numbers in the specified channel if it has changed."""
     try:
         old_cache = lucky_numbers_api.update_cache()
     except InvalidResponseException as e:
@@ -434,7 +454,28 @@ async def track_api_updates() -> None:
             await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
             file_manager.save_data_file()
 
-    # Update the substitutions cache, and if it's changed, announce the new data in the specified channel.
+
+async def check_for_steam_market_updates() -> None:
+    """Checks if any tracked item's price has exceeded the established boundaries."""
+    for item in steam_market.tracked_market_items:
+        await asyncio.sleep(3)
+        result = steam_api.get_item(item.name)
+        price = steam_api.get_item_price(result)
+        # Strips the price string of any non-digit characters and returns it as an integer
+        char_list = [char if char in "0123456789" else '' for char in price]
+        price = int(''.join(char_list))
+        if item.min_price < price < item.max_price:
+            continue
+        target_channel = client.get_channel(
+            testing_channel or ChannelID.admini)
+        await target_channel.send(f"{Emoji.cash} Uwaga, <@{item.author_id}>! "
+                                  f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
+        steam_market.tracked_market_items.remove(item)
+        file_manager.save_data_file()
+
+
+async def check_for_substitutions_updates() -> None:
+    """Updates the substitutions cache and announces the new data in the specified channel if it has changed."""
     try:
         old_cache = file_manager.cache_exists("subs")
         result = substitutions_crawler.get_substitutions(True)
@@ -455,12 +496,6 @@ async def track_api_updates() -> None:
             target_channel = client.get_channel(
                 testing_channel or ChannelID.substitutions)
             await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
-
-
-@track_api_updates.before_loop
-@track_time_changes.before_loop
-async def wait_until_ready_before_loops() -> None:
-    await client.wait_until_ready()
 
 
 async def set_offline_status() -> None:
