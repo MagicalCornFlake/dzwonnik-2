@@ -72,4 +72,5 @@ def start_bot() -> bool:
 
 
 if __name__ == "__main__":
+    bot.testing_channel = bot.ChannelID.bot_testing
     start_bot()

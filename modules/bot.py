@@ -34,8 +34,9 @@ client = discord.Client(intents=intents)
 my_server_id: int = 766346477874053130
 prefix = '!'  # Prefix used before commands
 enable_log_messages = True
-testing_channel = False
 restart_on_exit = True
+# If this is set, it will override most output channels to be the channel with the given ID.
+testing_channel = None
 
 
 def send_log(*raw_message, force=False) -> None:
