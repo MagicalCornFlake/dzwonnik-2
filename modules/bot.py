@@ -67,8 +67,8 @@ def send_log(*raw_message, force=False) -> None:
 
 
 async def send_log_message(message) -> None:
-    log_channel: discord.TextChannel = client.get_channel(ChannelID.bot_logs)
     await client.wait_until_ready()
+    log_channel: discord.TextChannel = client.get_channel(ChannelID.bot_logs)
     await log_channel.send(f"```py\n{message}\n```")
 
 
