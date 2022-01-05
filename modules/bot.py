@@ -17,6 +17,9 @@ from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
 
 
+current_period: int = -1
+
+
 class ChannelID:
     general: int = 766346477874053132
     nauka: int = 769098845598515220
@@ -267,11 +270,13 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     Arguments:
         query_time -- the time to get the status for.
     """
+    global current_period
     # Default time to check is current time
     query_time = query_time or datetime.datetime.now()
     send_log(f"Updating bot status ...")
-    next_period_is_today, next_period, next_lesson_weekday = commands.get_next_period(
-        query_time)
+    result = commands.get_next_period(query_time)
+    next_period_is_today, next_period, next_lesson_weekday = result
+
     if next_period_is_today:
         # Get the period of the next lesson
         roles = list(role_codes.keys())[1:]

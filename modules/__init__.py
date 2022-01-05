@@ -1,7 +1,5 @@
 """__init__.py file for the general modules containing definitions for constant values that are used repeatedly in the program."""
 
-current_period: int = 0
-
 
 class RoleID:
     gr1: int = 766346710712582155
