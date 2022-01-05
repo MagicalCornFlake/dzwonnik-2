@@ -47,10 +47,10 @@ def update_cache() -> dict[str, str or list[int or str]]:
     return old_cache
 
 
-def serialised_cached_data():
+def serialise(data = cached_data):
     """Returns the cached data as a JSON-serialisable dictionary."""
     temp: dict = {}
-    for key, value in cached_data.items():
+    for key, value in data.items():
         try:
             json.dumps(value)
         except TypeError:

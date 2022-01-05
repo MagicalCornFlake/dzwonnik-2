@@ -19,7 +19,7 @@ def read_data_file(filename: str = "data.json") -> None:
                 "lesson_links": {},
                 "homework_events": {},
                 "tracked_market_items": [],
-                "lucky_numbers": lucky_numbers.serialised_cached_data()
+                "lucky_numbers": lucky_numbers.serialise()
             }
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r') as file:
@@ -80,7 +80,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         "lesson_links": {code: link for code, link in util.lesson_links.items() if link},
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
-        "lucky_numbers": lucky_numbers.serialised_cached_data()
+        "lucky_numbers": lucky_numbers.serialise()
     }
 
     # Format the data to be JSON-serialisable
