@@ -27,6 +27,20 @@ class ChannelID:
     substitutions: int = 928101883778854954
 
 
+class MissingPermissionsException(Exception):
+    """Raised when the user does not have the appropriate permissions for performing a command or other action.
+
+    Attributes:
+        message -- explanation of the error
+    """
+    _message = "The user does not have the appropriate permissions to perform that action."
+    
+    
+    def __init__(self, message=_message):
+        self.message = message
+        super().__init__(self.message)
+
+
 intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents=intents)

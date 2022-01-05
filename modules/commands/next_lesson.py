@@ -60,7 +60,7 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
         return False, msg
 
     embed = Embed(title=f"Następna lekcja ({current_time:%H:%M})", description=msg)
-    link = f"[meet.google.com](https://meet.google.com/{raw_link}?authuser=0)" if raw_link else "[brak](http://guzek.uk/error/404?lang=pl-PL&source=discord)"
+    link = f"[meet.google.com](https://meet.google.com/{raw_link})" if raw_link else "[brak](http://guzek.uk/error/404?lang=pl-PL&source=discord)"
     embed.add_field(name="Link do lekcji", value=link)
     embed.set_footer(text=f"Użyj komendy {bot.prefix}nl, aby pokazać tą wiadomość.")
     return True, embed

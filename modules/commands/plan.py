@@ -91,7 +91,7 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
         lesson_texts = []
         for lesson in plan[period]:
             raw_link = util.get_lesson_link(lesson['name'])
-            link = f"https://meet.google.com/{raw_link}?authuser=0" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
+            link = f"https://meet.google.com/{raw_link}" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
             lesson_texts.append(f"[{util.get_lesson_name(lesson['name'])} - sala {lesson['room_id']}]({link})")
             if lesson['group'] != "grupa_0":
                 group_name = group_names.get(lesson['group'], lesson['group'])
