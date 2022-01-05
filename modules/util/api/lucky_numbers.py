@@ -39,7 +39,7 @@ def update_cache() -> dict[str, str or list[int or str]]:
     """
     url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
     global cached_data
-    old_cache = cached_data
+    old_cache = dict(cached_data)
     cached_data = web.make_request(url, ignore_request_limit=True).json()
     if cached_data["date"]:
         data_timestamp: datetime = datetime.strptime(cached_data["date"], "%d/%m/%Y")

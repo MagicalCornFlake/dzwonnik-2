@@ -400,8 +400,8 @@ async def track_api_updates() -> None:
         steam_market.tracked_market_items.remove(item)
         file_manager.save_data_file()
     await asyncio.sleep(3)
-
     # Update the lucky numbers cache, and if it's changed, announce the new numbers in the specified channel.
+    send_log(lucky_numbers_api.serialise())
     try:
         old_cache = lucky_numbers_api.update_cache()
     except InvalidResponseException as e:
