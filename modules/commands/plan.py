@@ -7,7 +7,7 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from .. import Weekday, weekday_names, Emoji, group_names, current_period, util, bot
+from .. import Weekday, weekday_names, Emoji, group_names, util, bot
 from ..util import web
 from ..util.crawlers import lesson_plan as lesson_plan_crawler
 
@@ -102,6 +102,6 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                 group_name = group_names.get(lesson['group'], lesson['group'])
                 lesson_texts[-1] += f" ({group_name})"
         txt = f"Lekcja {period} ({util.get_formatted_period_time(period)})"
-        is_current_lesson = query_day == today and period == current_period 
+        is_current_lesson = query_day == today and period == bot.current_period 
         embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value='\n'.join(lesson_texts), inline=False)
     return True, embed
