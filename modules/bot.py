@@ -425,11 +425,14 @@ async def track_api_updates() -> None:
         new_cache, cache_existed = substitutions_crawler.get_substitutions(
             True)
     except InvalidResponseException as e:
-        # Ping @Konrad
-        await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
-        exc: str = util.format_exception_info(e)
-        send_log(
-            f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}")
+        if e.status_code == 403:
+            send_log("Suppressing 403 Forbidden on substitutions page.")
+        else:
+            # Ping @Konrad
+            await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
+            exc: str = util.format_exception_info(e)
+            exception_message = f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}"
+            send_log(exception_message)
     else:
         if not cache_existed:
             send_log(
