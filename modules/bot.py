@@ -345,7 +345,8 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
             if role != "grupa_0":
                 mention_text = my_server.get_role(mention_role.id).mention
             break
-    target_channel = client.get_channel(testing_channel or ChannelID.nauka)
+    chnl: int = testing_channel or ChannelID.nauka
+    target_channel: discord.TextChannel = client.get_channel(chnl)
     # Which tense to use in the reminder message
     when = {
         "today": "dziś jest",
@@ -354,7 +355,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
         # 'future' is not really needed but I added it cause why not
         "future": f"{event.deadline} jest"
     }[tense]  # tense can have a value of 'today', 'tomorrow' or 'past'
-    message = await target_channel.send(f"{mention_text} Na {when} zadanie: **{event_name}**.")
+    message: discord.Message = await target_channel.send(f"{mention_text} Na {when} zadanie: **{event_name}**.")
     emojis = [Emoji.unicode_check, Emoji.unicode_alarm_clock]
     for emoji in emojis:
         await message.add_reaction(emoji)
