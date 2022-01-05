@@ -46,7 +46,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
                 group_text = f"(gr. {', '.join(groups)}) — " if groups else ""
                 sub_msgs.append(f"{group_text}*{sub_info['details']}*")
             standard_msg = f"**{class_name}**: {' | '.join(sub_msgs)}"
-            hyperlinked_msg = f"[{standard_msg}]({substitutions_crawler.substitutions_link})"
+            hyperlinked_msg = f"[{standard_msg}]({substitutions_crawler.source_url})"
             formatted_class_msg = hyperlinked_msg if class_name == util.format_class() else standard_msg
             class_msgs.append(formatted_class_msg)
         time = util.get_formatted_period_time(period)

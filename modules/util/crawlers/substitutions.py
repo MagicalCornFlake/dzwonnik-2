@@ -13,10 +13,11 @@ from .. import web
 from ... import Colour, file_manager
 
 
-sub_info_pattern = re.compile(r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,\s]+)*\s(.*)")
+sub_info_pattern = re.compile(
+    r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,\s]+)*\s(.*)")
 sub_groups_pattern = re.compile(r"(?:\sgr.\s|,\s|\si\s)(p. [^,\s]+)")
 
-substitutions_link = "http://www.lo1.gliwice.pl/zastepstwa-2/"
+source_url = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
 def parse_html(html: str) -> dict:
@@ -34,7 +35,7 @@ def parse_html(html: str) -> dict:
     except Exception as e:
         return {"error": type(e).__name__}
     subs_data = {"post": dict(post_elem.attrib), "lessons": {}}
-    lesson_list: dict[int, dict[str, list[dict[str, str]]]] = subs_data["lessons"]
+    lesson_list: dict[int, dict[str, list]] = subs_data["lessons"]
 
     tables = []
 
@@ -81,8 +82,8 @@ def parse_html(html: str) -> dict:
             if child_elem.tag == "strong":
                 if i == 0:
                     date_string = child_elem[0].text.split(' ', maxsplit=1)[1]
-                    date = datetime.datetime.strptime(date_string, "%d.%m.%Y").date()
-                    subs_data["date"] = str(date)
+                    date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
+                    subs_data["date"] = str(date.date())
                     continue
                 if i == 1:
                     teachers = child_elem.text.split(', ')
@@ -112,7 +113,7 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     update_cache_callback: function = lambda force: parse_html(
-        web.get_html(substitutions_link, force))
+        web.get_html(source_url, force))
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
 
