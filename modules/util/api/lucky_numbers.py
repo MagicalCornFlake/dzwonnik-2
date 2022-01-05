@@ -4,8 +4,6 @@
 from datetime import date, datetime
 import json
 
-from modules.bot import send_log
-
 # Local application imports
 from .. import web
 
