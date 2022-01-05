@@ -18,6 +18,8 @@ from .. import web
 cached_data: dict[str, date or list[int or str]] = {}
 max_cache_age = 1  # Days
 
+url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
+
 
 def get_lucky_numbers() -> dict[str, str or list[int or str]]:
     """Updates the cache if it is outdated then returns it."""
@@ -37,12 +39,11 @@ def update_cache() -> dict[str, str or list[int or str]]:
 
     Returns the old cache so that it can be compared with the new one.
     """
-    url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
     global cached_data
     old_cache = dict(cached_data)
     cached_data = web.make_request(url, ignore_request_limit=True).json()
     if cached_data["date"]:
-        data_timestamp: datetime = datetime.strptime(cached_data["date"], "%d/%m/%Y")
+        data_timestamp = datetime.strptime(cached_data["date"], "%d/%m/%Y")
         cached_data["date"] = data_timestamp.date()
     return old_cache
 
