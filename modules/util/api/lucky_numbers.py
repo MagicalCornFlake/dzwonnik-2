@@ -4,6 +4,8 @@
 from datetime import date, datetime
 import json
 
+from modules.bot import send_log
+
 # Local application imports
 from .. import web
 
@@ -47,14 +49,15 @@ def update_cache() -> dict[str, str or list[int or str]]:
     return old_cache
 
 
-def serialise(data = cached_data):
+def serialise(data: dict = cached_data):
     """Returns the cached data as a JSON-serialisable dictionary."""
-    temp: dict = {}
+    temp: dict = dict(data)
     for key, value in data.items():
         try:
             json.dumps(value)
-        except TypeError:
+        except (TypeError, OverflowError):
             temp[key] = str(value)
-        else:
-            temp[key] = value
+        except Exception as e:
+            temp[key] = str(value)
+            temp[type(e).__name__] = e
     return temp

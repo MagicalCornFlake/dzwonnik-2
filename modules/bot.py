@@ -414,6 +414,7 @@ async def track_api_updates() -> None:
             for age, *data in (["New"], ["Old", old_cache]):
                 send_log(age + " data:")
                 send_log(json.dumps(lucky_numbers_api.serialise(*data), indent=2))
+                send_log((data or [lucky_numbers_api.cached_data])[0])
             target_channel = client.get_channel(
                 ChannelID.bot_testing if use_bot_testing else ChannelID.general)
             await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
@@ -422,8 +423,7 @@ async def track_api_updates() -> None:
     # Update the substitutions cache, and if it's changed, announce the new data in the specified channel.
     try:
         old_cache = file_manager.cache_exists("subs")
-        new_cache, cache_existed = substitutions_crawler.get_substitutions(
-            True)
+        new_cache, cache_existed = substitutions_crawler.get_substitutions(True)
     except InvalidResponseException as e:
         if e.status_code == 403:
             send_log("Suppressing 403 Forbidden on substitutions page.")
