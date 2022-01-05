@@ -110,6 +110,9 @@ def parse_html(html: str) -> dict:
         except Exception as e:
             # Page structure has changed, return the nature of the error.
             subs_data["error"] = util.format_exception_info(e)
+            if __name__ == "__main__":
+                # Makes the error easier to see for debugging
+                raise e from None
             break
 
     # Add the list of tables to the data
