@@ -411,7 +411,7 @@ async def track_api_updates() -> None:
     else:
         if old_cache != lucky_numbers_api.cached_data:
             send_log(f"New lucky numbers data!")
-            for age, *data in (("New"), ("Old", old_cache)):
+            for age, *data in (["New"], ["Old", old_cache]):
                 send_log(age + " data:")
                 send_log(json.dumps(lucky_numbers_api.serialise(*data), indent=2))
             target_channel = client.get_channel(
