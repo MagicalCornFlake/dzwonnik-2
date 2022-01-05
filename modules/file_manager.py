@@ -156,13 +156,13 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
     Arguments:
         cache_name -- the filename of the cache without the .json extension.
         force_update -- a boolean indicating if the cache should be forcefully updated even if it already exists.
-        callback_function -- a lambda function that takes 'force_update' as an argument and returns the new cache.
+        callback_function -- a lambda function that generates the new cache.
     """
     cache = cache_exists(cache_name)
     cache_existed = bool(cache)
     log(f"Cache for {cache_name} was {'not ' * (not cache_existed)}found.")
     if force_update or not cache_existed:
-        cache = callback_function(force_update)
+        cache = callback_function()
         json_string = json.dumps(cache, indent=2, ensure_ascii=False)
         with open(f"cache/{cache_name}.json", 'w', encoding="UTF-8") as file:
             file.write(json_string)

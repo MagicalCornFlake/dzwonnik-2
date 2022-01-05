@@ -126,8 +126,8 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
     Arguments:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
-    def update_cache_callback(force: bool) -> dict:
-        html: str = web.get_html(source_url, force)
+    def update_cache_callback() -> dict:
+        html: str = web.get_html(source_url, force_update)
         return parse_html(html)
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
