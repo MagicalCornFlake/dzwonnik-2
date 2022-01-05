@@ -23,15 +23,15 @@ def read_data_file(filename: str = "data.json") -> None:
             }
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r') as file:
-        data = json.load(file)
+        data: dict[str, any] = json.load(file)
     try:
-        util.lesson_links.update(data["lesson_links"])
+        util.lesson_links.update(data.get("lesson_links", {}))
         log("Lesson links has been updated:", util.lesson_links)
     except KeyError:
         log("Lesson links not found in data file. Using blank values.")
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
-    for event_id in data["homework_events"]:
+    for event_id in data.get("homework_events", []):
         attributes = data["homework_events"][event_id]
         title, group, author_id, deadline, reminder_date, reminder_is_active = [
             attributes[attr] for attr in attributes]
@@ -43,16 +43,18 @@ def read_data_file(filename: str = "data.json") -> None:
         if new_event_candidate.serialised not in commands.homework_events.serialised:
             new_event_candidate.sort_into_container(commands.homework_events)
 
-    for item_attributes in data["tracked_market_items"]:
-        item_name, min_price, max_price, author_id = [
-            item_attributes[attr] for attr in item_attributes]
+    for attribs in data.get("tracked_market_items", []):
+        item_attributes = [attribs[attrib] for attrib in attribs]
+        item_name, min_price, max_price, author_id = item_attributes
         item = commands.TrackedItem(item_name, min_price, max_price, author_id)
         if item not in commands.tracked_market_items:
             commands.tracked_market_items.append(item)
+
+    lucky_numbers.cached_data = data.get("lucky_numbers", {})
     try:
         # Make datetime object from saved lucky numbers data
-        data_timestamp: datetime = datetime.strptime(
-            data["lucky_numbers"]["date"], "%Y-%m-%d")
+        date: str = data["lucky_numbers"]["date"]
+        data_timestamp = datetime.strptime(date, "%Y-%m-%d")
     except Exception as e:
         # Saved lucky numbers data contains an invalid date; don't update cache
         bot.send_log(f"Invalid lucky numbers:", data["lucky_numbers"])
@@ -89,10 +91,11 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     # Replaces file content with new data
     with open(filename, 'w') as file:
         file.write(formatted_data)
-        
+
     # Sends a log with the formatted data
     if should_log:
-        bot.send_log(f"Successfully saved data file '{filename}'.\nData:\n{formatted_data}")
+        bot.send_log(
+            f"Successfully saved data file '{filename}'.\nData:\n{formatted_data}")
 
 
 def clear_log_file(filename: str) -> None:
