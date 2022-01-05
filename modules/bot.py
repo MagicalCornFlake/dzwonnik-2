@@ -83,8 +83,8 @@ async def on_ready() -> None:
 
     # Report information about logged in guilds
     guilds = {guild.id: guild.name for guild in client.guilds}
-    send_log(
-        f"Successfully connected as {client.user}.\nActive guilds:", guilds, force=True)
+    login_message = f"Successfully connected as {client.user}.\nActive guilds:"
+    send_log(login_message, guilds, force=True)
 
     # Initialise server reference
     global my_server
@@ -97,7 +97,9 @@ async def on_ready() -> None:
         exc = util.format_exception_info(e)
         send_log(invalid_response_template + exc)
     else:
-        util.lesson_plan = result[0]
+        plan: dict = result[0]
+        send_log(f"Initialised lesson plan as {type(plan)}.")
+        util.lesson_plan = plan
 
     # Intialise array of schooldays
     schooldays = [key for key in util.lesson_plan if key in weekday_names]
