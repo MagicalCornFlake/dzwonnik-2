@@ -10,7 +10,7 @@ import lxml.html
 
 # Local application imports
 from .. import web
-from ... import Colour, util
+from ... import Colour, file_manager, util
 
 
 sub_info_pattern = re.compile(
@@ -119,7 +119,7 @@ def parse_html(html: str) -> dict:
     return subs_data
 
 
-def get_substitutions(force_update: bool = False, save_cache: bool = True) -> tuple[dict, bool]:
+def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
     """Gets the current lesson substitutions.
     Returns the data itself and a tuple containing a boolean indicating if the cache already existed.
 
@@ -129,8 +129,6 @@ def get_substitutions(force_update: bool = False, save_cache: bool = True) -> tu
     def update_cache_callback(force: bool) -> dict:
         html: str = web.get_html(source_url, force)
         return parse_html(html)
-    if not save_cache:
-        return update_cache_callback(force_update)
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
 
@@ -141,10 +139,8 @@ if __name__ == "__main__":
             print(f"Colour {colours[col]}{col}{Colour.ENDC}")
     print()
     try:
-        subs: dict = get_substitutions(force_update=True, save_cache=False)
+        subs: dict = get_substitutions(force_update=True)
         plan = json.dumps(subs, indent=2, ensure_ascii=False)
         print(f"{Colour.OKGREEN}Substitutions:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:
         print(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")
-else:
-    from ... import file_manager

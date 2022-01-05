@@ -17,10 +17,6 @@ from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
 
 
-# Enable the circular reference in the 'web' module, since it only works when called from this module.
-web.enable_circular_reference()
-
-
 class ChannelID:
     general: int = 766346477874053132
     nauka: int = 769098845598515220
@@ -79,6 +75,9 @@ my_server: discord.Guild = None
 # This function is called when the bot comes online
 @client.event
 async def on_ready() -> None:
+    # Enable the circular reference in the 'web' module, since it only works when called from this module.
+    web.enable_circular_reference()
+    
     # Report information about logged in guilds
     guilds = {guild.id: guild.name for guild in client.guilds}
     send_log(
