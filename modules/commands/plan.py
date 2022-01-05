@@ -94,7 +94,8 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
             link = f"https://meet.google.com/{raw_link}?authuser=0" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
             lesson_texts.append(f"[{util.get_lesson_name(lesson['name'])} - sala {lesson['room_id']}]({link})")
             if lesson['group'] != "grupa_0":
-                lesson_texts[-1] += f" ({group_names[lesson['group']]})"
+                group_name = group_names.get(lesson['group'], lesson['group'])
+                lesson_texts[-1] += f" ({group_name})"
         txt = f"Lekcja {period} ({util.get_formatted_period_time(period)})"
         is_current_lesson = query_day == today and period == current_period 
         embed.add_field(name=f"*{txt}    <── TERAZ*" if is_current_lesson else txt, value='\n'.join(lesson_texts), inline=False)
