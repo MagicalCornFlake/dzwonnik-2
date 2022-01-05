@@ -16,6 +16,8 @@ from ... import Colour, file_manager
 sub_info_pattern = re.compile(r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,\s]+)*\s(.*)")
 sub_groups_pattern = re.compile(r"(?:\sgr.\s|,\s|\si\s)(p. [^,\s]+)")
 
+substitutions_link = "http://www.lo1.gliwice.pl/zastepstwa-2/"
+
 
 def parse_html(html: str) -> dict:
     """Parses the HTML and finds a specific hard-coded table, then collects the timetable data from it.
@@ -110,7 +112,7 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     update_cache_callback: function = lambda force: parse_html(
-        web.get_html("http://www.lo1.gliwice.pl/zastepstwa-2/", force))
+        web.get_html(substitutions_link, force))
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
 
