@@ -23,6 +23,8 @@ class ChannelID:
     admini: int = 773137866338336768
     bot_testing: int = 832700271057698816
     bot_logs: int = 835561967007432784
+    numerki: int = 928102562710835240
+    substitutions: int = 928101883778854954
 
 
 intents = discord.Intents.default()
@@ -32,7 +34,7 @@ client = discord.Client(intents=intents)
 my_server_id: int = 766346477874053130
 prefix = '!'  # Prefix used before commands
 enable_log_messages = True
-use_bot_testing = False
+testing_channel = False
 restart_on_exit = True
 
 
@@ -301,8 +303,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
             if role != "grupa_0":
                 mention_text = my_server.get_role(mention_role.id).mention
             break
-    target_channel = client.get_channel(
-        ChannelID.bot_testing if use_bot_testing else ChannelID.nauka)
+    target_channel = client.get_channel(testing_channel or ChannelID.nauka)
     # Which tense to use in the reminder message
     when = {
         "today": "dziś jest",
@@ -392,7 +393,7 @@ async def track_api_updates() -> None:
         if item.min_price < price < item.max_price:
             continue
         target_channel = client.get_channel(
-            ChannelID.bot_testing if use_bot_testing else ChannelID.admini)
+            testing_channel or ChannelID.admini)
         await target_channel.send(f"{Emoji.cash} Uwaga, <@{item.author_id}>! "
                                   f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
         steam_market.tracked_market_items.remove(item)
@@ -414,16 +415,16 @@ async def track_api_updates() -> None:
             for age, *data in (["New"], ["Old", old_cache]):
                 send_log(age + " data:")
                 send_log(json.dumps(lucky_numbers_api.serialise(*data), indent=2))
-                send_log((data or [lucky_numbers_api.cached_data])[0])
             target_channel = client.get_channel(
-                ChannelID.bot_testing if use_bot_testing else ChannelID.general)
+                testing_channel or ChannelID.numerki)
             await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
             file_manager.save_data_file()
 
     # Update the substitutions cache, and if it's changed, announce the new data in the specified channel.
     try:
         old_cache = file_manager.cache_exists("subs")
-        new_cache, cache_existed = substitutions_crawler.get_substitutions(True)
+        result = substitutions_crawler.get_substitutions(True)
+        new_cache, cache_existed = result
     except InvalidResponseException as e:
         if e.status_code == 403:
             send_log("Suppressing 403 Forbidden on substitutions page.")
@@ -438,7 +439,7 @@ async def track_api_updates() -> None:
             send_log(
                 f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}")
             target_channel = client.get_channel(
-                ChannelID.bot_testing if True else ChannelID.general)
+                testing_channel or ChannelID.substitutions)
             await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
 
 

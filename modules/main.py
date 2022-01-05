@@ -72,5 +72,4 @@ def start_bot() -> bool:
 
 
 if __name__ == "__main__":
-    use_bot_testing = True
     start_bot()
