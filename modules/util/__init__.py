@@ -76,17 +76,15 @@ def get_lesson_name(lesson_code: str) -> str:
         "ang.": (True, "angielski"),
         "przedsięb.": (True, "przedsiębiorczość")
     }
-    # Handle edge cases
-    if lesson_code in ["mat", "r-mat"]:
-        return "matematyka rozszerzona"
-    if lesson_code == "mat.":
-        return "matematyka"
     # Remove trailing '.' and leading 'r-'
     lesson_name = lesson_code[2 * lesson_code.startswith('r-'):]
     for abbreviation, behaviour in mappings.items():
         map_entire_word, mapping = behaviour
         if map_entire_word or lesson_name.startswith(abbreviation):
             lesson_name = lesson_name.replace(abbreviation, mapping)
+    # Handle edge cases
+    if lesson_code in ["mat", "r-mat"]:
+        lesson_name += "ematyka"
     return lesson_name + " rozszerzona" * lesson_code.startswith('r-')
 
 
