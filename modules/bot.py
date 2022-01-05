@@ -232,9 +232,7 @@ async def on_message(message: discord.Message) -> None:
             await message.channel.send("Restarting bot...")
         else:
             await message.channel.send("Exiting program.")
-            file_manager.log()
-            file_manager.log(
-                f"    --- Program manually closed by user ('{msg_first_word}' command). ---")
+            send_log(f"    --- Program manually closed by user ('{msg_first_word}' command). ---")
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()

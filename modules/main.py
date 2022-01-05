@@ -32,16 +32,16 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            bot.send_log()
-            bot.send_log("    --- CRITICAL ERROR! ---")
-            bot.send_log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
+            file_manager.log()
+            file_manager.log("    --- CRITICAL ERROR! ---")
+            file_manager.log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
             return False
         else:
             # No problems finding OS variable containing bot token. Can login successfully.
             event_loop.run_until_complete(bot.client.login(token))
-            bot.send_log("Bot logged in!")
+            bot.send_log("Successfully authorised bot client!")
         # Bot has been logged in, continue with attempt to connect
         try:
             # Blocking call:
