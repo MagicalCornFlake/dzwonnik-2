@@ -59,4 +59,4 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             "albo dopisać po kodzie też nowy link aby go zaktualizować.\nKody lekcji:```md"
         for lesson_code, link in util.lesson_links.items():
             msg += f"\n# {lesson_code} [{util.get_lesson_name(lesson_code)}]({link or 'brak'})"
-        return False, msg
+        return False, msg + "```"
