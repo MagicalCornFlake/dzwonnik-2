@@ -183,7 +183,7 @@ if __name__ == "__main__":
     input_msg = f"{Colour.OKBLUE}Enter {Colour.OKGREEN}{Colour.UNDERLINE}class name{Colour.ENDC}{Colour.OKBLUE}...\n{Colour.WARNING}> "
     try:
         while True:
-            plan = json.dumps(get_lesson_plan(input(input_msg), force_update=True)[0], indent=4, ensure_ascii=False)
+            plan = json.dumps(get_lesson_plan(input(input_msg), force_update=True)[0], indent=2, ensure_ascii=False)
             print(Colour.ENDC)
             # _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:

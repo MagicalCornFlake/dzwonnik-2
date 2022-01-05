@@ -163,7 +163,7 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
     log(f"Cache for {cache_name} was {'not ' * (not cache_existed)}found.")
     if force_update or not cache_existed:
         cache = callback_function(force_update)
-        json_string = json.dumps(cache, indent=4, ensure_ascii=False)
+        json_string = json.dumps(cache, indent=2, ensure_ascii=False)
         with open(f"cache/{cache_name}.json", 'w', encoding="UTF-8") as file:
             file.write(json_string)
     return cache, cache_existed

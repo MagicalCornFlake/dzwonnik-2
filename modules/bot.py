@@ -189,20 +189,28 @@ async def on_message(message: discord.Message) -> None:
             send_log(f"Temp variable: {exec_result}")
             if exec_result:
                 res_msg = []
-                for returned_value in exec_result if type(exec_result) is ExecResultList else [exec_result]:
-                    if type(returned_value) in [list, dict]:
+                res_prefixes = []
+                for res in exec_result if type(exec_result) is ExecResultList else [exec_result]:
+                    res_prefixes.append("")
+                    if type(res) in [list, dict, tuple]:
                         try:
-                            res_msg.append("```\nDetected JSON content:```json\n" +
-                                           json.dumps(returned_value, indent=4, ensure_ascii=False))
+                            res_prefixes[-1] = "```\nDetected JSON content:```json\n"
+                            tmp = json.dumps(res, indent=2, ensure_ascii=False)
+                            res_msg.append(tmp)
                         except (TypeError, OverflowError):
-                            res_msg.append(returned_value)
+                            res_msg.append(str(res))
                     else:
-                        res_msg.append(returned_value)
+                        res_msg.append(str(res))
                 template = "Code executed:\n```py\n>>> " + \
                     expression.replace("\n", "\n>>> ")
-                res_msg = "\n".join([str(r) for r in res_msg])
+
+                def get_res(index: int) -> str:
+                    return res_prefixes[index] + res_msg[index]
+
+                fail_msg = "\n".join(res_msg)
+                res_msg = "\n".join([get_res(i) for i in range(len(res_msg))])
                 too_long_msg = f"{template}```*Result too long to send in message, attaching file 'result.txt'...*"
-                await try_send_message(message, False, {"content": f"{template}\n{res_msg}```"}, res_msg, on_fail_msg=too_long_msg)
+                await try_send_message(message, False, {"content": f"{template}\n{res_msg}```"}, fail_msg, on_fail_msg=too_long_msg)
             else:
                 await message.channel.send("Code executed (return value not specified).")
             return
@@ -498,7 +506,8 @@ async def check_for_substitutions_updates() -> None:
         log_msg = f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}"
         send_log(log_msg)
         # Announce the new substitutions
-        target_channel = client.get_channel(testing_channel or ChannelID.substitutions)
+        target_channel = client.get_channel(
+            testing_channel or ChannelID.substitutions)
         await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
         return
     # If the check wasn't completed successfully, ping @Konrad and log the error details.
@@ -551,7 +560,7 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
             for element in on_fail_data if should_iterate else [on_fail_data]:
                 elem_type = type(element)
                 send_log("Processing element with type", elem_type)
-                if elem_type in [list, dict]:
+                if elem_type in [list, dict, tuple]:
                     try:
                         temp.append(json.dumps(element, file,
                                     indent=2, ensure_ascii=False))

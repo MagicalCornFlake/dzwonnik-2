@@ -141,7 +141,7 @@ if __name__ == "__main__":
     print()
     try:
         subs: dict = get_substitutions(True)[0]
-        plan = json.dumps(subs, indent=4, ensure_ascii=False)
+        plan = json.dumps(subs, indent=2, ensure_ascii=False)
         print(f"{Colour.OKGREEN}Substitutions:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:
         print(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")
