@@ -25,8 +25,6 @@ def start_bot() -> bool:
         bot.send_log("Started bot from main file! Assuming this is debug behaviour.")
     else:
         bot.send_log("Program starting...")
-    result = subprocess.run(["pyclean", "."], capture_output=True, text=True)
-    bot.send_log(f"Pyclean: {result.stderr or result.stdout}")
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')
@@ -61,6 +59,9 @@ def start_bot() -> bool:
             file_manager.log()
             file_manager.log("    --- Bot execution terminated successfully. ---")
     finally:
+        # Remove the python cache files so that the program does not cache the modules on restart
+        result = subprocess.run(["pyclean", "."], capture_output=True, text=True)
+        file_manager.log(f"Pyclean: {result.stderr or result.stdout}")
         # Execute this no matter the circumstances, ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() function returns.
