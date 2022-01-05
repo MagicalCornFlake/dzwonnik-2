@@ -510,7 +510,7 @@ automatic_bot_replies = {
 
 
 async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord.Message) -> None:
-    def check_for_valid_reaction(test_reaction, reaction_author):
+    def check_for_valid_reaction(test_reaction: discord.Reaction, reaction_author: discord.User or discord.Member):
         return str(test_reaction.emoji) == Emoji.unicode_detective and reaction_author != client.user
 
     await reply_msg.add_reaction(Emoji.unicode_detective)
