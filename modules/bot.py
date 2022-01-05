@@ -12,9 +12,13 @@ from discord.ext.tasks import loop
 # Local application imports
 from . import file_manager, commands, util, role_codes, member_ids, weekday_names, group_names, Emoji, Weekday
 from .commands import help, homework, steam_market, lucky_numbers, substitutions
-from .util.web import InvalidResponseException
+from .util import web
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
+
+
+# Enable the circular reference in the 'web' module, since it only works when called from this module.
+web.enable_circular_reference()
 
 
 class ChannelID:
@@ -444,7 +448,7 @@ async def check_for_lucky_numbers_updates() -> None:
     """Updates the lucky numbers cache and announces announces the new numbers in the specified channel if it has changed."""
     try:
         old_cache = lucky_numbers_api.update_cache()
-    except InvalidResponseException as e:
+    except web.InvalidResponseException as e:
         await ping_konrad()
         exc: str = util.format_exception_info(e)
         send_log(
@@ -488,7 +492,7 @@ async def check_for_substitutions_updates() -> None:
         new_cache, cache_existed = result
         if "error" in new_cache:
             raise RuntimeError("Substitutions data could not be parsed.")
-    except InvalidResponseException as e:
+    except web.InvalidResponseException as e:
         # The web request returned an invalid response; log the error details
         if e.status_code == 403:
             send_log("Suppressing 403 Forbidden on substitutions page.")
