@@ -478,21 +478,32 @@ async def check_for_substitutions_updates() -> None:
         old_cache = file_manager.cache_exists("subs")
         result = substitutions_crawler.get_substitutions(True)
         new_cache, cache_existed = result
+        if "error" in new_cache:
+            raise RuntimeError("Substitutions data could not be parsed.")
     except InvalidResponseException as e:
+        # The web request returned an invalid response; log the error details
         if e.status_code == 403:
             send_log("Suppressing 403 Forbidden on substitutions page.")
-        else:
-            await ping_konrad()
-            exc: str = util.format_exception_info(e)
-            exception_message = f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}"
-            send_log(exception_message)
+            return
+        exc: str = util.format_exception_info(e)
+        exception_message = f"Error! Received an invalid response from the web request (substitutions cache update). Exception trace:\n{exc}"
+    except RuntimeError as err_desc:
+        # The HTML parser returned an error; log the error details
+        exc: str = new_cache.get("error")
+        exception_message = f"Error! {err_desc} Exception trace:\n{exc}"
     else:
-        if not cache_existed:
-            send_log(
-                f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}")
-            target_channel = client.get_channel(
-                testing_channel or ChannelID.substitutions)
-            await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
+        if cache_existed:
+            # The cache was not updated. Do nothing.
+            return
+        log_msg = f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}"
+        send_log(log_msg)
+        # Announce the new substitutions
+        target_channel = client.get_channel(testing_channel or ChannelID.substitutions)
+        await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
+        return
+    # If the check wasn't completed successfully, ping @Konrad and log the error details.
+    await ping_konrad()
+    send_log(exception_message)
 
 
 async def set_offline_status() -> None:

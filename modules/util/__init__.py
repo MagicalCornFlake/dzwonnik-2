@@ -1,7 +1,7 @@
 """__init__.py file for the web utility-related modules."""
 
 # Standard library imports
-from traceback import format_exception
+import traceback
 from datetime import datetime
 
 
@@ -33,7 +33,8 @@ def format_class(class_name: str = None):
 
 
 def format_exception_info(e: Exception):
-    return ''.join(format_exception(type(e), e, e.__traceback__))
+    info = traceback.format_exception(type(e), e, e.__traceback__)
+    return ''.join(info)
 
 
 def conjugate_numeric(num: int, word: str) -> str:

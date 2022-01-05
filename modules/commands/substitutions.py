@@ -24,6 +24,9 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
         error_message = f"Error! Received an invalid response from the web request. Exception trace:\n{ex}"
         bot.send_log(error_message, force=True)
         return False, web.get_error_message(e)
+    else:
+        if "error" in data:
+           return False, ":x: Nie można było odzyskać zastępstw. Proszę spróbowac ponownie w krótce." 
 
     # Initialise the embed
     date = datetime.strptime(data["date"], "%Y-%m-%d")

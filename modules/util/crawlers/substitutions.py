@@ -10,7 +10,7 @@ import lxml.html
 
 # Local application imports
 from .. import web
-from ... import Colour, file_manager
+from ... import Colour, file_manager, util
 
 
 sub_info_pattern = re.compile(
@@ -33,35 +33,39 @@ def parse_html(html: str) -> dict:
     try:
         post_elem: lxml.html.Element = root.xpath(post_xpath)[0]
     except Exception as e:
-        return {"error": type(e).__name__}
+        return {"error": util.format_exception_info(e)}
     subs_data = {"post": dict(post_elem.attrib), "lessons": {}}
     lesson_list: dict[int, dict[str, list]] = subs_data["lessons"]
 
     tables = []
 
-    for i, p_elem in enumerate(post_elem):
-        if p_elem.tag == "table":
-            tables[-1]["rows"] = len(p_elem[0])
-            continue
-        if p_elem.tag != "p":
+    def extract_data(elem: lxml.html.Element, elem_index: int):
+        """Extract the relevant information from each element in the post. Adds result to the subs_data dictionary."""
+        if elem.tag == "table":
+            tables[-1]["rows"] = len(elem[0])
+            return
+        if elem.tag != "p":
             # Skip non-paragraph elements (i.e. comments, divs etc.)
-            continue
-        if p_elem.text == "&nbsp;":
+            return
+        if elem.text == "&nbsp;":
             # Skip blank 'p' elements
-            continue
+            return
         try:
-            child_elem = p_elem[0]
+            # Check if this element has children
+            child_elem = elem[0]
         except IndexError:
-            subs_text: str = p_elem.text
+            # The current element has no children
+            subs_text: str = elem.text
             if subs_text.endswith(" są odwołane."):
                 subs_data["cancelled"] = subs_text
-                continue
+                return
             separator = " - " if " - " in subs_text else " – "
             lessons, info = subs_text.split(separator, maxsplit=1)
             lesson_ints = []
             for lesson in lessons.rstrip('l').split(','):
                 if "-" in lesson:
-                    start, end = [int(i) for i in lesson.split('-')]
+                    start, end = [int(elem_index)
+                                  for elem_index in lesson.split('-')]
                     lesson_ints += list(range(start, end + 1))
                 else:
                     lesson_ints.append(int(lesson))
@@ -79,24 +83,34 @@ def parse_html(html: str) -> dict:
                     substitution_info["details"] = details
                     lesson_list[lesson][class_name].append(substitution_info)
         else:
-            if child_elem.tag == "strong":
-                if i == 0:
-                    date_string = child_elem[0].text.split(' ', maxsplit=1)[1]
-                    date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
-                    subs_data["date"] = str(date.date())
-                    continue
-                if i == 1:
-                    teachers = child_elem.text.split(', ')
-                    subs_data["teachers"] = teachers
-                    continue
-                if i == 2:
-                    subs_data["misc"] = child_elem.text
-                    continue
-                if not (child_elem.text and child_elem.text.strip()):
-                    # Skip blank child elements
-                    continue
-                tables.append({"heading": child_elem.text})
-                continue
+            # The current element does have children
+            if child_elem.tag != "strong":
+                return
+            if elem_index == 0:
+                date_string = child_elem[0].text.split(' ', maxsplit=1)[1]
+                date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
+                subs_data["date"] = str(date.date())
+                return
+            if elem_index == 1:
+                teachers = child_elem.text.split(', ')
+                subs_data["teachers"] = teachers
+                return
+            if elem_index == 2:
+                subs_data["misc"] = child_elem.text
+                return
+            if not (child_elem.text and child_elem.text.strip()):
+                # Skip blank child elements
+                return
+            tables.append({"heading": child_elem.text})
+
+    for i, p_elem in enumerate(post_elem):
+        try:
+            # Attempt to extract the relevant data using a hard-coded algorithm
+            extract_data(p_elem, i)
+        except Exception as e:
+            # Page structure has changed, return the nature of the error.
+            subs_data["error"] = util.format_exception_info(e)
+            break
 
     # Add the list of tables to the data
     subs_data["tables"] = tables
@@ -112,8 +126,10 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
     Arguments:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
-    update_cache_callback: function = lambda force: parse_html(
-        web.get_html(source_url, force))
+    def update_cache_callback(force: bool) -> dict:
+        html: str = web.get_html(source_url, force)
+        return parse_html(html)
+
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
 
@@ -124,8 +140,8 @@ if __name__ == "__main__":
             print(f"Colour {colours[col]}{col}{Colour.ENDC}")
     print()
     try:
-        plan = json.dumps(get_substitutions(
-            True)[0], indent=4, ensure_ascii=False)
+        subs: dict = get_substitutions(True)[0]
+        plan = json.dumps(subs, indent=4, ensure_ascii=False)
         print(f"{Colour.OKGREEN}Substitutions:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:
         print(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")
