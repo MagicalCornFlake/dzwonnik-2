@@ -4,6 +4,7 @@
 import asyncio
 import importlib
 import os
+import subprocess
 
 # Local application imports
 from . import bot, file_manager, util, commands
@@ -20,11 +21,12 @@ def start_bot() -> bool:
 
     for module in (bot, file_manager, util, commands):
         importlib.reload(module)
-
     if __name__ == "__main__":
         file_manager.log("Started bot from main file! Assuming this is debug behaviour.")
     else:
         file_manager.log("Program starting...")
+    result = subprocess.run(["pyclean", "."], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    file_manager.log(result.stdout)
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')
