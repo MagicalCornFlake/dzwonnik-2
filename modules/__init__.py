@@ -60,11 +60,11 @@ role_codes = {
     "grupa_2hp": "Język Hiszpański",
     "grupa_2np": "Język Niemiecki (Podstawa)",
     "grupa_2pn": "Język Niemiecki (Rozszerzenie)",
-    "grupa_RB": "Rozszerzenie z biologii",
-    "grupa_RCH": "Rozszerzenie z chemii",
-    "grupa_RH": "Rozszerzenie z historii",
-    "grupa_RG": "Rozszerzenie z geografii",
-    "grupa_RF": "Rozszerzenie z fizyki"
+    "grupa_RB": "Biologia Rozszerzona",
+    "grupa_RCH": "Chemia Rozszerzona",
+    "grupa_RH": "Historia Rozszerzona",
+    "grupa_RG": "Geografia Rozszerzona",
+    "grupa_RF": "Fizyka Rozszerzona"
 }
 
 # Dictionary with text to use when sending messages, eg. 'lekcja dla grupy drugiej'
