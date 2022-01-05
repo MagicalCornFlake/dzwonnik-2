@@ -23,7 +23,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
                 return False, f"{Emoji.warning} Nie posiadasz uprawnień do zmieniania linków Google Meet."
             link_is_dash_format = len(args[2]) == 12 and args[2][3] == args[2][8] == "-"
             link_is_lookup_format = len(args[2]) == 17 and args[2].startswith("lookup/")
-            if link_is_dash_format or link_is_lookup_format:
+            if args[1] in util.lesson_links and link_is_dash_format or link_is_lookup_format:
                 # User-given link is valid
                 util.lesson_links[args[1]] = args[2]
                 file_manager.save_data_file()
