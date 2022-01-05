@@ -22,11 +22,11 @@ def start_bot() -> bool:
     for module in (bot, file_manager, util, commands):
         importlib.reload(module)
     if __name__ == "__main__":
-        file_manager.log("Started bot from main file! Assuming this is debug behaviour.")
+        bot.send_log("Started bot from main file! Assuming this is debug behaviour.")
     else:
-        file_manager.log("Program starting...")
+        bot.send_log("Program starting...")
     result = subprocess.run(["pyclean", "."], capture_output=True, text=True)
-    file_manager.log(f"Pyclean: {result.stderr or result.stdout}")
+    bot.send_log(f"Pyclean: {result.stderr or result.stdout}")
     try:
         file_manager.read_env_file()
         file_manager.read_data_file('data.json')
@@ -34,21 +34,21 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            file_manager.log()
-            file_manager.log("    --- CRITICAL ERROR! ---")
-            file_manager.log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
+            bot.send_log()
+            bot.send_log("    --- CRITICAL ERROR! ---")
+            bot.send_log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
             save_on_exit = False
             # Do not restart bot
             return False
         else:
             # No problems finding OS variable containing bot token. Can login successfully.
             event_loop.run_until_complete(bot.client.login(token))
-            file_manager.log("Bot logged in!")
+            bot.send_log("Bot logged in!")
         # Bot has been logged in, continue with attempt to connect
         try:
             # Blocking call:
             # The program will stay on this line until the bot is disconnected.
-            file_manager.log("Connecting to Discord...")
+            bot.send_log("Connecting to Discord...")
             event_loop.run_until_complete(bot.client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (eg. Ctrl+C in terminal).
