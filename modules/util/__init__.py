@@ -5,8 +5,31 @@ from traceback import format_exception
 from datetime import datetime
 
 
-lesson_plan: dict[str, list[int] or list[list[int]] or list[list[dict[str, str]]]] = {}
+lesson_plan: dict[str, any] = {}
 lesson_links: dict[str, str] = {}
+
+our_class = "2d"
+
+
+def format_class(class_name: str = None):
+    """Change the format of the class name string using roman numerals instead of arabic numerals.
+    Also capitalises the class letter.
+
+    E.g. '2d' -> 'IID'
+
+    Arguments:
+        class_name -- the name of the class. By default this is the value of the `our_class` variable."""
+    class_name = class_name or our_class
+    if len(class_name) < 2:
+        err_msg = f"Invalid class name: '{class_name}' is too short (min. 2 characters)."
+        raise ValueError(err_msg)
+    try:
+        formatted = 'I' * int(class_name[0])
+    except ValueError:
+        err_msg = f"Invalid class name: '{class_name}' does not start with a number."
+        raise ValueError(err_msg)
+    else:
+        return formatted + class_name[1:].upper()
 
 
 def format_exception_info(e: Exception):
@@ -15,7 +38,7 @@ def format_exception_info(e: Exception):
 
 def conjugate_numeric(num: int, word: str) -> str:
     """Inputs a number and base noun and returns the correctly conjugated string in Polish.
-    
+
     Arguments:
         num -- the quantity, integer
         word -- the base noun, e.g. 'godzin' or 'minut'
@@ -31,7 +54,13 @@ def conjugate_numeric(num: int, word: str) -> str:
 def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tuple[str, datetime]:
     times = lesson_plan["Godz"][period]
     hour, minute = times[get_period_end_time]
-    date_time = base_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    replace_args = {
+        "hour": hour,
+        "minute": minute,
+        "second": 0,
+        "microsecond": 0
+    }
+    date_time = base_time.replace(**replace_args)
     return date_time
 
 

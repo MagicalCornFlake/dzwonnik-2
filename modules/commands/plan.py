@@ -24,6 +24,7 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
     args = message.content.split(" ")
     today = datetime.now().weekday()
     class_lesson_plan = util.lesson_plan
+    class_code = util.our_class
     if len(args) == 1:
         query_day = today if today < Weekday.saturday else Weekday.monday
     else:
@@ -60,6 +61,7 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                 except ValueError:
                     raise RuntimeError(f"invalid class name: {args[2]}")
                 else:
+                    class_code = args[2]
                     class_lesson_plan = lesson_plan_crawler.get_lesson_plan(plan_id)[0]
         except RuntimeError as e:
             bot.send_log(f"Handling exception with args: '{' '.join(args[1:])}' ({type(e).__name__}: \"{e}\")")
@@ -76,7 +78,9 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
     first_period: int = 0
 
     desc = f"Plan lekcji na **{weekday_names[query_day].lower().replace('środa', 'środę')}** ({periods} lekcji) jest następujący:"
-    embed = Embed(title="Plan lekcji", description=desc)
+    embed = Embed(title=desc)
+    lesson_plan_url = lesson_plan_crawler.get_plan_link(class_code)
+    embed.set_author(name="Plan lekcji", url=lesson_plan_url)
     embed.set_footer(text=f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość.")
 
     for period in class_lesson_plan["Nr"]:
