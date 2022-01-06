@@ -27,10 +27,12 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
         if "error" in data:
             return False, ":x: Nie można było odzyskać zastępstw. Proszę spróbowac ponownie w krótce."
 
+    # Number of substitutions for our class
+    our_substitutions: int = 0
+
     # Initialise the embed
     date = datetime.strptime(data["date"], "%Y-%m-%d")
-    description = f"Zastępstwa na {date:%d.%m.%Y}:"
-    embed = Embed(title="Zastępstwa", description=description)
+    embed = Embed(title=f"Zastępstwa na {date:%d.%m.%Y}:")
     footer = f"Użyj komendy {bot.prefix}zast, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
 
@@ -50,16 +52,19 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
                 group_text = f"(gr. {', '.join(groups)}) — " if groups else ""
                 sub_msgs.append(f"{group_text}*{sub_info['details']}*")
             standard_msg = f"**{class_name}**: {' | '.join(sub_msgs)}"
-            hyperlinked_msg = f"[{standard_msg}]({substitutions_crawler.source_url})"
-            formatted_class_msg = hyperlinked_msg if class_name == util.format_class() else standard_msg
-            class_msgs.append(formatted_class_msg)
+            if class_name == util.format_class():
+                our_substitutions += 1
+                hyperlinked_msg = f"[{standard_msg}]({substitutions_crawler.source_url})"
+                class_msgs.append(hyperlinked_msg)
+                continue
+            class_msgs.append(standard_msg)
         time = util.get_formatted_period_time(period)
         field_args = {
             "name": f"Lekcja {period} ({time})",
             "value": '\n'.join(class_msgs)
         }
         embed.add_field(**field_args, inline=False)
-    
+
     # Cancelled lessons field
     embed.add_field(name="Lekcje odwołane", value=data["cancelled"])
 
@@ -78,4 +83,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
                 "value": "\n".join(rows)
             }
             embed.add_field(**field_args, inline=True)
+
+    # Set embed description to contain the number of substitutions for our class
+    embed.description = f"Liczba zastępstw dla klasy {util.our_class}: {our_substitutions}"
     return True, embed
