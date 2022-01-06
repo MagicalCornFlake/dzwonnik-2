@@ -59,10 +59,17 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
         }
         embed.add_field(**field_args, inline=False)
     for table in data["tables"]:
-        field_args = {
-            "name": table["heading"],
-            "value": f"{table['rows']} lekcje",
-        }
+        embed.add_field(name=table["title"], inline=False)
+        for col in range(len(table["headings"])):
+            heading = table["headings"][col]
+            rows = table["columns"][col]
+            if col == 0:
+                rows = [f"**{row}**" for row in rows]
+            field_args = {
+                "name": heading,
+                "value": "\n".join(rows)
+            }
+            embed.add_field(**field_args, inline=True)
         embed.add_field(**field_args, inline=False)
     embed.add_field(name="Lekcje odwołane", value=data["cancelled"])
     return True, embed
