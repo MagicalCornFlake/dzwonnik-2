@@ -154,7 +154,7 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
                 bot.send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
-    bot.send_log(f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.", force=True)
+    bot.send_log(f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.")
     return {}
 
 
