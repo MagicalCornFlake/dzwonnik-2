@@ -586,24 +586,26 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
     except discord.errors.HTTPException:
         send_log("Message too long. Length of data:", len(str(on_fail_data)))
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
+        should_iterate = on_fail_msg and type(on_fail_data) is list
         if type(on_fail_data) is discord.Embed:
             on_fail_data = on_fail_data.to_dict()
-        should_iterate = on_fail_msg and type(on_fail_data) is list
         with open("result.txt", 'w') as file:
-            temp: list[str] = []
+            results: list[str] = []
             for element in on_fail_data if should_iterate else [on_fail_data]:
-                elem_type = type(element)
-                send_log("Processing element with type", elem_type)
-                if elem_type in [list, dict, tuple]:
+                processing_element_msg = f"Processing element with type {type(element)}"
+                send_log(processing_element_msg, force=True)
+                if type(element) in [list, dict, tuple]:
                     try:
-                        temp.append(json.dumps(element, file,
-                                    indent=2, ensure_ascii=False))
+                        tmp = json.dumps(element, indent=2, ensure_ascii=False)
                     except TypeError:
-                        pass
+                        send_log("Could not parse element as JSON.", force=True)
                     else:
+                        results.append(tmp)
                         continue
-                temp.append(element.decode('UTF-8')
-                            if elem_type is bytes else str(element))
-            file.write("\n".join(temp))
+                if type(element) is bytes:
+                    results.append(element.decode('UTF-8'))
+                else:
+                    results.append(str(element))
+            file.write("\n".join(results))
         await user_message.channel.send(file=discord.File("result.txt"))
     return reply_msg
