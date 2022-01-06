@@ -255,9 +255,9 @@ async def on_message(message: discord.Message) -> None:
     try:
         reply_is_embed, reply = callback_function(message)
     except Exception as e:
-        send_log(util.format_exception_info(e))
-        await message.reply(f"<@{member_ids[8 - 1]}> An exception occurred while executing command `{message.content}`."
-                            f" Check the bot logs for details.")
+        await ping_konrad()
+        send_log(util.format_exception_info(e), force=True)
+        await message.reply(f":x: Nastąpił błąd przy wykonaniu tej komendy. Administrator bota (Konrad) został o tym powiadomiony.")
         return
     reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
     if callback_function is homework.get_homework_events:
@@ -554,7 +554,7 @@ async def set_offline_status() -> None:
 
 
 async def ping_konrad() -> None:
-    """Sends a message to the bot log channel mentioning MagicalCornFlake#0520"""
+    """Sends a message to the bot log channel mentioning MagicalCornFlake#0520."""
     await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
 
 # noinspection SpellCheckingInspection
