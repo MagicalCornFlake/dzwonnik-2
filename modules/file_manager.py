@@ -123,7 +123,7 @@ def log(*raw_message: str) -> str:
 def save_log_file() -> None:
     """Copies the active log file to a new file in the bot_logs directory and clears it."""
     try:
-        with open("bot.log", 'r', encoding="UTF-8", encoding="UTF-8") as file:
+        with open("bot.log", 'r', encoding="UTF-8") as file:
             contents = file.read()
             if contents.startswith("START TIMESTAMP "):
                 # Extract log creation date from active log
