@@ -176,15 +176,6 @@ async def on_ready() -> None:
                 send_log(last_message_not_mine)
 
 
-class ExecResultList(list):
-    def __init__(self):
-        super().__init__(self)
-
-    def __iadd__(self, __x):
-        self.append(__x)
-        return self
-
-
 # This function is called when someone sends a message in the server
 @client.event
 async def on_message(message: discord.Message) -> None:
@@ -212,54 +203,7 @@ async def on_message(message: discord.Message) -> None:
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
         if msg_first_word in admin_commands[:2]:
-            command_template = f"{prefix}{msg_first_word} "
-            if not message.content.startswith(command_template):
-                await message.channel.send("Type an expression or command to execute.")
-                return
-            expression = message.content[len(command_template):]
-            try:
-                expression_to_be_executed = f"""ExecResultList()\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
-                try:
-                    exec("locals()['temp'] = " + expression_to_be_executed)
-                    execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
-                    send_log(*execing, force=True)
-                except SyntaxError as e:
-                    send_log("Caught SyntaxError in 'exec' command:", force=True)
-                    send_log(util.format_exception_info(e), force=True)
-                    send_log("Executing raw code:\n" + expression, force=True)
-                    exec(expression, force=True)
-            except Exception as e:
-                exec_result = util.format_exception_info(e)
-            else:
-                exec_result = locals().get("temp")
-            send_log(f"Temp variable: {exec_result}")
-            if exec_result:
-                res_msg = []
-                res_prefixes = []
-                for res in exec_result if type(exec_result) is ExecResultList else [exec_result]:
-                    res_prefixes.append("")
-                    if type(res) in [list, dict, tuple]:
-                        try:
-                            res_prefixes[-1] = "```\nDetected JSON content:```json\n"
-                            tmp = json.dumps(res, indent=2, ensure_ascii=False)
-                            res_msg.append(tmp)
-                        except (TypeError, OverflowError):
-                            res_msg.append(str(res))
-                    else:
-                        res_msg.append(str(res))
-                template = "Code executed:\n```py\n>>> " + \
-                    expression.replace("\n", "\n>>> ")
-
-                def get_res(index: int) -> str:
-                    return res_prefixes[index] + res_msg[index]
-
-                fail_msg = "\n".join(res_msg)
-                res_msg = "\n".join([get_res(i) for i in range(len(res_msg))])
-                too_long_msg = f"{template}```*Result too long to send in message, attaching file 'result.txt'...*"
-                await try_send_message(message, False, {"content": f"{template}\n{res_msg}```"}, fail_msg, on_fail_msg=too_long_msg)
-            else:
-                await message.channel.send("Code executed (return value not specified).")
-            return
+            help.INFO[msg_first_word]["function"]()
 
         if msg_first_word == admin_commands[2]:
             await message.channel.send("Restarting bot...")
@@ -275,12 +219,12 @@ async def on_message(message: discord.Message) -> None:
         file_manager.log("Bot disconnected.")
         return
 
-    if msg_first_word not in help.info:
+    if msg_first_word not in help.INFO:
         return
 
     received_command_msg = f"Received command '{message.content}' from {message.author}"
     send_log(received_command_msg, force=True)
-    callback_function = help.info[msg_first_word]["function"]
+    callback_function = help.INFO[msg_first_word]["function"]
     try:
         reply_is_embed, reply = callback_function(message)
     except Exception as e:

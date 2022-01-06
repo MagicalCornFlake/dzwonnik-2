@@ -4,7 +4,7 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet
+from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet, exec
 from .. import bot
 
 
@@ -74,5 +74,15 @@ INFO: dict[help, dict[str, str or function]] = {
     "meet": {
         "description": meet.DESC,
         "function": meet.update_meet_link
+    },
+    "exec": {
+        "description": exec.DESC,
+        "function": exec.execute_sync,
+        "owner_only": True
+    },
+    "exec_async": {
+        "description": exec.DESC,
+        "function": exec.execute_async,
+        "owner_only": True
     }
 }
