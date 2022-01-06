@@ -365,7 +365,7 @@ async def main_update_loop() -> None:
         # Update the bot status once a minute
         await check_for_status_updates(current_time)
 
-        if current_time % 30 == 0:
+        if current_time.minute % 30 == 0:
             # Update the Steam Market prices every half hour
             await check_for_steam_market_updates()
 
