@@ -32,7 +32,8 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
 
     # Initialise the embed
     date = datetime.strptime(data["date"], "%Y-%m-%d")
-    embed = Embed(title=f"Zastępstwa na {date:%d.%m.%Y}:")
+    url = substitutions_crawler.source_url
+    embed = Embed(title=f"Zastępstwa na {date:%d.%m.%Y}", url=url)
     footer = f"Użyj komendy {bot.prefix}zast, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
 
