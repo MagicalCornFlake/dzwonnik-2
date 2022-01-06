@@ -34,7 +34,7 @@ def parse_html(html: str) -> dict:
         post_elem: lxml.html.Element = root.xpath(post_xpath)[0]
     except Exception as e:
         return {"error": util.format_exception_info(e)}
-    subs_data = {"post": dict(post_elem.attrib), "lessons": {}}
+    subs_data = {"post": dict(post_elem.attrib), "events": [], "lessons": {}}
     lesson_list: dict[int, dict[str, list]] = subs_data["lessons"]
 
     tables = []
@@ -47,19 +47,20 @@ def parse_html(html: str) -> dict:
         if elem.tag != "p":
             # Skip non-paragraph elements (i.e. comments, divs etc.)
             return
-        if elem.text == "&nbsp;":
-            # Skip blank 'p' elements
-            return
         try:
             # Check if this element has children
             child_elem = elem[0]
         except IndexError:
             # The current element has no children
             subs_text: str = elem.text
-            if subs_text.endswith(" są odwołane."):
+            if not (subs_text and subs_text.strip()):
+                # Skip blank 'p' elements
+                return
+            if "są odwołane" in subs_text:
                 subs_data["cancelled"] = subs_text
                 return
             separator = " - " if " - " in subs_text else " – "
+            # print(f"'{subs_text}'")
             lessons, info = subs_text.split(separator, maxsplit=1)
             lesson_ints = []
             for lesson in lessons.rstrip('l').split(','):
@@ -86,17 +87,21 @@ def parse_html(html: str) -> dict:
             # The current element does have children
             if child_elem.tag != "strong":
                 return
-            if elem_index == 0:
-                date_string = child_elem[0].text.split(' ', maxsplit=1)[1]
-                date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
-                subs_data["date"] = str(date.date())
-                return
-            if elem_index == 1:
-                teachers = child_elem.text.split(', ')
-                subs_data["teachers"] = teachers
-                return
-            if elem_index == 2:
-                subs_data["misc"] = child_elem.text
+            if elem.attrib.get("style") == "text-align: center;":
+                text = child_elem.xpath(f"./text()")
+                child_elem_text = child_elem.text
+                if text:
+                    child_elem_text = ''.join(text)
+                if elem_index == 0:
+                    date_string = child_elem[0].text.split(' ', maxsplit=1)[1]
+                    date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
+                    subs_data["date"] = str(date.date())
+                    return
+                if elem_index == 1:
+                    teachers = child_elem_text.split(', ')
+                    subs_data["teachers"] = teachers
+                    return
+                subs_data["events"].append(child_elem_text)
                 return
             if not (child_elem.text and child_elem.text.strip()):
                 # Skip blank child elements
