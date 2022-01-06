@@ -15,12 +15,12 @@ DESC = """Podaje aktualną cenę dla szukanego przedmiotu na Rynku Społecznośc
     Przykłady: 
     `{p}cena Operation Broken Fang Case` - wyświetliłaby się cena dla tego przedmiotu, domyślnie w zł.
     `{p}cena Operation Broken Fang Case waluta=EUR` - wyświetliłaby się cena dla tego przedmiotu w euro."""
-desc_2 = """Zaczyna śledzić dany przedmiot na Rynku Społeczności Steam \
+DESC_2 = """Zaczyna śledzić dany przedmiot na Rynku Społeczności Steam \
     i wysyła powiadomienie, gdy cena wykroczy podaną granicę.
     Parametry: __nazwa przedmiotu__, __cena minimalna__, __cena maksymalna__,
     Przykład: `{p}sledz Operation Broken Fang Case min=1.00 max=3.00` - stworzyłoby się zlecenie śledzenia tego\
     przedmiotu z powiadomieniem, gdy cena się obniży poniżej 1,00zł lub przekroczy 3,00zł."""
-desc_3 = """Przestaje śledzić dany przedmiot na Rynku Społeczności Steam.
+DESC_3 = """Przestaje śledzić dany przedmiot na Rynku Społeczności Steam.
     Parametry: __nazwa przedmiotu__
     Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny tego przedmiotu."""
 

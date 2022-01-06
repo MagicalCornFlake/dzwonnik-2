@@ -4,75 +4,75 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import next_lesson, next_break, plan, homework, meet, steam_market, lucky_numbers, substitutions
+from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet
 from .. import bot
 
 
 def get_help_message(_: Message) -> tuple[bool, Embed]:
     embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{bot.prefix}`")
-    for command_name in info:
-        command_description = info[command_name]["description"]
+    for command_name, info in INFO.items():
+        command_description = info["description"]
         if command_description:
             embed.add_field(name=command_name, value=command_description.format(p=bot.prefix), inline=False)
     embed.set_footer(text=f"Użyj komendy {bot.prefix}help lub mnie @oznacz, aby pokazać tą wiadomość.")
     return True, embed
 
 
-info: dict[help, dict[str, str or function]] = {
-    'help': {
+INFO: dict[help, dict[str, str or function]] = {
+    "help": {
         "description": "Wyświetla tą wiadomość.",
         "function": get_help_message
     },
-    'nl': {
+    "nl": {
         "description": next_lesson.DESC,
         "function": next_lesson.get_next_lesson
     },
-    'nb': {
+    "nb": {
         "description": next_break.DESC,
         "function": next_break.get_next_break
     },
-    'plan': {
+    "plan": {
         "description": plan.DESC,
         "function": plan.get_lesson_plan
     },
-    'zad': {
+    "zad": {
         "description": homework.DESC,
         "function": homework.process_homework_events_alias
     },
-    'zadanie': {
-        "description": homework.desc_2,
+    "zadanie": {
+        "description": homework.DESC_2,
         "function": homework.create_homework_event
     },
-    'zadania': {
-        "description": homework.desc_3,
+    "zadania": {
+        "description": homework.DESC_3,
         "function": homework.get_homework_events
     },
-    'meet': {
-        "description": meet.DESC,
-        "function": meet.update_meet_link
-    },
-    'cena': {
+    "cena": {
         "description": steam_market.DESC,
         "function": steam_market.get_market_price
     },
-    'sledz': {
-        "description": steam_market.desc_2,
+    "sledz": {
+        "description": steam_market.DESC_2,
         "function": steam_market.start_market_tracking
     },
-    'odsledz': {
-        "description": steam_market.desc_3,
+    "odsledz": {
+        "description": steam_market.DESC_3,
         "function": steam_market.stop_market_tracking
     },
-    'numerki': {
+    "numerki": {
         "description": lucky_numbers.DESC,
         "function": lucky_numbers.get_lucky_numbers_embed
     },
-    'num': {
+    "num": {
         "description": "Alias komendy `{p}numerki`.",
         "function": lucky_numbers.get_lucky_numbers_embed
     },
-    'zast': {
+    "zast": {
         "description": substitutions.DESC,
         "function": substitutions.get_substitutions_embed
+    },
+    "meet": {
+        "description": meet.DESC,
+        "function": meet.update_meet_link
     }
 }

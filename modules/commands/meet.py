@@ -11,6 +11,7 @@ from .. import bot, util, file_manager, Emoji
 
 
 DESC = None
+
 link_pattern = re.compile(r"[a-z]{3}-[a-z]{4}-[a-z]{3}$|lookup/[a-z]{10}$")
 
 
