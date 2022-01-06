@@ -1,21 +1,15 @@
-# Project details for PyCharm IDE
-.idea
-
 # Python cache for files generated during compilation
 *.pyc
 __pycache__
-
-# Environment variable files
-*.env
-
-# Linux output files
-*.out
 
 # Local log files
 *.log
 
 # Local data files
+.*
 data.json
+
+# Local data folders
 cache
 bot_logs
 
