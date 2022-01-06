@@ -37,7 +37,8 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
     # Add fields
     teachers = ', '.join(data["teachers"])
     embed.add_field(name="Nauczyciele", value=teachers, inline=False)
-    embed.add_field(name="Informacje ogólne", value=data["misc"], inline=False)
+    events = '\n'.join(data["events"])
+    embed.add_field(name="Wydarzenia szkolne", value=events, inline=False)
 
     for period in data["lessons"]:
         class_msgs = []
