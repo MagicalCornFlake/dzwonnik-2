@@ -59,7 +59,6 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
 
     Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher]) to each weekday name.
     """
-
     tag_index = seen_tables = row_number = column_number = 0
     headers = []
     data: dict[str, list[list[dict[str, str]]]] = {}
@@ -174,14 +173,13 @@ def get_lesson_plan(class_id="2d", force_update=False) -> tuple[dict, bool]:
     log_msg = f"Getting lesson plan with ID {plan_id} for class '{class_id}' ({force_update=}) ..."
     _log(log_msg)
     return file_manager.get_cache(f"plan_{plan_id}", force_update, update_cache_callback)
-    # return update_cache_callback(force_update), False
 
 
 def _log(*args):
     if __name__ == "__main__":
         print(*args)
-    else:
-        file_manager.log(*args)
+        return
+    file_manager.log(*args)
 
 
 if __name__ == "__main__":
@@ -196,6 +194,6 @@ if __name__ == "__main__":
             data = get_lesson_plan(input(input_msg), force_update=True)[0]
             plan = json.dumps(data, indent=2, ensure_ascii=False)
             print(Colour.ENDC)
-            # _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
+            _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:
         _log(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")
