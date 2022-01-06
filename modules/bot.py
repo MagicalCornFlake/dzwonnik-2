@@ -412,13 +412,13 @@ async def track_time_changes() -> None:
         if cached_date == current_time.date() or current_time.hour < 1:
             # Data does not need to be updated
             return
-        if current_time.hour == 1:
-            # First hour of API update window
-            if current_time.second > 5:
-                # Don't update more than 5 times a minute
+        if current_time.hour == 1 and current_time.minute < 20:
+            # First 20 min of API update window
+            if current_time.second > 3:
+                # Don't update more than 3 times a minute
                 return
         elif current_time.minute % 5 or current_time.second > 0:
-            # After the first hour; update every 5 minutes
+            # Update every 5 min after the first 20 min
             return
         # Lucky numbers data is not current; update it
         await check_for_lucky_numbers_updates()
