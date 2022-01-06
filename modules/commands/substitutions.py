@@ -40,6 +40,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
     events = '\n'.join(data["events"])
     embed.add_field(name="Wydarzenia szkolne", value=events, inline=False)
 
+    # Substitution fields
     for period in data["lessons"]:
         class_msgs = []
         for class_name, substitutions in data["lessons"][period].items():
@@ -58,6 +59,11 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
             "value": '\n'.join(class_msgs)
         }
         embed.add_field(**field_args, inline=False)
+    
+    # Cancelled lessons field
+    embed.add_field(name="Lekcje odwołane", value=data["cancelled"])
+
+    # School events fields
     for table in data["tables"]:
         for col in range(len(table["headings"])):
             rows = table["columns"][col]
@@ -72,5 +78,4 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
                 "value": "\n".join(rows)
             }
             embed.add_field(**field_args, inline=True)
-    embed.add_field(name="Lekcje odwołane", value=data["cancelled"])
     return True, embed
