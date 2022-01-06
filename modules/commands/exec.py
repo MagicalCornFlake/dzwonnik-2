@@ -27,6 +27,8 @@ class ExecResultList(list):
 
 
 def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
+    if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
+        raise bot.MissingPermissionsException("synchronicznego egzekowania kodu")
     msg_content: str = message.content
     args = msg_content.split(' ', maxsplit=1)
     try:
@@ -81,4 +83,10 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
 
 
 def execute_async(message: discord.Message) -> tuple[bool, str or discord.Embed]:
+    if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
+        raise bot.MissingPermissionsException("asynchronicznego egzekowania kodu")
     return False, ""
+
+
+async def _execute_async() -> None:
+    pass

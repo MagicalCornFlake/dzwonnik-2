@@ -4,7 +4,7 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet, exec
+from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet, exec, terminate
 from .. import bot
 
 
@@ -45,7 +45,8 @@ INFO: dict[help, dict[str, str or function]] = {
     },
     "zadania": {
         "description": homework.DESC_3,
-        "function": homework.get_homework_events
+        "function": homework.get_homework_events,
+        "on_completion": homework.wait_for_zadania_reaction
     },
     "cena": {
         "description": steam_market.DESC,
@@ -78,11 +79,25 @@ INFO: dict[help, dict[str, str or function]] = {
     "exec": {
         "description": exec.DESC,
         "function": exec.execute_sync,
-        "owner_only": True
     },
     "exec_async": {
         "description": exec.DESC,
         "function": exec.execute_async,
-        "owner_only": True
+        "on_completion": exec._execute_async,
+    },
+    "restart": {
+        "description": terminate.DESC,
+        "function": terminate.restart_bot,
+        "on_completion": terminate.terminate_bot,
+    },
+    "stop": {
+        "description": terminate.DESC,
+        "function": terminate.exit_bot,
+        "on_completion": terminate.terminate_bot,
+    },
+    "exit": {
+        "description": terminate.DESC,
+        "function": terminate.exit_bot,
+        "on_completion": terminate.terminate_bot,
     }
 }

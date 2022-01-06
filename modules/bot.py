@@ -31,6 +31,14 @@ MY_SERVER_ID: int = 766346477874053130
 # The message template to be used when an API call returned an invalid response.
 BAD_RESPONSE = "Error! Received an invalid response when performing the web request. Exception trace:\n"
 
+# When somebody sends a message starting with any of the below keys, it replies with the value of that dict pair.
+# noinspection SpellCheckingInspection
+AUTOMATIC_BOT_REPLIES = {
+    MY_SERVER_ID: {
+        "co jest?": "nie wjem"
+    }
+}
+
 
 class ChannelID:
     """Constant declarations for Discord channnel IDs."""
@@ -81,14 +89,6 @@ current_period: int = -1
 # If this is set, it will override most output channels to be the channel with the given ID.
 testing_channel: int = None
 
-# When somebody sends a message starting with any of the below keys, it replies with the value of that dict pair.
-# noinspection SpellCheckingInspection
-automatic_bot_replies = {
-    MY_SERVER_ID: {
-        "co jest?": "nie wjem"
-    }
-}
-
 
 def send_log(*raw_message, force: bool = False) -> None:
     """Determine if the message should actually be logged, and if so, generate the string that should be sent."""
@@ -104,14 +104,15 @@ def send_log(*raw_message, force: bool = False) -> None:
 
 
 async def send_log_message(message) -> None:
+    """Send the log message to the `bot_logs` channel."""
     await client.wait_until_ready()
     log_channel: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
     await log_channel.send(f"```py\n{message}\n```")
 
 
-# This function is called when the bot comes online
 @client.event
 async def on_ready() -> None:
+    """Initialise the bot when it comes online."""
     # Enable the circular reference in the 'web' module, since it only works when called from this module.
     web.enable_circular_reference()
 
@@ -179,12 +180,13 @@ async def on_ready() -> None:
 # This function is called when someone sends a message in the server
 @client.event
 async def on_message(message: discord.Message) -> None:
+    """Handle the commands sent by users."""
     await client.wait_until_ready()
     if client.user in message.mentions:
         message.content = "!help " + message.content
-    for reply in automatic_bot_replies.get(message.guild.id, {}):
+    for reply in AUTOMATIC_BOT_REPLIES.get(message.guild.id, {}):
         if reply.lower().startswith(message.content) and len(message.content) >= 3:
-            await message.reply(automatic_bot_replies[reply], mention_author=False)
+            await message.reply(AUTOMATIC_BOT_REPLIES[reply], mention_author=False)
             return
     author_role_names = [str(role) for role in message.author.roles]
     if message.author == client.user or "Bot" in author_role_names or not message.content.startswith(prefix):
@@ -196,45 +198,28 @@ async def on_message(message: discord.Message) -> None:
             f"{client.get_channel(ChannelID.RANGI).mention} numerem odpowiedniej grupy.**\n"
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
-    admin_commands = ["exec", "exec_async", "restart", "quit", "exit"]
-    if msg_first_word in admin_commands:
-        if message.author != client.get_user(MEMBER_IDS[8 - 1]):
-            author_name = message.author.nick or message.author.name
-            await message.reply(f"Ha ha! Nice try, {author_name}.")
-            return
-        if msg_first_word in admin_commands[:2]:
-            help.INFO[msg_first_word]["function"]()
-
-        if msg_first_word == admin_commands[2]:
-            await message.channel.send("Restarting bot...")
-        else:
-            await message.channel.send("Exiting program.")
-            log_msg = f"    --- Program manually closed by user ('{msg_first_word}' command). ---"
-            file_manager.log(log_msg)
-            global restart_on_exit
-            restart_on_exit = False
-        main_update_loop.stop()
-        await set_offline_status()
-        await client.close()
-        file_manager.log("Bot disconnected.")
-        return
 
     if msg_first_word not in help.INFO:
         return
 
     received_command_msg = f"Received command '{message.content}' from {message.author}"
     send_log(received_command_msg, force=True)
-    callback_function = help.INFO[msg_first_word]["function"]
+    command_info = help.INFO[msg_first_word]
+    callback_function = command_info["function"]
     try:
         reply_is_embed, reply = callback_function(message)
+    except MissingPermissionsException as e:
+        error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {e}."
+        message.reply(error_message)
     except Exception as e:
         await ping_konrad()
         send_log(util.format_exception_info(e), force=True)
         await message.reply(f":x: Nastąpił błąd przy wykonaniu tej komendy. Administrator bota (Konrad) został o tym powiadomiony.")
-        return
-    reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
-    if callback_function is homework.get_homework_events:
-        await wait_for_zadania_reaction(message, reply_msg)
+    else:
+        reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
+        on_success_coroutine = command_info.get("on_completion")
+        if on_success_coroutine:
+            await on_success_coroutine(message, reply_msg)
 
 
 def get_new_status_msg(query_time: datetime.datetime = None) -> str:
@@ -309,6 +294,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
 
 
 async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str) -> None:
+    """Send a message reminding about the homework event."""
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
     for role in ROLE_CODES:
@@ -420,7 +406,7 @@ async def check_for_status_updates(current_time: datetime.datetime) -> None:
 
 
 async def check_for_due_homework(current_time: datetime.datetime) -> None:
-    """Checks if the bot should make a reminder about due homework"""
+    """Checks if the bot should make a reminder about due homework."""
     tomorrow = current_time.date() + datetime.timedelta(days=1)  # Today's date + 1 day
     for event in homework.homework_events:
         reminder_time = datetime.datetime.strptime(
@@ -445,26 +431,6 @@ async def wait_before_starting_loop() -> None:
     await client.wait_until_ready()
 
 
-async def check_for_lucky_numbers_updates() -> None:
-    """Updates the lucky numbers cache and announces announces the new numbers in the specified channel if it has changed."""
-    try:
-        old_cache = lucky_numbers_api.update_cache()
-    except web.InvalidResponseException as e:
-        await ping_konrad()
-        exc: str = util.format_exception_info(e)
-        send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
-    else:
-        if old_cache != lucky_numbers_api.cached_data:
-            send_log(f"Lucky numbers data updated!", force=True)
-            new_str = lucky_numbers_api.serialise(pretty=True)
-            old_str = lucky_numbers_api.serialise(old_cache, pretty=True)
-            send_log(f"New data: {new_str}\nOld data: {old_str}", force=True)
-            target_channel = client.get_channel(
-                testing_channel or ChannelID.NUMERKI)
-            await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
-            file_manager.save_data_file()
-
-
 async def check_for_steam_market_updates() -> None:
     """Checks if any tracked item's price has exceeded the established boundaries."""
     for item in steam_market.tracked_market_items:
@@ -487,6 +453,26 @@ async def check_for_steam_market_updates() -> None:
                                   f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
         steam_market.tracked_market_items.remove(item)
         file_manager.save_data_file()
+
+
+async def check_for_lucky_numbers_updates() -> None:
+    """Updates the lucky numbers cache and announces announces the new numbers in the specified channel if it has changed."""
+    try:
+        old_cache = lucky_numbers_api.update_cache()
+    except web.InvalidResponseException as e:
+        await ping_konrad()
+        exc: str = util.format_exception_info(e)
+        send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
+    else:
+        if old_cache != lucky_numbers_api.cached_data:
+            send_log(f"Lucky numbers data updated!", force=True)
+            new_str = lucky_numbers_api.serialise(pretty=True)
+            old_str = lucky_numbers_api.serialise(old_cache, pretty=True)
+            send_log(f"New data: {new_str}\nOld data: {old_str}", force=True)
+            target_channel = client.get_channel(
+                testing_channel or ChannelID.NUMERKI)
+            await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
+            file_manager.save_data_file()
 
 
 async def check_for_substitutions_updates() -> None:
@@ -535,22 +521,6 @@ async def ping_konrad(channel_id: int = ChannelID.BOT_LOGS) -> None:
         channel_id -- the ID of the channel to send the message to. By default, this is the ID of the `bot_logs` channel.
     """
     await client.get_channel(channel_id).send(f"<@{MEMBER_IDS[8 - 1]}>")
-
-
-async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord.Message) -> None:
-    def check_for_valid_reaction(test_reaction: discord.Reaction, reaction_author: discord.User or discord.Member):
-        return str(test_reaction.emoji) == Emoji.UNICODE_DETECTIVE and reaction_author != client.user
-
-    await reply_msg.add_reaction(Emoji.UNICODE_DETECTIVE)
-    try:
-        await client.wait_for('reaction_add', timeout=10.0, check=check_for_valid_reaction)
-    except asyncio.TimeoutError:
-        # 10 seconds have passed with no user input
-        await reply_msg.clear_reactions()
-    else:
-        # Someone has added detective reaction to message
-        await reply_msg.clear_reactions()
-        await reply_msg.edit(embed=homework.get_homework_events(message, True)[1])
 
 
 async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict, on_fail_data, on_fail_msg: str = None) -> discord.message:

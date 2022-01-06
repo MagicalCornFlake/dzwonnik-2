@@ -2,9 +2,10 @@
 
 # Standard library imports
 import datetime
+import asyncio
 
 # Third-party imports
-from discord import Message, Embed
+import discord
 
 # Local application imports
 from . import HomeworkEvent, homework_events
@@ -22,7 +23,7 @@ DESC_2 = "Pokazuje wszystkie zadania domowe, które zostały stworzone za pomoc�
 DESC_3 = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
 
 
-def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]:
+def process_homework_events_alias(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     args = message.content.split(" ")
     if len(args) == 1:
         return get_homework_events(message)
@@ -32,19 +33,21 @@ def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]
     return create_homework_event(message)
 
 
-def get_homework_events(message: Message, should_display_event_ids=False) -> tuple[bool, str or Embed]:
+def get_homework_events(message: discord.Message, should_display_event_ids=False) -> tuple[bool, str or discord.Embed]:
     file_manager.read_data_file()
     amount_of_homeworks = len(homework_events)
     if amount_of_homeworks > 0:
-        embed = Embed(title="Zadania", description=f"Lista zadań ({amount_of_homeworks}) jest następująca:")
+        embed = discord.Embed(
+            title="Zadania", description=f"Lista zadań ({amount_of_homeworks}) jest następująca:")
     else:
         return False, f"{Emoji.INFO} Nie ma jeszcze żadnych zadań. " + \
-               f"Możesz je tworzyć za pomocą komendy `{bot.prefix}zadanie`."
+            f"Możesz je tworzyć za pomocą komendy `{bot.prefix}zadanie`."
 
     # Adds an embed field for each event
     for homework_event in homework_events:
         group_role_name = ROLE_CODES[homework_event.group]
-        role_mention = "@everyone"  # Defaults to setting @everyone as the group the homework event is for
+        # Defaults to setting @everyone as the group the homework event is for
+        role_mention = "@everyone"
         if group_role_name != "everyone":
             # Adjusts the mention string if the homework event is not for everyone
             for role in message.guild.roles:
@@ -70,11 +73,12 @@ def get_homework_events(message: Message, should_display_event_ids=False) -> tup
         if should_display_event_ids:
             field_value += f"\n*ID: event-id-{homework_event.id}*"
         embed.add_field(name=field_name, value=field_value, inline=False)
-    embed.set_footer(text=f"Użyj komendy {bot.prefix}zadania, aby pokazać tą wiadomość.")
+    embed.set_footer(
+        text=f"Użyj komendy {bot.prefix}zadania, aby pokazać tą wiadomość.")
     return True, embed
 
 
-def create_homework_event(message: Message) -> tuple[bool, str]:
+def create_homework_event(message: discord.Message) -> tuple[bool, str]:
     args = message.content.split(" ")
     # Args is asserted to have at least 4 elements
     if args[1] == "del":
@@ -126,3 +130,19 @@ def delete_homework_event(event_id: int) -> str:
             file_manager.save_data_file()
             return event.title
     raise ValueError
+
+
+async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord.Message) -> None:
+    def check_for_valid_reaction(test_reaction: discord.Reaction, reaction_author: discord.User or discord.Member):
+        return str(test_reaction.emoji) == Emoji.UNICODE_DETECTIVE and reaction_author != bot.client.user
+
+    await reply_msg.add_reaction(Emoji.UNICODE_DETECTIVE)
+    try:
+        await bot.client.wait_for('reaction_add', timeout=10.0, check=check_for_valid_reaction)
+    except asyncio.TimeoutError:
+        # 10 seconds have passed with no user input
+        await reply_msg.clear_reactions()
+    else:
+        # Someone has added detective reaction to message
+        await reply_msg.clear_reactions()
+        await reply_msg.edit(embed=get_homework_events(message, True)[1])

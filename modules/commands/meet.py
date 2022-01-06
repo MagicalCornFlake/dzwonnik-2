@@ -7,6 +7,7 @@ import re
 from discord import Message
 
 # Local application imports
+from . import ensure_sender_is_admin
 from .. import bot, util, file_manager, Emoji
 
 
@@ -38,8 +39,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             link_desc = f"to <https://meet.google.com/{link}>" if link else "nie jest ustawiony"
             return False, f"{Emoji.INFO} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
         else:
-            if not message.channel.permissions_for(message.author).administrator:
-                raise bot.MissingPermissionsException
+            ensure_sender_is_admin(message, "zmieniania linków Google Meet")
             if not (re.match(link_pattern, args[1])):
                 # Display codes list if the specified link is of invalid format
                 raise InvalidFormatException(args[1])
@@ -48,8 +48,6 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             file_manager.save_data_file()
             return False, f"{Emoji.CHECK} Zmieniono link dla lekcji " \
                 f"'__{lesson_name}__' z `{link}` na **{args[1]}**."
-    except bot.MissingPermissionsException:
-        return False, f"{Emoji.WARNING} Nie posiadasz uprawnień do zmieniania linków Google Meet."
     except InvalidFormatException:
         # noinspection SpellCheckingInspection
         msg_first_line = ":warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."

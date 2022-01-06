@@ -4,7 +4,7 @@
 from discord import Message
 
 # Local application imports
-from . import TrackedItem, tracked_market_items
+from . import TrackedItem, ensure_sender_is_admin, tracked_market_items
 from .. import bot, file_manager, Emoji
 from ..util import web
 from ..util.api import steam_market as steam_market_api
@@ -77,9 +77,9 @@ def stop_market_tracking(message: Message) -> tuple[bool, str]:
     item_name = message.content.lstrip(f"{bot.prefix}odsledz ")
     for item in tracked_market_items:
         if item.name.lower() == item_name.lower():
-            if item.author_id == message.author.id or message.channel.permissions_for(message.author).administrator:
-                tracked_market_items.remove(item)
-                file_manager.save_data_file()
-                return False, f"{Emoji.CHECK} Zaprzestano śledzenie przedmiotu *{item.name}*."
-            return False, f":x: Nie jesteś osobą, która zażyczyła śledzenia tego przedmiotu."
+            if item.author_id != message.author.id:
+                ensure_sender_is_admin(message, "usuwania tego zlecenia")
+            tracked_market_items.remove(item)
+            file_manager.save_data_file()
+            return False, f"{Emoji.CHECK} Zaprzestano śledzenie przedmiotu *{item.name}*."
     return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."

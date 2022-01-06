@@ -2,9 +2,10 @@
 
 # Standard library imports
 from datetime import datetime
+from typing import Text
 
 # Third-party imports
-from discord import Role, Message
+from discord import Role, Message, TextChannel
 
 # Local application imports
 from .. import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, util, bot
@@ -48,14 +49,17 @@ class HomeworkEvent:
         except (IndexError, TypeError):
             self.id = 1
         for comparison_event in event_container:
-            new_event_time = datetime.datetime.strptime(self.deadline, "%d.%m.%Y")
-            old_event_time = datetime.datetime.strptime(comparison_event.deadline, "%d.%m.%Y")
+            new_event_time = datetime.datetime.strptime(
+                self.deadline, "%d.%m.%Y")
+            old_event_time = datetime.datetime.strptime(
+                comparison_event.deadline, "%d.%m.%Y")
             # Dumps debugging data
             if new_event_time < old_event_time:
                 # The new event should be placed chronologically before the one it is currently being compared to
                 # Inserts event id in the place of the one it's being compared to, so every event
                 # after this event (including the comparison one) is pushed one spot ahead in the list
-                event_container.insert(event_container.index(comparison_event), self)
+                event_container.insert(
+                    event_container.index(comparison_event), self)
                 return
             # The new event should not be placed before the one it is currently being compared to, continue evaluating
         # At this point the algorithm was unable to place the event before any others, so it shall be put at the end
@@ -70,11 +74,9 @@ class HomeworkEventContainer(list[HomeworkEvent]):
     def remove_disjunction(self, reference_container):
         for event in self:
             if event.serialised not in reference_container.serialised:
-                bot.send_log(f"Removing obsolete event '{event.title}' from container")
+                bot.send_log(
+                    f"Removing obsolete event '{event.title}' from container")
                 self.remove(event)
-
-
-homework_events = HomeworkEventContainer()
 
 
 class TrackedItem:
@@ -98,7 +100,20 @@ class TrackedItem:
             return self.name.lower() == other.name.lower()
         return False
 
+
+homework_events = HomeworkEventContainer()
 tracked_market_items: list[TrackedItem] = []
+
+
+def ensure_sender_is_admin(message: Message, error_message: str = None) -> None:
+    """Raises the `modules.bot.MissingPermissionsException` if the message author is not an administrator."""
+    message_content: str = message.content
+    msg_first_word = message_content.split(' ', maxsplit=1)[0]
+    default_msg = f"korzystania z komendy `{bot.prefix}{msg_first_word}`"
+    chnl: TextChannel = message.channel
+    if not chnl.permissions_for(message.author).administrator:
+        raise bot.MissingPermissionsException(error_message or default_msg)
+
 
 def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     """Get the information about the next period for a given time.
@@ -117,7 +132,8 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
-                    bot.send_log(f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
+                    bot.send_log(
+                        f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
                     return True, period + 10 * is_during_lesson, current_day_index
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
@@ -126,7 +142,8 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
         next_school_day = Weekday.MONDAY
 
     # If it's currently weekend or after the last lesson for the day
-    bot.send_log(f"... there are no more lessons today. Next school day: {next_school_day}")
+    bot.send_log(
+        f"... there are no more lessons today. Next school day: {next_school_day}")
     for first_period, lessons in enumerate(util.lesson_plan[WEEKDAY_NAMES[next_school_day]]):
         # Stop incrementing 'first_period' when the 'lessons' object is a non-empty list
         if lessons:
@@ -143,18 +160,22 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
 
     Returns a dictionary containing the lesson details including the period, or an empty dictionary if no lesson was found.
     """
-    target_roles = ["grupa_0"] + [str(role) for role in roles if role in ROLE_CODES or str(role) in ROLE_CODES.values()]
+    target_roles = [
+        "grupa_0"] + [str(role) for role in roles if role in ROLE_CODES or str(role) in ROLE_CODES.values()]
     weekday_name = WEEKDAY_NAMES[weekday_index]
-    bot.send_log(f"Looking for lesson of period {query_period} on {weekday_name} with roles: {target_roles})")
+    bot.send_log(
+        f"Looking for lesson of period {query_period} on {weekday_name} with roles: {target_roles})")
     for period, lessons in enumerate(util.lesson_plan[weekday_name]):
         if period < query_period:
             continue
         for lesson in lessons:
             if lesson["group"] in target_roles or ROLE_CODES[lesson["group"]] in target_roles:
-                bot.send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
+                bot.send_log(
+                    f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
-    bot.send_log(f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.")
+    bot.send_log(
+        f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.")
     return {}
 
 
@@ -167,9 +188,11 @@ def get_datetime_from_input(message: Message, calling_command: str) -> tuple[boo
             try:
                 if 0 <= int(args[1]) < 24:
                     if not 0 <= int(args[2]) < 60:
-                        raise RuntimeError(f"Godzina ('{args[2]}') nie znajduje się w przedziale `0, 59`.")
+                        raise RuntimeError(
+                            f"Godzina ('{args[2]}') nie znajduje się w przedziale `0, 59`.")
                 else:
-                    raise RuntimeError(f"Minuta ('{args[1]}') nie znajduje się w przedziale `0, 23`.")
+                    raise RuntimeError(
+                        f"Minuta ('{args[1]}') nie znajduje się w przedziale `0, 23`.")
             except IndexError:
                 # Minute not specified by user
                 args.append(00)
@@ -180,5 +203,6 @@ def get_datetime_from_input(message: Message, calling_command: str) -> tuple[boo
             msg = f"{Emoji.WARNING} {e}\nNależy napisać po komendzie `{bot.prefix}{calling_command}` godzinę" \
                   f" i ewentualnie minutę oddzieloną spacją, lub zostawić parametry komendy puste. "
             return False, msg
-        current_time = current_time.replace(hour=int(args[1]), minute=int(args[2]), second=0, microsecond=0)
+        current_time = current_time.replace(
+            hour=int(args[1]), minute=int(args[2]), second=0, microsecond=0)
     return True, current_time
