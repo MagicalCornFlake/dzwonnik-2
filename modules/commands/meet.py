@@ -19,9 +19,9 @@ link_pattern = re.compile(r"[a-z]{3}-[a-z]{4}-[a-z]{3}$|lookup/[a-z]{10}$")
 class InvalidFormatException(Exception):
     """Raised when the user-inputted Google Meet link is of invalid format."""
 
-    def init(self, link):
+    def __init__(self, link):
         self.message = "Invalid Googe Meet link: " + link
-        super.__init__(self.message)
+        super().__init__(self.message)
 
 
 def update_meet_link(message: Message) -> tuple[bool, str]:

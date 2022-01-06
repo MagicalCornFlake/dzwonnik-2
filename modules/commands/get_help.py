@@ -4,7 +4,7 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet, exec, terminate
+from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet, exec as execute, terminate
 from .. import bot
 
 
@@ -18,7 +18,7 @@ def get_help_message(_: Message) -> tuple[bool, Embed]:
     return True, embed
 
 
-INFO: dict[help, dict[str, str or function]] = {
+INFO: dict[help, dict[str, any]] = {
     "help": {
         "description": "Wyświetla tą wiadomość.",
         "function": get_help_message
@@ -77,13 +77,13 @@ INFO: dict[help, dict[str, str or function]] = {
         "function": meet.update_meet_link
     },
     "exec": {
-        "description": exec.DESC,
-        "function": exec.execute_sync,
+        "description": execute.DESC,
+        "function": execute.execute_sync,
     },
     "exec_async": {
-        "description": exec.DESC,
-        "function": exec.execute_async,
-        "on_completion": exec._execute_async,
+        "description": execute.DESC,
+        "function": execute.execute_async,
+        "on_completion": execute.run_async_code,
     },
     "restart": {
         "description": terminate.DESC,

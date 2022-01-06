@@ -34,15 +34,15 @@ last_request_time: int = 0
 MAX_REQUEST_COOLDOWN: int = 3  # Must wait 3s since last request
 
 
-def get_error_message(e: Exception) -> str:
-    if type(e) is InvalidResponseException:
-        return f"Nastąpił błąd w połączeniu: {e.status_code}"
-    if type(e) is TooManyRequestsException:
-        return f"Musisz poczekać jeszcze {MAX_REQUEST_COOLDOWN - e.time_since_last_request:.2f}s."
-    if type(e) is NoSuchItemException:
-        return f":x: Nie znaleziono przedmiotu `{e.query}`. Spróbuj ponownie i upewnij się, że nazwa się zgadza."
+def get_error_message(ex: Exception) -> str:
+    if isinstance(ex, InvalidResponseException):
+        return f"Nastąpił błąd w połączeniu: {ex.status_code}"
+    if isinstance(ex, TooManyRequestsException):
+        return f"Musisz poczekać jeszcze {MAX_REQUEST_COOLDOWN - ex.time_since_last_request:.2f}s."
+    if isinstance(ex, NoSuchItemException):
+        return f":x: Nie znaleziono przedmiotu `{ex.query}`. Spróbuj ponownie i upewnij się, że nazwa się zgadza."
     else:
-        raise e
+        raise ex
 
 
 class TooManyRequestsException(Exception):

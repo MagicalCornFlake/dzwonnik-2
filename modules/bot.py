@@ -11,7 +11,7 @@ from discord.ext.tasks import loop
 
 # Local application imports
 from . import file_manager, commands, util, ROLE_CODES, MEMBER_IDS, WEEKDAY_NAMES, GROUP_NAMES, Emoji, Weekday
-from .commands import help, homework, steam_market, lucky_numbers, substitutions
+from .commands import get_help, homework, steam_market, lucky_numbers, substitutions
 from .util import web
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
@@ -66,8 +66,7 @@ class MissingPermissionsException(Exception):
 
 
 # Initialise the discord client settings
-intents = discord.Intents.default()
-intents.members = True
+intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 
 # Initialise the object reference to our Discord server
@@ -199,12 +198,12 @@ async def on_message(message: discord.Message) -> None:
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
 
-    if msg_first_word not in help.INFO:
+    if msg_first_word not in get_help.INFO:
         return
 
     received_command_msg = f"Received command '{message.content}' from {message.author}"
     send_log(received_command_msg, force=True)
-    command_info = help.INFO[msg_first_word]
+    command_info = get_help.INFO[msg_first_word]
     callback_function = command_info["function"]
     try:
         reply_is_embed, reply = callback_function(message)
@@ -214,7 +213,7 @@ async def on_message(message: discord.Message) -> None:
     except Exception as e:
         await ping_konrad()
         send_log(util.format_exception_info(e), force=True)
-        await message.reply(f":x: Nastąpił błąd przy wykonaniu tej komendy. Administrator bota (Konrad) został o tym powiadomiony.")
+        await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. Administrator bota (Konrad) został o tym powiadomiony.")
     else:
         reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
         on_success_coroutine = command_info.get("on_completion")
@@ -231,7 +230,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     global current_period
     # Default time to check is current time
     query_time = query_time or datetime.datetime.now()
-    send_log(f"Updating bot status ...", force=True)
+    send_log("Updating bot status ...", force=True)
     result = commands.get_next_period(query_time)
     next_period_is_today, next_period, next_lesson_weekday = result
 
@@ -465,7 +464,7 @@ async def check_for_lucky_numbers_updates() -> None:
         send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
     else:
         if old_cache != lucky_numbers_api.cached_data:
-            send_log(f"Lucky numbers data updated!", force=True)
+            send_log("Lucky numbers data updated!", force=True)
             new_str = lucky_numbers_api.serialise(pretty=True)
             old_str = lucky_numbers_api.serialise(old_cache, pretty=True)
             send_log(f"New data: {new_str}\nOld data: {old_str}", force=True)
@@ -478,7 +477,7 @@ async def check_for_lucky_numbers_updates() -> None:
 async def check_for_substitutions_updates() -> None:
     """Updates the substitutions cache and announces the new data in the specified channel if it has changed."""
     try:
-        old_cache = file_manager.cache_exists("subs")
+        # old_cache = file_manager.cache_exists("subs")
         result = substitutions_crawler.get_substitutions(True)
         new_cache, cache_existed = result
         if "error" in new_cache:
@@ -530,8 +529,8 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
     except discord.errors.HTTPException:
         send_log("Message too long. Length of data:", len(str(on_fail_data)))
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
-        should_iterate = on_fail_msg and type(on_fail_data) is list
-        if type(on_fail_data) is discord.Embed:
+        should_iterate = on_fail_msg and isinstance(on_fail_data, list)
+        if isinstance(on_fail_data, discord.Embed):
             on_fail_data = {"embed": on_fail_data.to_dict()}
         with open("result.txt", 'w') as file:
             results: list[str] = []
@@ -546,7 +545,7 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
                     else:
                         results.append(tmp)
                         continue
-                if type(element) is bytes:
+                if isinstance(element, bytes):
                     results.append(element.decode('UTF-8'))
                 else:
                     results.append(str(element))

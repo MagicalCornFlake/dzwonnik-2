@@ -34,8 +34,8 @@ def get_market_price(message: Message, result_override=None) -> tuple[bool, str]
         params = args[0], 730, currency
         result = result_override or steam_market_api.get_item(*params)
         return False, f"{Emoji.INFO} Aktualna cena dla *{args[0]}* to `{steam_market_api.get_item_price(result)}`."
-    except Exception as e:
-        return False, web.get_error_message(e)
+    except Exception as ex:
+        return False, web.get_error_message(ex)
 
 
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
@@ -55,8 +55,8 @@ def start_market_tracking(message: Message):
         item_name = args[0].rstrip()
         try:
             result = steam_market_api.get_item(item_name)
-        except Exception as e:
-            return False, web.get_error_message(e)
+        except Exception as ex:
+            return False, web.get_error_message(ex)
         else:
             author_id = message.author.id
             item = TrackedItem(item_name, min_price, max_price, author_id)

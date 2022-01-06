@@ -132,7 +132,7 @@ def delete_homework_event(event_id: int) -> str:
     raise ValueError
 
 
-async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord.Message) -> None:
+async def wait_for_zadania_reaction(original_msg: discord.Message, reply_msg: discord.Message) -> None:
     def check_for_valid_reaction(test_reaction: discord.Reaction, reaction_author: discord.User or discord.Member):
         return str(test_reaction.emoji) == Emoji.UNICODE_DETECTIVE and reaction_author != bot.client.user
 
@@ -145,4 +145,4 @@ async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord
     else:
         # Someone has added detective reaction to message
         await reply_msg.clear_reactions()
-        await reply_msg.edit(embed=get_homework_events(message, True)[1])
+        await reply_msg.edit(embed=get_homework_events(original_msg, True)[1])

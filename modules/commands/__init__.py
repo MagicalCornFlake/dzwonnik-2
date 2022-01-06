@@ -96,7 +96,7 @@ class TrackedItem:
         }
 
     def __eq__(self, other):
-        if type(other) is type(self):
+        if isinstance(other, type(self)):
             return self.name.lower() == other.name.lower()
         return False
 
@@ -144,6 +144,7 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     # If it's currently weekend or after the last lesson for the day
     bot.send_log(
         f"... there are no more lessons today. Next school day: {next_school_day}")
+    first_period = -1  # Initialise so PyLint doesn't complain
     for first_period, lessons in enumerate(util.lesson_plan[WEEKDAY_NAMES[next_school_day]]):
         # Stop incrementing 'first_period' when the 'lessons' object is a non-empty list
         if lessons:
@@ -198,7 +199,7 @@ def get_datetime_from_input(message: Message, calling_command: str) -> tuple[boo
                 args.append(00)
             except ValueError:
                 # NaN
-                raise RuntimeError(f"`{':'.join(args[1:])}` nie jest godziną.")
+                raise RuntimeError(f"`{':'.join(args[1:])}` nie jest godziną.") from None
         except RuntimeError as e:
             msg = f"{Emoji.WARNING} {e}\nNależy napisać po komendzie `{bot.prefix}{calling_command}` godzinę" \
                   f" i ewentualnie minutę oddzieloną spacją, lub zostawić parametry komendy puste. "

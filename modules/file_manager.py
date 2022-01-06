@@ -14,7 +14,7 @@ def read_data_file(filename: str = "data.json") -> None:
     # Reads data file and updates settings
     if not os.path.isfile(filename):
         log("Data file not found. Writing default values.")
-        with open(filename, 'w') as file:
+        with open(filename, 'w', encoding="UTF-8") as file:
             default_settings = {
                 "lesson_links": {},
                 "homework_events": {},
@@ -22,7 +22,7 @@ def read_data_file(filename: str = "data.json") -> None:
                 "lucky_numbers": lucky_numbers.serialise()
             }
             json.dump(default_settings, file, indent=2)
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding="UTF-8") as file:
         data: dict[str, any] = json.load(file)
     try:
         util.lesson_links.update(data.get("lesson_links", {}))
@@ -55,12 +55,12 @@ def read_data_file(filename: str = "data.json") -> None:
         # Make datetime object from saved lucky numbers data
         date: str = data["lucky_numbers"]["date"]
         data_timestamp = datetime.strptime(date, "%Y-%m-%d")
-    except Exception as e:
+    except Exception as ex:
         # Saved lucky numbers data contains an invalid date; don't update cache
         bad_numbers = lucky_numbers.serialise(data["lucky_numbers"], pretty=True)
         bad_lucky_numbers = f"Invalid lucky numbers: {bad_numbers}"
         bot.send_log(bad_lucky_numbers, force=True)
-        bot.send_log(util.format_exception_info(e), force=True)
+        bot.send_log(util.format_exception_info(ex), force=True)
     else:
         lucky_numbers.cached_data["date"] = data_timestamp.date()
 
@@ -91,7 +91,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
     formatted_data: str = json.dumps(data_to_be_saved, indent=2)
 
     # Replaces file content with new data
-    with open(filename, 'w') as file:
+    with open(filename, 'w', encoding="UTF-8") as file:
         file.write(formatted_data)
 
     # Sends a log with the formatted data
@@ -102,7 +102,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
 
 def clear_log_file(filename: str) -> None:
     """Truncates the given file and writes to it a log header to identify when the log was started."""
-    with open(filename, 'w') as file:
+    with open(filename, 'w', encoding="UTF-8") as file:
         file.write(
             f"START TIMESTAMP {datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP Started bot log.\n")
 
@@ -123,7 +123,7 @@ def log(*raw_message: str) -> str:
 def save_log_file() -> None:
     """Copies the active log file to a new file in the bot_logs directory and clears it."""
     try:
-        with open("bot.log", 'r') as file:
+        with open("bot.log", 'r', encoding="UTF-8", encoding="UTF-8") as file:
             contents = file.read()
             if contents.startswith("START TIMESTAMP "):
                 # Extract log creation date from active log
@@ -131,7 +131,7 @@ def save_log_file() -> None:
                     "START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
                 log_start_time = log_start_time.rstrip('\n')
                 # Copy active log contents to new file
-                with open(f"bot_logs{os.path.sep}{log_start_time}.log", 'w') as file:
+                with open(f"bot_logs{os.path.sep}{log_start_time}.log", 'w', encoding="UTF-8") as file:
                     file.write(log_contents)
     except FileNotFoundError:
         # bot.log file does not exist
@@ -195,7 +195,7 @@ def read_env_file() -> bool:
     return_value = False
     log()
     log("    --- Processing environment variable (.env) file... ---")
-    with open('.env', 'r') as file:
+    with open('.env', 'r', encoding="UTF-8") as file:
         # Loop through each line in file
         for line in file.readlines():
             # Line does not contain a variable assignment

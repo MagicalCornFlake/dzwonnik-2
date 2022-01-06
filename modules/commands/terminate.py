@@ -26,7 +26,7 @@ def exit_bot(message: discord.Message) -> tuple[bool, str]:
     return False, "Exiting program."
 
 
-async def terminate_bot():
+async def terminate_bot(_original_msg: discord.Message, _reply_msg: discord.Message):
     """Terminates the bot client process."""
     bot.main_update_loop.stop()
     await bot.set_offline_status()

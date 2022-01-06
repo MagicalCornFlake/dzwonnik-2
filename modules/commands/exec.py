@@ -41,13 +41,13 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
             exec("locals()['temp'] = " + expression_to_be_executed)
             execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
             bot.send_log(*execing, force=True)
-        except SyntaxError as e:
+        except SyntaxError as ex:
             bot.send_log("Caught SyntaxError in 'exec' command:", force=True)
-            bot.send_log(util.format_exception_info(e), force=True)
+            bot.send_log(util.format_exception_info(ex), force=True)
             bot.send_log("Executing raw code:\n" + expression, force=True)
             exec(expression)
-    except Exception as e:
-        exec_result = util.format_exception_info(e)
+    except Exception as ex:
+        exec_result = util.format_exception_info(ex)
     else:
         exec_result = locals().get("temp")
     bot.send_log(f"Temp variable: {exec_result}")
@@ -55,7 +55,7 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
         return False, "Code executed (return value not specified)."
     res_msg = []
     json_responses = []
-    for res in exec_result if type(exec_result) is ExecResultList else [exec_result]:
+    for res in exec_result if isinstance(exec_result, ExecResultList) else [exec_result]:
         json_responses.append("")
         if type(res) in [list, dict, tuple]:
             try:
@@ -88,5 +88,5 @@ def execute_async(message: discord.Message) -> tuple[bool, str or discord.Embed]
     return False, ""
 
 
-async def _execute_async() -> None:
+async def run_async_code(_original_msg: discord.Message, _reply_msg: discord.Message) -> None:
     pass

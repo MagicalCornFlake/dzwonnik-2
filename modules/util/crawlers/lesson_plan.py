@@ -25,7 +25,7 @@ def get_plan_id(class_id: str or int = None) -> int:
         class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
     """
 
-    if type(class_id) is int and 1 <= class_id <= 16:
+    if isinstance(class_id, int) and 1 <= class_id <= 16:
         return class_id
     class_id = "2d" if class_id is None else class_id
     try:
