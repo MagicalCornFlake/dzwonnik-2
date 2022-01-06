@@ -65,7 +65,7 @@ role_codes = {
     "grupa_RF": "Fizyka Rozszerzona"
 }
 
-# Dictionary with text to use when sending messages, eg. 'lekcja dla grupy drugiej'
+# Dictionary with text to use when sending messages, e.g. 'lekcja dla grupy drugiej'
 group_names = {
     "grupa_0": "",
     "grupa_1": "dla grupy pierwszej",

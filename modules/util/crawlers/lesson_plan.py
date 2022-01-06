@@ -55,7 +55,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     """Parses the HTML and finds a specific hard-coded table, then collects the timetable data from it.
 
     Arguments:
-        html -- a string containing whole HTML code, eg. from the contents of a web request's response.
+        html -- a string containing whole HTML code, e.g. from the contents of a web request's response.
 
     Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher]) to each weekday name.
     """
@@ -74,7 +74,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             return int(period_pattern.match(raw_line).groups()[-1])
         elif raw_line.startswith("<td class=\"g\">"):
             # Row containing the lesson period start hour, start minute, end hour and end minute
-            # eg. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
+            # e.g. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
             times = [int(time)
                      for time in duration_pattern.match(raw_line).groups()]
             # Check if the start hour of the lesson is less than 12:00 (i.e. old timetable is still relevant)

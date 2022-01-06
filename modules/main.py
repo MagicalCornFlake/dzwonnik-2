@@ -49,13 +49,13 @@ def start_bot() -> bool:
             bot.send_log("Connecting to Discord...")
             event_loop.run_until_complete(bot.client.connect())
         except KeyboardInterrupt:
-            # Raised when the program is forcefully closed (eg. Ctrl+C in terminal).
+            # Raised when the program is forcefully closed (e.g. Ctrl+C in terminal).
             file_manager.log()
             file_manager.log("    --- Program manually closed by user (KeyboardInterrupt exception). ---")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
-            # The bot was exited gracefully (eg. !exit, !restart command issued in Discord)
+            # The bot was exited gracefully (e.g. !exit, !restart command issued in Discord)
             file_manager.log()
             file_manager.log("    --- Bot execution terminated successfully. ---")
     finally:
