@@ -86,10 +86,10 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
     periods: int = sum([bool(lesson) for lesson in plan])
     first_period: int = 0
 
-    title = f"Plan lekcji dla kl. {class_code} ({periods} lekcji)"
-    desc = f"Plan lekcji na **{WEEKDAY_NAMES[query_day].lower().replace('środa', 'środę')}** jest następujący"
+    title = f"Plan lekcji {class_code}"
+    desc = f"Plan lekcji na **{WEEKDAY_NAMES[query_day].lower().replace('środa', 'środę')}** ({periods} lekcji) jest następujący"
     lesson_plan_url = lesson_plan_crawler.get_plan_link(class_code)
-    embed = Embed(title=title, desc=desc, url=lesson_plan_url)
+    embed = Embed(title=title, description=desc, url=lesson_plan_url)
     footer = f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
 
