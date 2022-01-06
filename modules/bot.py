@@ -588,7 +588,7 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
         reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
         should_iterate = on_fail_msg and type(on_fail_data) is list
         if type(on_fail_data) is discord.Embed:
-            on_fail_data = on_fail_data.to_dict()
+            on_fail_data = {"embed": on_fail_data.to_dict()}
         with open("result.txt", 'w') as file:
             results: list[str] = []
             for element in on_fail_data if should_iterate else [on_fail_data]:
