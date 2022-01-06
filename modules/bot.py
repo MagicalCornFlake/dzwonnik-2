@@ -192,12 +192,12 @@ async def on_message(message: discord.Message) -> None:
                 try:
                     exec("locals()['temp'] = " + expression_to_be_executed)
                     execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
-                    send_log(*execing)
+                    send_log(*execing, force=True)
                 except SyntaxError as e:
                     send_log("Caught SyntaxError in 'exec' command:", force=True)
                     send_log(util.format_exception_info(e), force=True)
-                    send_log("Executing raw code:\n" + expression)
-                    exec(expression)
+                    send_log("Executing raw code:\n" + expression, force=True)
+                    exec(expression, force=True)
             except Exception as e:
                 exec_result = util.format_exception_info(e)
             else:
@@ -249,8 +249,8 @@ async def on_message(message: discord.Message) -> None:
     if msg_first_word not in help.info:
         return
 
-    send_log(f"Received command: '{message.content}'",
-             "from user:", message.author)
+    received_command_msg = f"Received command '{message.content}' from {message.author}"
+    send_log(received_command_msg, force=True)
     callback_function = help.info[msg_first_word]["function"]
     try:
         reply_is_embed, reply = callback_function(message)
