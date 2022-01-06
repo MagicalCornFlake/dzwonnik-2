@@ -60,7 +60,6 @@ def parse_html(html: str) -> dict:
                 subs_data["cancelled"] = subs_text
                 return
             separator = " - " if " - " in subs_text else " – "
-            # print(f"'{subs_text}'")
             lessons, info = subs_text.split(separator, maxsplit=1)
             lesson_ints = []
             for lesson in lessons.rstrip('l').split(','):
