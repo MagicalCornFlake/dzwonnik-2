@@ -21,10 +21,10 @@ source_url = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
 def parse_html(html: str) -> dict:
-    """Parses the HTML and finds a specific hard-coded table, then collects the timetable data from it.
+    """Parses the HTML and finds a specific hard-coded substitutions post, then collects the relevant data from it.
 
     Arguments:
-        html -- a string containing whole HTML code, eg. from the contents of a web request's response.
+        html -- a string containing whole HTML code, e.g. from the contents of a web request's response.
 
     Returns a dictionary.
     """
@@ -42,7 +42,23 @@ def parse_html(html: str) -> dict:
     def extract_data(elem: lxml.html.Element, elem_index: int):
         """Extract the relevant information from each element in the post. Adds result to the subs_data dictionary."""
         if elem.tag == "table":
-            tables[-1]["rows"] = len(elem[0])
+            rows = elem[0]
+            table_data: dict[str, any] = tables[-1]
+            column_data: list[list[str]] = table_data["columns"]
+            heading_data: list[str] = table_data["headings"]
+            for i, row in enumerate(rows):
+                for j, cell in enumerate(row):
+                    try:
+                        cell_text = cell[0].text
+                    except IndexError:
+                        cell_text = cell.text
+                    if i == 0:
+                        # Add the header of the column
+                        heading_data.append(cell_text)
+                        # Add empty list to hold the rows of that column
+                        column_data.append([])
+                        continue
+                    column_data[j].append(cell_text)
             return
         if elem.tag != "p":
             # Skip non-paragraph elements (i.e. comments, divs etc.)
@@ -105,7 +121,11 @@ def parse_html(html: str) -> dict:
             if not (child_elem.text and child_elem.text.strip()):
                 # Skip blank child elements
                 return
-            tables.append({"heading": child_elem.text})
+            tables.append({
+                "title": child_elem.text,
+                "headings": [],
+                "columns": []
+            })
 
     for i, p_elem in enumerate(post_elem):
         try:
@@ -146,7 +166,7 @@ if __name__ == "__main__":
             print(f"Colour {colours[col]}{col}{Colour.ENDC}")
     print()
     try:
-        subs: dict = get_substitutions(force_update=True)
+        subs: dict = get_substitutions(force_update=True)[0]
         plan = json.dumps(subs, indent=2, ensure_ascii=False)
         print(f"{Colour.OKGREEN}Substitutions:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:
