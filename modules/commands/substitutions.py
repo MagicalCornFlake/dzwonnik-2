@@ -59,7 +59,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
         }
         embed.add_field(**field_args, inline=False)
     for table in data["tables"]:
-        embed.add_field(name=table["title"], inline=False)
+        embed.add_field(name=table["title"], value="\u200B", inline=False)
         for col in range(len(table["headings"])):
             heading = table["headings"][col]
             rows = table["columns"][col]
