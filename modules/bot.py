@@ -49,16 +49,16 @@ client = discord.Client(intents=intents)
 
 my_server_id: int = 766346477874053130
 prefix = '!'  # Prefix used before commands
-enable_log_messages = True
+enable_log_messages = False
 restart_on_exit = True
 # If this is set, it will override most output channels to be the channel with the given ID.
 testing_channel = None
 
 
-invalid_response_template = "Error! Received an invalid response when performing the web request. Exception trace: "
+bad_response = "Error! Received an invalid response when performing the web request. Exception trace:\n"
 
 
-def send_log(*raw_message, force=False) -> None:
+def send_log(*raw_message, force: bool = False) -> None:
     """Determine if the message should actually be logged, and if so, generate the string that should be sent."""
     if not (enable_log_messages or force):
         return
@@ -98,7 +98,7 @@ async def on_ready() -> None:
         result = lesson_plan_crawler.get_lesson_plan(force_update=True)
     except web.InvalidResponseException as e:
         exc = util.format_exception_info(e)
-        send_log(invalid_response_template + exc)
+        send_log(f"{bad_response}{exc}", force=True)
     else:
         plan: dict = result[0]
         send_log(f"Initialised lesson plan as {type(plan)}.")
@@ -133,8 +133,8 @@ async def on_ready() -> None:
         try:
             last_test_message = await channel.fetch_message(channel.last_message_id)
         except discord.errors.NotFound:
-            send_log(
-                f"Could not find last message in channel {channel.name}. It was probably deleted.")
+            last_message_404 = f"Could not find last message in channel {channel.name}. It was probably deleted."
+            send_log(last_message_404)
         else:
             if last_test_message is None:
                 send_log(f"Last message in channel {channel.name} is None.")
@@ -142,8 +142,8 @@ async def on_ready() -> None:
                 if last_test_message.content == "Restarting bot...":
                     await last_test_message.edit(content="Restarted bot!")
             else:
-                send_log(
-                    f"Last message in channel {channel.name} was not sent by me.")
+                last_message_not_mine = f"Last message in channel {channel.name} was not sent by me."
+                send_log(last_message_not_mine)
 
 
 class ExecResultList(list):
@@ -191,11 +191,11 @@ async def on_message(message: discord.Message) -> None:
                 expression_to_be_executed = f"""ExecResultList()\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
                 try:
                     exec("locals()['temp'] = " + expression_to_be_executed)
-                    send_log(
-                        "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed)
+                    execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
+                    send_log(*execing)
                 except SyntaxError as e:
-                    send_log("Caught SyntaxError in 'exec' command:")
-                    send_log(util.format_exception_info(e))
+                    send_log("Caught SyntaxError in 'exec' command:", force=True)
+                    send_log(util.format_exception_info(e), force=True)
                     send_log("Executing raw code:\n" + expression)
                     exec(expression)
             except Exception as e:
@@ -236,7 +236,7 @@ async def on_message(message: discord.Message) -> None:
         else:
             await message.channel.send("Exiting program.")
             log_msg = f"    --- Program manually closed by user ('{msg_first_word}' command). ---"
-            send_log(log_msg)
+            file_manager.log(log_msg)
             global restart_on_exit
             restart_on_exit = False
         track_time_changes.stop()
@@ -273,7 +273,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     global current_period
     # Default time to check is current time
     query_time = query_time or datetime.datetime.now()
-    send_log(f"Updating bot status ...")
+    send_log(f"Updating bot status ...", force=True)
     result = commands.get_next_period(query_time)
     next_period_is_today, next_period, next_lesson_weekday = result
 
@@ -309,15 +309,15 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
                 lesson = commands.get_lesson_by_roles(*params)
                 if not lesson or lesson["period"] > current_period:
                     # No lesson for that group
-                    log_msg = f"Skipping lesson: {lesson} on period {current_period}."
-                    send_log(log_msg)
+                    skipping_lesson_msg = f"Skipping lesson: {lesson} on period {current_period}."
+                    send_log(skipping_lesson_msg)
                     continue
                 send_log("Validated lesson:", lesson)
                 msgs[lesson['group']] = util.get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
                 if lesson['group'] == "grupa_0":
-                    send_log(
-                        "Found lesson for entire class, skipping checking individual groups.")
+                    found_lesson_msg = "Found lesson for entire class, skipping checking individual groups."
+                    send_log(found_lesson_msg)
                     break
             # set(msgs.values()) returns a list of unique lesson names
             lesson_text = "/".join(set(msgs.values()))
@@ -330,8 +330,8 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         current_period = -1
         is_weekend = query_time.weekday() >= Weekday.friday
         new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
-    send_log(f"... new status message is '{new_status_msg}'.")
-    send_log(f"Current period: {current_period}")
+    send_log(f"... new status message is '{new_status_msg}'.", force=True)
+    send_log(f"Current period: {current_period}", force=True)
     return new_status_msg
 
 
@@ -406,7 +406,7 @@ async def track_time_changes() -> None:
     except (KeyError, AttributeError) as e:
         # Lucky numbers data does not contain a date
         await ping_konrad()
-        send_log(util.format_exception_info(e))
+        send_log(util.format_exception_info(e), force=True)
     else:
         # Lucky numbers data contains a valid date
         if cached_date == current_time.date() or current_time.hour < 1:
@@ -478,13 +478,13 @@ async def check_for_lucky_numbers_updates() -> None:
     except web.InvalidResponseException as e:
         await ping_konrad()
         exc: str = util.format_exception_info(e)
-        send_log(f"Lucky numbers update: {invalid_response_template}\n{exc}")
+        send_log(f"Lucky numbers update: {bad_response}{exc}", force=True)
     else:
         if old_cache != lucky_numbers_api.cached_data:
-            send_log(f"New lucky numbers data!")
-            for age, *data in (["New"], ["Old", old_cache]):
-                send_log(age + " data:")
-                send_log(json.dumps(lucky_numbers_api.serialise(*data), indent=2))
+            send_log(f"Lucky numbers data updated!", force=True)
+            new_str = lucky_numbers_api.serialise(pretty=True)
+            old_str = lucky_numbers_api.serialise(old_cache, pretty=True)
+            send_log(f"New data: {new_str}\nOld data: {old_str}", force=True)
             target_channel = client.get_channel(
                 testing_channel or ChannelID.numerki)
             await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
@@ -500,7 +500,7 @@ async def check_for_steam_market_updates() -> None:
             price = steam_api.get_item_price(result)
         except Exception as http_exc:
             await ping_konrad()
-            send_log(web.get_error_message(http_exc))
+            send_log(web.get_error_message(http_exc), force=True)
             return
         # Strips the price string of any non-digit characters and returns it as an integer
         char_list = [char if char in "0123456789" else '' for char in price]
@@ -526,10 +526,10 @@ async def check_for_substitutions_updates() -> None:
     except web.InvalidResponseException as e:
         # The web request returned an invalid response; log the error details
         if e.status_code == 403:
-            send_log("Suppressing 403 Forbidden on substitutions page.")
+            send_log("Suppressing 403 Forbidden on substitutions page.", force=True)
             return
         exc: str = util.format_exception_info(e)
-        exception_message = f"Substitutions update: {invalid_response_template}\n{exc}"
+        exception_message = f"Substitutions update: {bad_response}{exc}"
     except RuntimeError as err_desc:
         # The HTML parser returned an error; log the error details
         exc: str = new_cache.get("error")
@@ -538,8 +538,7 @@ async def check_for_substitutions_updates() -> None:
         if cache_existed:
             # The cache was not updated. Do nothing.
             return
-        log_msg = f"Substitution data updated! New data:\n{new_cache}\n\nOld data:\n{old_cache}"
-        send_log(log_msg)
+        send_log("Substitution data updated!", force=True)
         # Announce the new substitutions
         target_channel = client.get_channel(
             testing_channel or ChannelID.substitutions)
@@ -547,7 +546,7 @@ async def check_for_substitutions_updates() -> None:
         return
     # If the check wasn't completed successfully, ping @Konrad and log the error details.
     await ping_konrad()
-    send_log(exception_message)
+    send_log(exception_message, force=True)
 
 
 async def set_offline_status() -> None:

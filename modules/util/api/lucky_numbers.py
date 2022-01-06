@@ -53,7 +53,7 @@ def update_cache() -> dict[str, str or list[int or str]]:
     return old_cache
 
 
-def serialise(data: dict = {}):
+def serialise(data: dict = {}, pretty: bool = False):
     """Returns the cached data as a JSON-serialisable dictionary."""
     temp: dict = dict(data or cached_data)
     for key, value in temp.items():
@@ -61,4 +61,6 @@ def serialise(data: dict = {}):
             json.dumps(value)
         except TypeError:
             temp[key] = str(value)
+    if pretty:
+        return json.dumps(temp, indent=2, encoding='utf-8')
     return temp

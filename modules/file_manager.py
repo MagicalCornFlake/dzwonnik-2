@@ -57,8 +57,10 @@ def read_data_file(filename: str = "data.json") -> None:
         data_timestamp = datetime.strptime(date, "%Y-%m-%d")
     except Exception as e:
         # Saved lucky numbers data contains an invalid date; don't update cache
-        bot.send_log(f"Invalid lucky numbers:", data["lucky_numbers"])
-        bot.send_log(util.format_exception_info(e))
+        bad_numbers = lucky_numbers.serialise(data["lucky_numbers"], pretty=True)
+        bad_lucky_numbers = f"Invalid lucky numbers: {bad_numbers}"
+        bot.send_log(bad_lucky_numbers, force=True)
+        bot.send_log(util.format_exception_info(e), force=True)
     else:
         lucky_numbers.cached_data["date"] = data_timestamp.date()
 
@@ -71,7 +73,7 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         should_log -- whether or not the save should be logged in the Discord Log and in the console.
     """
     if should_log:
-        bot.send_log("Saving data file", filename)
+        bot.send_log("Saving data file", filename, force=True)
     # Creates containers with the data to be saved in .json format
     serialised_homework_events = {
         event.id_string: event.serialised for event in commands.homework_events}
@@ -94,8 +96,8 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
 
     # Sends a log with the formatted data
     if should_log:
-        bot.send_log(
-            f"Successfully saved data file '{filename}'.\nData:\n{formatted_data}")
+        saved_file_msg = f"Successfully saved data file '{filename}'.\nData:\n{formatted_data}"
+        bot.send_log(saved_file_msg)
 
 
 def clear_log_file(filename: str) -> None:
