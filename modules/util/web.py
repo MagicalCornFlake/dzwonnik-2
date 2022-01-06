@@ -9,9 +9,11 @@ import time
 from .api.steam_market import NoSuchItemException
 
 
-def send_log(*msg):
+def send_log(*msg, force: bool = False):
     """Function that defines the log behaviour when the 'bot' module has not been imported to the namespace.
     Function `enable_circular_reference` redefines this function as the 'send_log' function of the 'bot' module."""
+    if not force:
+        return
     print(*msg)
 
 # The 'bot' module imports this module first, by which time the lower-defined TooManyRequestsException class has been initialised.
@@ -87,7 +89,7 @@ def make_request(url: str, ignore_request_limit: bool = False) -> requests.Respo
         raise TooManyRequestsException(
             int(current_time * 1000 - last_request_time * 1000))
     last_request_time = current_time
-    send_log(f"Fetching content from {url} ...")
+    send_log(f"Fetching content from {url} ...", force=True)
     try:
         response = requests.get(url, timeout=10)  # Waits 10s for response
     except requests.exceptions.ReadTimeout:
