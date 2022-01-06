@@ -17,17 +17,31 @@ from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_
 from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
 
 
-current_period: int = -1
+# These settings ensure that data from the SU ILO API is only fetched a maximum of 45 times a day.
+# If the bot finds new data for a given day, it stops checking, so in practice this is usually less than 45.
+UPDATE_NUMBERS_AT = 1  # Hours; i.e. check only if it's 01:00 AM
+UPDATE_NUMBERS_FOR = 15  # Minutes; i.e. only check from 01:00:00 - 01:14:59
+UPDATE_NUMBERS_EVERY = 20  # Seconds; i.e. only check 3 times a minute
+
+# Sets the maximum length of a message that can be sent without causing errors with the Discord API.
+MAX_MESSAGE_LENGTH = 4000  # Characters
+
+MY_SERVER_ID: int = 766346477874053130
+
+# The message template to be used when an API call returned an invalid response.
+BAD_RESPONSE = "Error! Received an invalid response when performing the web request. Exception trace:\n"
 
 
 class ChannelID:
-    general: int = 766346477874053132
-    nauka: int = 769098845598515220
-    admini: int = 773137866338336768
-    bot_testing: int = 832700271057698816
-    bot_logs: int = 835561967007432784
-    numerki: int = 928102562710835240
-    substitutions: int = 928101883778854954
+    """Constant declarations for Discord channnel IDs."""
+    RANGI: int = 773135499627593738
+    GENERAL: int = 766346477874053132
+    NAUKA: int = 769098845598515220
+    NUMERKI: int = 928102562710835240
+    SUBSTITUTIONS: int = 928101883778854954
+    ADMINI: int = 773137866338336768
+    BOT_TESTING: int = 832700271057698816
+    BOT_LOGS: int = 835561967007432784
 
 
 class MissingPermissionsException(Exception):
@@ -43,19 +57,37 @@ class MissingPermissionsException(Exception):
         super().__init__(self.message)
 
 
+# Initialise the discord client settings
 intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents=intents)
 
-my_server_id: int = 766346477874053130
-prefix = '!'  # Prefix used before commands
-enable_log_messages = False
-restart_on_exit = True
+# Initialise the object reference to our Discord server
+# The value is set once the bot is logged in and ready.
+my_server: discord.Guild = None
+
+# Determines the prefix that is to be used before each user command.
+prefix: str = '!'
+
+# Makes the log messages sent by the bot more verbose.
+enable_log_messages: bool = False
+
+# Determines whether or not the bot should save the data file once it terminates.
+restart_on_exit: bool = True
+
+# Used to show the current lesson in the lesson plan (e.g. '!plan' command).
+current_period: int = -1
+
 # If this is set, it will override most output channels to be the channel with the given ID.
-testing_channel = None
+testing_channel: int = None
 
-
-bad_response = "Error! Received an invalid response when performing the web request. Exception trace:\n"
+# When somebody sends a message starting with any of the below keys, it replies with the value of that dict pair.
+# noinspection SpellCheckingInspection
+automatic_bot_replies = {
+    MY_SERVER_ID: {
+        "co jest?": "nie wjem"
+    }
+}
 
 
 def send_log(*raw_message, force: bool = False) -> None:
@@ -64,18 +96,17 @@ def send_log(*raw_message, force: bool = False) -> None:
         return
 
     msg = file_manager.log(*raw_message)
+    too_long_msg = f"Log message too long ({len(msg)} characters). Check 'bot.log' file."
+    msg_to_log = msg if len(msg) <= MAX_MESSAGE_LENGTH else too_long_msg
+
     log_loop = asyncio.get_event_loop()
-    log_loop.create_task(send_log_message(msg if len(
-        msg) <= 4000 else f"Log message too long ({len(msg)} characters). Check 'bot.log' file."))
+    log_loop.create_task(send_log_message(msg_to_log))
 
 
 async def send_log_message(message) -> None:
     await client.wait_until_ready()
-    log_channel: discord.TextChannel = client.get_channel(ChannelID.bot_logs)
+    log_channel: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
     await log_channel.send(f"```py\n{message}\n```")
-
-
-my_server: discord.Guild = None
 
 
 # This function is called when the bot comes online
@@ -91,14 +122,14 @@ async def on_ready() -> None:
 
     # Initialise server reference
     global my_server
-    my_server = client.get_guild(my_server_id)  # Konrad's Discord Server
+    my_server = client.get_guild(MY_SERVER_ID)  # Konrad's Discord Server
 
     # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
     try:
         result = lesson_plan_crawler.get_lesson_plan(force_update=True)
     except web.InvalidResponseException as e:
         exc = util.format_exception_info(e)
-        send_log(f"{bad_response}{exc}", force=True)
+        send_log(f"{BAD_RESPONSE}{exc}", force=True)
     else:
         plan: dict = result[0]
         send_log(f"Initialised lesson plan as {type(plan)}.")
@@ -124,11 +155,10 @@ async def on_ready() -> None:
     await client.change_presence(activity=status)
 
     # Starts loops that run continuously
-    track_time_changes.start()
-    track_api_updates.start()
+    main_update_loop.start()
 
     # Checks if the bot was just restarted
-    for channel_id in [ChannelID.bot_testing, ChannelID.bot_logs]:
+    for channel_id in [ChannelID.BOT_TESTING, ChannelID.BOT_LOGS]:
         channel = client.get_channel(channel_id)
         try:
             last_test_message = await channel.fetch_message(channel.last_message_id)
@@ -161,7 +191,7 @@ async def on_message(message: discord.Message) -> None:
     await client.wait_until_ready()
     if client.user in message.mentions:
         message.content = "!help " + message.content
-    for reply in automatic_bot_replies:
+    for reply in automatic_bot_replies.get(message.guild.id, {}):
         if reply.lower().startswith(message.content) and len(message.content) >= 3:
             await message.reply(automatic_bot_replies[reply], mention_author=False)
             return
@@ -172,7 +202,7 @@ async def on_message(message: discord.Message) -> None:
         await message.channel.send(
             f"{Emoji.WARNING} **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej "
             f"ani do grupy drugiej.\nUstaw sobie grupę, do której należysz reagując na wiadomość w kanale "
-            f"{client.get_channel(773135499627593738).mention} numerem odpowiedniej grupy.**\n"
+            f"{client.get_channel(ChannelID.RANGI).mention} numerem odpowiedniej grupy.**\n"
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
     admin_commands = ["exec", "exec_async", "restart", "quit", "exit"]
@@ -239,8 +269,7 @@ async def on_message(message: discord.Message) -> None:
             file_manager.log(log_msg)
             global restart_on_exit
             restart_on_exit = False
-        track_time_changes.stop()
-        track_api_updates.stop()
+        main_update_loop.stop()
         await set_offline_status()
         await client.close()
         file_manager.log("Bot disconnected.")
@@ -345,7 +374,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
             if role != "grupa_0":
                 mention_text = my_server.get_role(mention_role.id).mention
             break
-    chnl: int = testing_channel or ChannelID.nauka
+    chnl: int = testing_channel or ChannelID.NAUKA
     target_channel: discord.TextChannel = client.get_channel(chnl)
     # Which tense to use in the reminder message
     when = {
@@ -386,23 +415,34 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
 
 
 @loop(seconds=1)
-async def track_time_changes() -> None:
-    """Tracks time changes for non-resource intensive tasks that do not connect to APIs.
-    For example, checks if the current lesson period has changed using cached lesson plan data and updates the bot status accordingly.
-    Additionally, this checks if any locally stored homework events are due.
-    Also, if the lucky numbers data is outdated and it's past 1 AM, the bot tries to update it.
-    """
+async def main_update_loop() -> None:
+    """Routinely fetches data from various APIs to ensure the cache is up-to-date, and also regularly performs non-resource-intensive tasks that do not connect to APIs.
 
-    INITIAL_UPDATE_PERIOD = 15  # Minutes
-    MAX_CHECKS_PER_MINUTE = 3
-    CHECK_COOLDOWN_AFTER_INITIAL_PERIOD = 10  # Minutes
+    API updates:
+        - Steam Community Market item prices -- every 30 min
+        - The substitutions from the I LO website -- every 1 h
+        - The lucky numbers from the SUI LO API -- according to the settings
+
+    Non-API updates:
+        - The bot status -- every 1 min
+        - Homework event deadlines-- every 1 min
+    """
 
     current_time = datetime.datetime.now()  # Today's time
     await check_for_due_homework(current_time)
 
+    # Tasks that only update on the first second of a given minute
     if current_time.second == 0:
-        # Update the status only on the first second of each minute
+        # Update the bot status once a minute
         await check_for_status_updates(current_time)
+
+        if current_time % 30 == 0:
+            # Update the Steam Market prices every half hour
+            await check_for_steam_market_updates()
+
+            if current_time.minute == 0:
+                # Update the substitutions cache every hour
+                await check_for_substitutions_updates()
 
     # Check if the lucky numbers data is outdated
     try:
@@ -414,17 +454,13 @@ async def track_time_changes() -> None:
         send_log(util.format_exception_info(e), force=True)
     else:
         # Lucky numbers data contains a valid date
-        if cached_date == current_time.date() or current_time.hour < 1:
-            # Data does not need to be updated
+
+        if cached_date == current_time.date() or current_time.hour != UPDATE_NUMBERS_AT:
+            # Data does not need to be updated; only update at the given time
             return
-        if current_time.hour == 1 and current_time.minute < INITIAL_UPDATE_PERIOD:
-            # Initial update period of API update window
-            if current_time.second > MAX_CHECKS_PER_MINUTE:
-                # Don't update more than the maximum
-                return
-        elif current_time.second > 0 or current_time.minute % CHECK_COOLDOWN_AFTER_INITIAL_PERIOD:
-            # Update every x min after the initial update period
-            # Return if there is remainder after dividing minutes by x or if the second is not equal to 0
+         # The bot will update every x seconds so that it doesn't exceed the max
+        if current_time.minute < UPDATE_NUMBERS_FOR or current_time.second % UPDATE_NUMBERS_EVERY:
+            # Initial update period of API update window; don't update more than the maximum
             return
         # Lucky numbers data is not current; update it
         await check_for_lucky_numbers_updates()
@@ -460,20 +496,8 @@ async def check_for_due_homework(current_time: datetime.datetime) -> None:
         await remind_about_homework_event(event, tense)
 
 
-@loop(minutes=10)
-async def track_api_updates() -> None:
-    """Routinely fetches data from the various APIs in order to ensure it is up-to-date.
-    Updates:
-        - Steam Community Market item prices
-        - The substitutions from the I LO website
-    """
-    await check_for_steam_market_updates()
-    await check_for_substitutions_updates()
-
-
-@track_api_updates.before_loop
-@track_time_changes.before_loop
-async def wait_until_ready_before_loops() -> None:
+@main_update_loop.before_loop
+async def wait_before_starting_loop() -> None:
     await client.wait_until_ready()
 
 
@@ -484,7 +508,7 @@ async def check_for_lucky_numbers_updates() -> None:
     except web.InvalidResponseException as e:
         await ping_konrad()
         exc: str = util.format_exception_info(e)
-        send_log(f"Lucky numbers update: {bad_response}{exc}", force=True)
+        send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
     else:
         if old_cache != lucky_numbers_api.cached_data:
             send_log(f"Lucky numbers data updated!", force=True)
@@ -492,7 +516,7 @@ async def check_for_lucky_numbers_updates() -> None:
             old_str = lucky_numbers_api.serialise(old_cache, pretty=True)
             send_log(f"New data: {new_str}\nOld data: {old_str}", force=True)
             target_channel = client.get_channel(
-                testing_channel or ChannelID.numerki)
+                testing_channel or ChannelID.NUMERKI)
             await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
             file_manager.save_data_file()
 
@@ -514,7 +538,7 @@ async def check_for_steam_market_updates() -> None:
         if item.min_price < price < item.max_price:
             continue
         target_channel = client.get_channel(
-            testing_channel or ChannelID.admini)
+            testing_channel or ChannelID.ADMINI)
         await target_channel.send(f"{Emoji.CASH} Uwaga, <@{item.author_id}>! "
                                   f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
         steam_market.tracked_market_items.remove(item)
@@ -535,7 +559,7 @@ async def check_for_substitutions_updates() -> None:
             send_log("Suppressing 403 Forbidden on substitutions page.", force=True)
             return
         exc: str = util.format_exception_info(e)
-        exception_message = f"Substitutions update: {bad_response}{exc}"
+        exception_message = f"Substitutions update: {BAD_RESPONSE}{exc}"
     except RuntimeError as err_desc:
         # The HTML parser returned an error; log the error details
         exc: str = new_cache.get("error")
@@ -547,7 +571,7 @@ async def check_for_substitutions_updates() -> None:
         send_log("Substitution data updated!", force=True)
         # Announce the new substitutions
         target_channel = client.get_channel(
-            testing_channel or ChannelID.substitutions)
+            testing_channel or ChannelID.SUBSTITUTIONS)
         await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
         return
     # If the check wasn't completed successfully, ping @Konrad and log the error details.
@@ -556,17 +580,17 @@ async def check_for_substitutions_updates() -> None:
 
 
 async def set_offline_status() -> None:
+    """Sets the bot's Discord status to 'offline'."""
     await client.change_presence(status=discord.Status.offline)
 
 
-async def ping_konrad() -> None:
-    """Sends a message to the bot log channel mentioning MagicalCornFlake#0520."""
-    await client.get_channel(ChannelID.bot_logs).send(f"<@{MEMBER_IDS[8 - 1]}>")
+async def ping_konrad(channel_id: int = ChannelID.BOT_LOGS) -> None:
+    """Sends a message to the specified channel mentioning MagicalCornFlake#0520.
 
-# noinspection SpellCheckingInspection
-automatic_bot_replies = {
-    "co jest?": "nie wjem"
-}
+    Arguments:
+        channel_id -- the ID of the channel to send the message to. By default, this is the ID of the `bot_logs` channel.
+    """
+    await client.get_channel(channel_id).send(f"<@{MEMBER_IDS[8 - 1]}>")
 
 
 async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord.Message) -> None:

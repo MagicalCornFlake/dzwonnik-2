@@ -21,7 +21,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
         data = substitutions_crawler.get_substitutions()[0]
     except Exception as e:
         ex: str = util.format_exception_info(e)
-        bot.send_log(f"{bot.bad_response}{ex}", force=True)
+        bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
         return False, web.get_error_message(e)
     else:
         if "error" in data:
