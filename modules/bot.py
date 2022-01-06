@@ -66,7 +66,8 @@ class MissingPermissionsException(Exception):
 
 
 # Initialise the discord client settings
-intents = discord.Intents.all()
+intents = discord.Intents.default()
+intents.members = True
 client = discord.Client(intents=intents)
 
 # Initialise the object reference to our Discord server
