@@ -12,7 +12,7 @@ from ..util import web
 from ..util.crawlers import substitutions as substitutions_crawler
 
 
-desc = "Podaje zastępstwa na dany dzień."
+DESC = """Podaje zastępstwa na dany dzień."""
 
 
 def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
@@ -32,7 +32,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
 
     # Initialise the embed
     date = datetime.strptime(data["date"], "%Y-%m-%d")
-    url = substitutions_crawler.source_url
+    url = substitutions_crawler.SOURCE_URL
     embed = Embed(title=f"Zastępstwa na {date:%d.%m.%Y}", url=url)
     footer = f"Użyj komendy {bot.prefix}zast, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
@@ -55,7 +55,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
             standard_msg = f"**{class_name}**: {' | '.join(sub_msgs)}"
             if class_name == util.format_class():
                 our_substitutions += 1
-                hyperlinked_msg = f"[{standard_msg}]({substitutions_crawler.source_url})"
+                hyperlinked_msg = f"[{standard_msg}]({substitutions_crawler.SOURCE_URL})"
                 class_msgs.append(hyperlinked_msg)
                 continue
             class_msgs.append(standard_msg)
@@ -86,5 +86,5 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
             embed.add_field(**field_args, inline=True)
 
     # Set embed description to contain the number of substitutions for our class
-    embed.description = f"Liczba zastępstw dla klasy {util.our_class}: **{our_substitutions}**"
+    embed.description = f"Liczba zastępstw dla klasy {util.OUR_CLASS}: **{our_substitutions}**"
     return True, embed

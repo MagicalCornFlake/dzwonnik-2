@@ -15,7 +15,7 @@ lesson_pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>
                             r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
 
 # Tags that should not increment or decrement a line's tag depth
-ignored_tags = ["hr", "br"]
+IGNORED_TAGS = ["hr", "br"]
 
 
 def get_plan_id(class_id: str or int = None) -> int:
@@ -128,7 +128,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         # Decremenet the tag depth if the line contains a closing tag
         # Ignore tags like '<hr>', '<br>' that are defined above
         tag_index += row.count("<") - 2 * row.count("</") - \
-            sum([row.count(f"<{tag}>") for tag in ignored_tags])
+            sum([row.count(f"<{tag}>") for tag in IGNORED_TAGS])
         if "<table" in row:
             # Increment the number of tables that have been met so far
             seen_tables += row.count('<table')

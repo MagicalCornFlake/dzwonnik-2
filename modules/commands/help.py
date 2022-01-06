@@ -24,19 +24,19 @@ info: dict[help, dict[str, str or function]] = {
         "function": get_help_message
     },
     'nl': {
-        "description": next_lesson.desc,
+        "description": next_lesson.DESC,
         "function": next_lesson.get_next_lesson
     },
     'nb': {
-        "description": next_break.desc,
+        "description": next_break.DESC,
         "function": next_break.get_next_break
     },
     'plan': {
-        "description": plan.desc,
+        "description": plan.DESC,
         "function": plan.get_lesson_plan
     },
     'zad': {
-        "description": homework.desc,
+        "description": homework.DESC,
         "function": homework.process_homework_events_alias
     },
     'zadanie': {
@@ -48,11 +48,11 @@ info: dict[help, dict[str, str or function]] = {
         "function": homework.get_homework_events
     },
     'meet': {
-        "description": meet.desc,
+        "description": meet.DESC,
         "function": meet.update_meet_link
     },
     'cena': {
-        "description": steam_market.desc,
+        "description": steam_market.DESC,
         "function": steam_market.get_market_price
     },
     'sledz': {
@@ -64,7 +64,7 @@ info: dict[help, dict[str, str or function]] = {
         "function": steam_market.stop_market_tracking
     },
     'numerki': {
-        "description": lucky_numbers.desc,
+        "description": lucky_numbers.DESC,
         "function": lucky_numbers.get_lucky_numbers_embed
     },
     'num': {
@@ -72,7 +72,7 @@ info: dict[help, dict[str, str or function]] = {
         "function": lucky_numbers.get_lucky_numbers_embed
     },
     'zast': {
-        "description": substitutions.desc,
+        "description": substitutions.DESC,
         "function": substitutions.get_substitutions_embed
     }
 }

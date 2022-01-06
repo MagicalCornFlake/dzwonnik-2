@@ -8,7 +8,7 @@ from datetime import datetime
 lesson_plan: dict[str, any] = {}
 lesson_links: dict[str, str] = {}
 
-our_class = "2d"
+OUR_CLASS = "2d"
 
 
 def format_class(class_name: str = None):
@@ -19,7 +19,7 @@ def format_class(class_name: str = None):
 
     Arguments:
         class_name -- the name of the class. By default this is the value of the `our_class` variable."""
-    class_name = class_name or our_class
+    class_name = class_name or OUR_CLASS
     if len(class_name) < 2:
         err_msg = f"Invalid class name: '{class_name}' is too short (min. 2 characters)."
         raise ValueError(err_msg)

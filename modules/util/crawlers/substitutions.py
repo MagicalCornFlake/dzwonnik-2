@@ -17,7 +17,7 @@ sub_info_pattern = re.compile(
     r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,\s]+)*\s(.*)")
 sub_groups_pattern = re.compile(r"(?:\sgr.\s|,\s|\si\s)(p. [^,\s]+)")
 
-source_url = "http://www.lo1.gliwice.pl/zastepstwa-2/"
+SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
 def parse_html(html: str) -> dict:
@@ -154,7 +154,7 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     def update_cache_callback() -> dict:
-        html: str = web.get_html(source_url, force_update)
+        html: str = web.get_html(SOURCE_URL, force_update)
         return parse_html(html)
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 

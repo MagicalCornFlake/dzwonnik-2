@@ -10,7 +10,7 @@ import discord
 from discord.ext.tasks import loop
 
 # Local application imports
-from . import file_manager, commands, util, role_codes, member_ids, weekday_names, group_names, Emoji, Weekday
+from . import file_manager, commands, util, ROLE_CODES, MEMBER_IDS, WEEKDAY_NAMES, GROUP_NAMES, Emoji, Weekday
 from .commands import help, homework, steam_market, lucky_numbers, substitutions
 from .util import web
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
@@ -105,7 +105,7 @@ async def on_ready() -> None:
         util.lesson_plan = plan
 
     # Intialise array of schooldays
-    schooldays = [key for key in util.lesson_plan if key in weekday_names]
+    schooldays = [key for key in util.lesson_plan if key in WEEKDAY_NAMES]
 
     # Initialise set of unique lesson names
     lesson_names = set()
@@ -170,14 +170,14 @@ async def on_message(message: discord.Message) -> None:
         return
     if not any(group_role in author_role_names for group_role in ["Grupa 1", "Grupa 2"]):
         await message.channel.send(
-            f"{Emoji.warning} **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej "
+            f"{Emoji.WARNING} **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej "
             f"ani do grupy drugiej.\nUstaw sobie grupę, do której należysz reagując na wiadomość w kanale "
             f"{client.get_channel(773135499627593738).mention} numerem odpowiedniej grupy.**\n"
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
     admin_commands = ["exec", "exec_async", "restart", "quit", "exit"]
     if msg_first_word in admin_commands:
-        if message.author != client.get_user(member_ids[8 - 1]):
+        if message.author != client.get_user(MEMBER_IDS[8 - 1]):
             author_name = message.author.nick or message.author.name
             await message.reply(f"Ha ha! Nice try, {author_name}.")
             return
@@ -279,14 +279,14 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
 
     if next_period_is_today:
         # Get the period of the next lesson
-        roles = list(role_codes.keys())[1:]
+        roles = list(ROLE_CODES.keys())[1:]
         params = next_period % 10, next_lesson_weekday, roles
         lesson = commands.get_lesson_by_roles(*params)
         if lesson:
             current_period = lesson['period']
             send_log("The next lesson is on period", lesson['period'])
         # Get the period of the first lesson
-        for first_period, lessons in enumerate(util.lesson_plan[weekday_names[query_time.weekday()]]):
+        for first_period, lessons in enumerate(util.lesson_plan[WEEKDAY_NAMES[query_time.weekday()]]):
             if lessons:
                 send_log("The first lesson is on period", first_period)
                 break
@@ -304,7 +304,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             # Currently lesson
             # Dictionary with lesson group code and lesson name
             msgs: dict[str, str] = {}
-            for role_code in list(role_codes.keys())[1:]:
+            for role_code in list(ROLE_CODES.keys())[1:]:
                 params = current_period, next_lesson_weekday, [role_code]
                 lesson = commands.get_lesson_by_roles(*params)
                 if not lesson or lesson["period"] > current_period:
@@ -323,12 +323,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             lesson_text = "/".join(set(msgs.values()))
             if len(msgs) == 1 and list(msgs.keys())[0] != "grupa_0":
                 # Specify the group the current lesson is for if only one group has it
-                lesson_text += " " + group_names[list(msgs.keys())[0]]
+                lesson_text += " " + GROUP_NAMES[list(msgs.keys())[0]]
             new_status_msg = f"{lesson_text} do {util.get_formatted_period_time(current_period).split('-')[1]}"
     else:
         # After the last lesson for the given day
         current_period = -1
-        is_weekend = query_time.weekday() >= Weekday.friday
+        is_weekend = query_time.weekday() >= Weekday.FRIDAY
         new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
     send_log(f"... new status message is '{new_status_msg}'.", force=True)
     send_log(f"Current period: {current_period}", force=True)
@@ -338,10 +338,10 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
 async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str) -> None:
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
-    for role in role_codes:
+    for role in ROLE_CODES:
         if role == event.group:
             mention_role = discord.utils.get(
-                my_server.roles, name=role_codes[role])
+                my_server.roles, name=ROLE_CODES[role])
             if role != "grupa_0":
                 mention_text = my_server.get_role(mention_role.id).mention
             break
@@ -356,7 +356,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
         "future": f"{event.deadline} jest"
     }[tense]  # tense can have a value of 'today', 'tomorrow' or 'past'
     message: discord.Message = await target_channel.send(f"{mention_text} Na {when} zadanie: **{event_name}**.")
-    emojis = [Emoji.unicode_check, Emoji.unicode_alarm_clock]
+    emojis = [Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK]
     for emoji in emojis:
         await message.add_reaction(emoji)
 
@@ -377,7 +377,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
         if str(reaction.emoji) == emojis[0]:
             # Reaction emoji is ':ballot_box_with_check:'
             event.reminder_is_active = False
-            await message.edit(content=f"{Emoji.check_2} Zaznaczono zadanie `{event_name}` jako odrobione.")
+            await message.edit(content=f"{Emoji.CHECK_2} Zaznaczono zadanie `{event_name}` jako odrobione.")
         else:  # Reaction emoji is :alarm_clock:
             await snooze_event()
     await message.clear_reactions()
@@ -392,6 +392,11 @@ async def track_time_changes() -> None:
     Additionally, this checks if any locally stored homework events are due.
     Also, if the lucky numbers data is outdated and it's past 1 AM, the bot tries to update it.
     """
+
+    INITIAL_UPDATE_PERIOD = 15  # Minutes
+    MAX_CHECKS_PER_MINUTE = 3
+    CHECK_COOLDOWN_AFTER_INITIAL_PERIOD = 10  # Minutes
+
     current_time = datetime.datetime.now()  # Today's time
     await check_for_due_homework(current_time)
 
@@ -412,13 +417,14 @@ async def track_time_changes() -> None:
         if cached_date == current_time.date() or current_time.hour < 1:
             # Data does not need to be updated
             return
-        if current_time.hour == 1 and current_time.minute < 20:
-            # First 20 min of API update window
-            if current_time.second > 3:
-                # Don't update more than 3 times a minute
+        if current_time.hour == 1 and current_time.minute < INITIAL_UPDATE_PERIOD:
+            # Initial update period of API update window
+            if current_time.second > MAX_CHECKS_PER_MINUTE:
+                # Don't update more than the maximum
                 return
-        elif current_time.minute % 5 or current_time.second > 0:
-            # Update every 5 min after the first 20 min
+        elif current_time.second > 0 or current_time.minute % CHECK_COOLDOWN_AFTER_INITIAL_PERIOD:
+            # Update every x min after the initial update period
+            # Return if there is remainder after dividing minutes by x or if the second is not equal to 0
             return
         # Lucky numbers data is not current; update it
         await check_for_lucky_numbers_updates()
@@ -509,7 +515,7 @@ async def check_for_steam_market_updates() -> None:
             continue
         target_channel = client.get_channel(
             testing_channel or ChannelID.admini)
-        await target_channel.send(f"{Emoji.cash} Uwaga, <@{item.author_id}>! "
+        await target_channel.send(f"{Emoji.CASH} Uwaga, <@{item.author_id}>! "
                                   f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
         steam_market.tracked_market_items.remove(item)
         file_manager.save_data_file()
@@ -555,7 +561,7 @@ async def set_offline_status() -> None:
 
 async def ping_konrad() -> None:
     """Sends a message to the bot log channel mentioning MagicalCornFlake#0520."""
-    await client.get_channel(ChannelID.bot_logs).send(f"<@{member_ids[8 - 1]}>")
+    await client.get_channel(ChannelID.bot_logs).send(f"<@{MEMBER_IDS[8 - 1]}>")
 
 # noinspection SpellCheckingInspection
 automatic_bot_replies = {
@@ -565,9 +571,9 @@ automatic_bot_replies = {
 
 async def wait_for_zadania_reaction(message: discord.Message, reply_msg: discord.Message) -> None:
     def check_for_valid_reaction(test_reaction: discord.Reaction, reaction_author: discord.User or discord.Member):
-        return str(test_reaction.emoji) == Emoji.unicode_detective and reaction_author != client.user
+        return str(test_reaction.emoji) == Emoji.UNICODE_DETECTIVE and reaction_author != client.user
 
-    await reply_msg.add_reaction(Emoji.unicode_detective)
+    await reply_msg.add_reaction(Emoji.UNICODE_DETECTIVE)
     try:
         await client.wait_for('reaction_add', timeout=10.0, check=check_for_valid_reaction)
     except asyncio.TimeoutError:

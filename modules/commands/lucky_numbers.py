@@ -7,12 +7,12 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from .. import bot, util, member_ids
+from .. import bot, util, MEMBER_IDS
 from ..util import web
 from ..util.api import lucky_numbers as numbers_api
 
 
-desc = "Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone."
+DESC = """Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone."""
 
 
 def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
@@ -28,9 +28,9 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     footer_text = f"Użyj komendy {bot.prefix}numerki, aby pokazać tą wiadomość."
     embed.set_footer(text=footer_text)
     for n in data["luckyNumbers"]:
-        is_id = type(member_ids[n - 1]) is int
-        member_text = f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*" if n > len(member_ids) else \
-            f"<@!{member_ids[n - 1]}>" if is_id else member_ids[n - 1]
+        is_id = type(MEMBER_IDS[n - 1]) is int
+        member_text = f"*W naszej klasie nie ma osoby z numerkiem __{n}__.*" if n > len(MEMBER_IDS) else \
+            f"<@!{MEMBER_IDS[n - 1]}>" if is_id else MEMBER_IDS[n - 1]
         embed.add_field(name=n, value=member_text, inline=False)
     # embed.add_field(name="\u200B", value="\u200B", inline=False)
     excluded = ", ".join(data["excludedClasses"]) or "*Brak*"

@@ -14,11 +14,10 @@ from .. import web
 #     "excludedClasses": ["X", "Y"]
 # }
 
-# This module converts the date strings from the API into datetime.date objects
 cached_data: dict[str, date or list[int or str]] = {}
-max_cache_age = 1  # Days
 
-source_url = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
+MAX_CACHE_AGE = 1  # Days
+SOURCE_URL = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
 
 
 def get_lucky_numbers() -> dict[str, str or list[int or str]]:
@@ -26,7 +25,7 @@ def get_lucky_numbers() -> dict[str, str or list[int or str]]:
     current_date: date = date.today()
     try:
         last_cache_date: date = cached_data["date"]
-        if (current_date - last_cache_date).days > max_cache_age:
+        if (current_date - last_cache_date).days > MAX_CACHE_AGE:
             raise ValueError()
     except (KeyError, ValueError):
         # If the cache is empty or too old
@@ -45,7 +44,7 @@ def update_cache() -> dict[str, str or list[int or str]]:
     """
     global cached_data
     old_cache = dict(cached_data)
-    res = web.make_request(source_url, ignore_request_limit=True)
+    res = web.make_request(SOURCE_URL, ignore_request_limit=True)
     cached_data = res.json()
     if cached_data["date"]:
         data_timestamp = datetime.strptime(cached_data["date"], "%d/%m/%Y")

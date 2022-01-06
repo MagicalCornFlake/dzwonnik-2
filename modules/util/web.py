@@ -29,11 +29,16 @@ def enable_circular_reference():
     send_log = bot.send_log
 
 
+last_request_time: int = 0
+
+MAX_REQUEST_COOLDOWN: int = 3  # Must wait 3s since last request
+
+
 def get_error_message(e: Exception) -> str:
     if type(e) is InvalidResponseException:
         return f"Nastąpił błąd w połączeniu: {e.status_code}"
     if type(e) is TooManyRequestsException:
-        return f"Musisz poczekać jeszcze {max_request_cooldown - e.time_since_last_request:.2f}s."
+        return f"Musisz poczekać jeszcze {MAX_REQUEST_COOLDOWN - e.time_since_last_request:.2f}s."
     if type(e) is NoSuchItemException:
         return f":x: Nie znaleziono przedmiotu `{e.query}`. Spróbuj ponownie i upewnij się, że nazwa się zgadza."
     else:
@@ -51,7 +56,7 @@ class TooManyRequestsException(Exception):
     def __init__(self, time_since_last_request: int, message="You must must wait for another {cooldown}s."):
         self.time_since_last_request = time_since_last_request
         self.message = message.format(
-            cooldown=f"{(max_request_cooldown * 1000) - time_since_last_request:.2f}")
+            cooldown=f"{(MAX_REQUEST_COOLDOWN * 1000) - time_since_last_request:.2f}")
         super().__init__(self.message)
 
 
@@ -69,10 +74,6 @@ class InvalidResponseException(Exception):
         super().__init__(self.message)
 
 
-last_request_time: int = 0
-max_request_cooldown: int = 3  # Must wait 3s since last request
-
-
 def make_request(url: str, ignore_request_limit: bool = False) -> requests.Response:
     """Make a web request.
 
@@ -85,7 +86,7 @@ def make_request(url: str, ignore_request_limit: bool = False) -> requests.Respo
     """
     global last_request_time
     current_time = time.time()
-    if current_time - last_request_time < max_request_cooldown and not ignore_request_limit:
+    if current_time - last_request_time < MAX_REQUEST_COOLDOWN and not ignore_request_limit:
         raise TooManyRequestsException(
             int(current_time * 1000 - last_request_time * 1000))
     last_request_time = current_time

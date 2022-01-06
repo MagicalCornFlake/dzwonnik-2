@@ -10,7 +10,7 @@ from discord import Message
 from .. import bot, util, file_manager, Emoji
 
 
-desc = None
+DESC = None
 link_pattern = re.compile(r"[a-z]{3}-[a-z]{4}-[a-z]{3}$|lookup/[a-z]{10}$")
 
 
@@ -35,7 +35,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
         link = util.get_lesson_link(args[0])
         if len(args) == 1:
             link_desc = f"to <https://meet.google.com/{link}>" if link else "nie jest ustawiony"
-            return False, f"{Emoji.info} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
+            return False, f"{Emoji.INFO} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
         else:
             if not message.channel.permissions_for(message.author).administrator:
                 raise bot.MissingPermissionsException
@@ -45,10 +45,10 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             # User-given link is valid
             util.lesson_links[args[0]] = args[1]
             file_manager.save_data_file()
-            return False, f"{Emoji.check} Zmieniono link dla lekcji " \
+            return False, f"{Emoji.CHECK} Zmieniono link dla lekcji " \
                 f"'__{lesson_name}__' z `{link}` na **{args[1]}**."
     except bot.MissingPermissionsException:
-        return False, f"{Emoji.warning} Nie posiadasz uprawnień do zmieniania linków Google Meet."
+        return False, f"{Emoji.WARNING} Nie posiadasz uprawnień do zmieniania linków Google Meet."
     except InvalidFormatException:
         # noinspection SpellCheckingInspection
         msg_first_line = ":warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."

@@ -1,11 +1,6 @@
 """__init__.py file for the general modules containing definitions for constant values that are used repeatedly in the program."""
 
 
-class RoleID:
-    gr1: int = 766346710712582155
-    gr2: int = 766346737400807474
-
-
 class Colour:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -19,28 +14,28 @@ class Colour:
 
 
 class Emoji:
-    cash: str = ":moneybag:"
-    check: str = ":white_check_mark:"
-    check_2: str = ":ballot_box_with_check:"
-    info: str = ":information_source:"
-    warning: str = ":warning:"
+    CASH: str = ":moneybag:"
+    CHECK: str = ":white_check_mark:"
+    CHECK_2: str = ":ballot_box_with_check:"
+    INFO: str = ":information_source:"
+    WARNING: str = ":warning:"
 
-    unicode_alarm_clock: str = "\N{ALARM CLOCK}"
-    unicode_check: str = "\N{BALLOT BOX WITH CHECK}"
-    unicode_detective: str = "\N{SLEUTH OR SPY}"
+    UNICODE_ALARM_CLOCK: str = "\N{ALARM CLOCK}"
+    UNICODE_CHECK: str = "\N{BALLOT BOX WITH CHECK}"
+    UNICODE_DETECTIVE: str = "\N{SLEUTH OR SPY}"
 
 
 class Weekday:
-    monday: int = 0
-    tuesday: int = 1
-    wednesday: int = 2
-    thursday: int = 3
-    friday: int = 4
-    saturday: int = 5
-    sunday: int = 6
+    MONDAY: int = 0
+    TUESDAY: int = 1
+    WEDNESDAY: int = 2
+    THURSDAY: int = 3
+    FRIDAY: int = 4
+    SATURDAY: int = 5
+    SUNDAY: int = 6
 
 
-weekday_names = [
+WEEKDAY_NAMES = [
     "Poniedziałek",
     "Wtorek",
     "Środa",
@@ -49,7 +44,7 @@ weekday_names = [
 ]
 
 # What group code correlates to which Discord role
-role_codes = {
+ROLE_CODES = {
     "grupa_0": "everyone",
     "grupa_1": "Grupa 1",
     "grupa_2": "Grupa 2",
@@ -66,7 +61,7 @@ role_codes = {
 }
 
 # Dictionary with text to use when sending messages, e.g. 'lekcja dla grupy drugiej'
-group_names = {
+GROUP_NAMES = {
     "grupa_0": "",
     "grupa_1": "dla grupy pierwszej",
     "grupa_2": "dla grupy drugiej",
@@ -84,7 +79,7 @@ group_names = {
 
 
 # noinspection SpellCheckingInspection
-member_ids = [
+MEMBER_IDS = [
     693443232415088650,  # 01 Zofia Cybul
     695209819715403818,  # 02 Aleksandra Cywińska
     690174699459706947,  # 03 Ida Durbacz

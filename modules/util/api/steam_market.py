@@ -7,7 +7,7 @@ from urllib import parse
 from .. import web
 
 
-currency_ids = [
+CURRENCY_IDS = [
     'USD',  # United States Dollar
     'GBP',  # Great British Pound
     'EUR',  # Euro
@@ -45,7 +45,7 @@ currency_ids = [
 
 def get_currency_id(currency: str):
     """Returns the ID of a given currency if it's listed, otherwise return the ID for PLN (6)."""
-    return (currency_ids.index(currency) + 1) if currency in currency_ids else 6
+    return (CURRENCY_IDS.index(currency) + 1) if currency in CURRENCY_IDS else 6
 
 
 # Define custom exceptions

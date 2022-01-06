@@ -8,10 +8,10 @@ from discord import Message, Embed
 
 # Local application imports
 from . import HomeworkEvent, homework_events
-from .. import bot, Emoji, file_manager, role_codes, group_names
+from .. import bot, Emoji, file_manager, ROLE_CODES, GROUP_NAMES
 
 
-desc = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
+DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
     Natomiast, jeśli w parametrach podane jest hasło 'del' oraz nr zadania, zadanie to zostanie usunięte.
     Parametry: __data__, __grupa__, __treść__ | 'del', __ID zadania__
     Przykłady:
@@ -27,7 +27,7 @@ def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]
     if len(args) == 1:
         return get_homework_events(message)
     elif len(args) < 4:
-        return False, f"{Emoji.warning} Należy napisać po komendzie `{bot.prefix}zad` termin oddania zadania, oznaczenie " + \
+        return False, f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin oddania zadania, oznaczenie " + \
             "grupy, dla której jest zadanie oraz jego treść, lub 'del' i ID zadania, którego się chce usunąć."
     return create_homework_event(message)
 
@@ -38,12 +38,12 @@ def get_homework_events(message: Message, should_display_event_ids=False) -> tup
     if amount_of_homeworks > 0:
         embed = Embed(title="Zadania", description=f"Lista zadań ({amount_of_homeworks}) jest następująca:")
     else:
-        return False, f"{Emoji.info} Nie ma jeszcze żadnych zadań. " + \
+        return False, f"{Emoji.INFO} Nie ma jeszcze żadnych zadań. " + \
                f"Możesz je tworzyć za pomocą komendy `{bot.prefix}zadanie`."
 
     # Adds an embed field for each event
     for homework_event in homework_events:
-        group_role_name = role_codes[homework_event.group]
+        group_role_name = ROLE_CODES[homework_event.group]
         role_mention = "@everyone"  # Defaults to setting @everyone as the group the homework event is for
         if group_role_name != "everyone":
             # Adjusts the mention string if the homework event is not for everyone
@@ -84,11 +84,11 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
         except ValueError:
             return False, f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. " + \
                           f"Wpisz `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID."
-        return False, f"{Emoji.check} Usunięto zadanie z treścią: `{deleted_event}`"
+        return False, f"{Emoji.CHECK} Usunięto zadanie z treścią: `{deleted_event}`"
     try:
         datetime.datetime.strptime(args[1], "%d.%m.%Y")
     except ValueError:
-        return False, f"{Emoji.warning} Drugim argumentem komendy musi być data o formacie: `DD.MM.YYYY`."
+        return False, f"{Emoji.WARNING} Drugim argumentem komendy musi być data o formacie: `DD.MM.YYYY`."
     title = args[3]
     for word in args[4:]:
         title += " " + word
@@ -102,15 +102,15 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
         try:
             message.guild.get_role(group_id)
         except ValueError:
-            return False, f"{Emoji.warning} Trzecim argumentem komendy musi być oznaczenie grupy, dla której jest zadanie."
-        group_text = group_names[group_id] + " "
+            return False, f"{Emoji.WARNING} Trzecim argumentem komendy musi być oznaczenie grupy, dla której jest zadanie."
+        group_text = GROUP_NAMES[group_id] + " "
 
     new_event = HomeworkEvent(title, group_id, author, args[1] + " 17")
     if new_event.serialised in homework_events:
-        return False, f"{Emoji.warning} Takie zadanie już istnieje."
+        return False, f"{Emoji.WARNING} Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)
     file_manager.save_data_file()
-    return False, f"{Emoji.check} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}` {group_text}" + \
+    return False, f"{Emoji.CHECK} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}` {group_text}" + \
                   "z powiadomieniem na dzień przed o **17:00.**"
 
 

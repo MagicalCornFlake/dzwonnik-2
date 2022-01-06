@@ -7,7 +7,7 @@ from datetime import datetime
 from discord import Role, Message
 
 # Local application imports
-from .. import Weekday, Emoji, weekday_names, role_codes, util, bot
+from .. import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, util, bot
 
 
 class HomeworkEvent:
@@ -112,7 +112,7 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     bot.send_log(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
     current_day_index: int = given_time.weekday()
 
-    if current_day_index < Weekday.saturday:
+    if current_day_index < Weekday.SATURDAY:
         for period, times in enumerate(util.lesson_plan["Godz"]):
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
@@ -121,13 +121,13 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
                     return True, period + 10 * is_during_lesson, current_day_index
         # Could not find any such lesson.
         # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
-        next_school_day = (current_day_index + 1) % Weekday.saturday
+        next_school_day = (current_day_index + 1) % Weekday.SATURDAY
     else:
-        next_school_day = Weekday.monday
+        next_school_day = Weekday.MONDAY
 
     # If it's currently weekend or after the last lesson for the day
     bot.send_log(f"... there are no more lessons today. Next school day: {next_school_day}")
-    for first_period, lessons in enumerate(util.lesson_plan[weekday_names[next_school_day]]):
+    for first_period, lessons in enumerate(util.lesson_plan[WEEKDAY_NAMES[next_school_day]]):
         # Stop incrementing 'first_period' when the 'lessons' object is a non-empty list
         if lessons:
             break
@@ -143,14 +143,14 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
 
     Returns a dictionary containing the lesson details including the period, or an empty dictionary if no lesson was found.
     """
-    target_roles = ["grupa_0"] + [str(role) for role in roles if role in role_codes or str(role) in role_codes.values()]
-    weekday_name = weekday_names[weekday_index]
+    target_roles = ["grupa_0"] + [str(role) for role in roles if role in ROLE_CODES or str(role) in ROLE_CODES.values()]
+    weekday_name = WEEKDAY_NAMES[weekday_index]
     bot.send_log(f"Looking for lesson of period {query_period} on {weekday_name} with roles: {target_roles})")
     for period, lessons in enumerate(util.lesson_plan[weekday_name]):
         if period < query_period:
             continue
         for lesson in lessons:
-            if lesson["group"] in target_roles or role_codes[lesson["group"]] in target_roles:
+            if lesson["group"] in target_roles or ROLE_CODES[lesson["group"]] in target_roles:
                 bot.send_log(f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
                 lesson["period"] = period
                 return lesson
@@ -177,7 +177,7 @@ def get_datetime_from_input(message: Message, calling_command: str) -> tuple[boo
                 # NaN
                 raise RuntimeError(f"`{':'.join(args[1:])}` nie jest godziną.")
         except RuntimeError as e:
-            msg = f"{Emoji.warning} {e}\nNależy napisać po komendzie `{bot.prefix}{calling_command}` godzinę" \
+            msg = f"{Emoji.WARNING} {e}\nNależy napisać po komendzie `{bot.prefix}{calling_command}` godzinę" \
                   f" i ewentualnie minutę oddzieloną spacją, lub zostawić parametry komendy puste. "
             return False, msg
         current_time = current_time.replace(hour=int(args[1]), minute=int(args[2]), second=0, microsecond=0)
