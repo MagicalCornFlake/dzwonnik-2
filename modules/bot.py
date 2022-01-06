@@ -409,9 +409,19 @@ async def track_time_changes() -> None:
         send_log(util.format_exception_info(e))
     else:
         # Lucky numbers data contains a valid date
-        if cached_date != current_time.date() and current_time.hour >= 1:
-            # Lucky numbers data is not current; update it
-            await check_for_lucky_numbers_updates()
+        if cached_date == current_time.date() or current_time.hour < 1:
+            # Data does not need to be updated
+            return
+        if current_time.hour == 1:
+            # First hour of API update window
+            if current_time.second > 5:
+                # Don't update more than 5 times a minute
+                return
+        elif current_time.minute % 5 or current_time.second > 0:
+            # After the first hour; update every 5 minutes
+            return
+        # Lucky numbers data is not current; update it
+        await check_for_lucky_numbers_updates()
 
 
 async def check_for_status_updates(current_time: datetime.datetime) -> None:
