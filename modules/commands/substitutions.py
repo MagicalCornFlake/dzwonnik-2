@@ -85,5 +85,5 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
             embed.add_field(**field_args, inline=True)
 
     # Set embed description to contain the number of substitutions for our class
-    embed.description = f"Liczba zastępstw dla klasy {util.our_class}: {our_substitutions}"
+    embed.description = f"Liczba zastępstw dla klasy __{util.our_class}__: **{our_substitutions}**"
     return True, embed
