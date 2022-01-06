@@ -72,6 +72,5 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
                 "value": "\n".join(rows)
             }
             embed.add_field(**field_args, inline=True)
-        embed.add_field(**field_args, inline=False)
     embed.add_field(name="Lekcje odwołane", value=data["cancelled"])
     return True, embed
