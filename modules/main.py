@@ -65,7 +65,7 @@ def start_bot() -> bool:
         if save_on_exit:
             # The file is saved before the start_bot() function returns.
             # Do not send a debug message since the bot is already offline.
-            file_manager.save_data_file(should_log=False)
+            file_manager.save_data_file(allow_logs=False)
             file_manager.log("Successfully saved data file 'data.json'. Program exiting.")
     # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,

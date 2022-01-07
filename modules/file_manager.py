@@ -11,9 +11,10 @@ from .util.api import lucky_numbers
 
 
 def read_data_file(filename: str = "data.json") -> None:
-    # Reads data file and updates settings
+    """Reads data file and updates settings."""
+    bot.send_log(f"Reading data file '{filename}'...", force=True)
     if not os.path.isfile(filename):
-        log("Data file not found. Writing default values.")
+        bot.send_log("Data file not found. Writing default values.", force=True)
         with open(filename, 'w', encoding="UTF-8") as file:
             default_settings = {
                 "lesson_links": {},
@@ -26,9 +27,8 @@ def read_data_file(filename: str = "data.json") -> None:
         data: dict[str, any] = json.load(file)
     try:
         util.lesson_links.update(data.get("lesson_links", {}))
-        log("Lesson links has been updated:", util.lesson_links)
     except KeyError:
-        log("Lesson links not found in data file. Using blank values.")
+        bot.send_log("Lesson links not found in data file. Using blank values.", force=True)
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
     for event_id in data.get("homework_events", []):
@@ -63,17 +63,18 @@ def read_data_file(filename: str = "data.json") -> None:
         bot.send_log(util.format_exception_info(ex), force=True)
     else:
         lucky_numbers.cached_data["date"] = data_timestamp.date()
+    bot.send_log(f"Successfully read data file '{filename}'.", force=True)
 
 
-def save_data_file(filename: str = "data.json", should_log: bool = True) -> None:
+def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None:
     """Saves the settings stored in the program's memory to the file provided.
 
     Arguments:
         filename -- the name of the file relative to the program root directory to write to (default 'data.json').
         should_log -- whether or not the save should be logged in the Discord Log and in the console.
     """
-    if should_log:
-        bot.send_log("Saving data file", filename, force=True)
+    if allow_logs:
+        bot.send_log(f"Saving data file '{filename}'...", force=True)
     # Creates containers with the data to be saved in .json format
     serialised_homework_events = {
         event.id_string: event.serialised for event in commands.homework_events}
@@ -95,9 +96,9 @@ def save_data_file(filename: str = "data.json", should_log: bool = True) -> None
         file.write(formatted_data)
 
     # Sends a log with the formatted data
-    if should_log:
+    if allow_logs:
         saved_file_msg = f"Successfully saved data file '{filename}'.\nData:\n{formatted_data}"
-        bot.send_log(saved_file_msg)
+        bot.send_log(saved_file_msg, force=True)
 
 
 def clear_log_file(filename: str) -> None:
