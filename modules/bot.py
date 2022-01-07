@@ -104,10 +104,11 @@ async def send_log_message(message) -> None:
     """Send the log message to the `bot_logs` channel."""
     try:
         await client.wait_until_ready()
-        log_channel: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
-        await log_channel.send(f"```py\n{message}\n```")
+        log_chnl: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
+        await log_chnl.send(f"```py\n{message}\n```")
     except (RuntimeError, OSError) as exception:
-        file_manager.log(f"Could not log message: '{message}'. Exception: {exception}")
+        could_not_log_msg = f"Could not log message: '{message}'. Exception: {exception}"
+        file_manager.log(could_not_log_msg)
 
 
 @client.event
@@ -485,9 +486,10 @@ async def check_for_lucky_numbers_updates() -> None:
     else:
         if old_cache != lucky_numbers_api.cached_data:
             send_log("Lucky numbers data updated!", force=True)
-            new_str = lucky_numbers_api.serialise(pretty=True)
-            old_str = lucky_numbers_api.serialise(old_cache, pretty=True)
-            send_log(f"New data: {new_str}\nOld data: {old_str}", force=True)
+            new_str: str = lucky_numbers_api.serialise(pretty=True)
+            old_str: str = lucky_numbers_api.serialise(old_cache, pretty=True)
+            send_log(f"New data:\n{new_str}", force=True)
+            send_log(f"Old data:\n{old_str}", force=True)
             target_channel = client.get_channel(
                 testing_channel or ChannelID.NUMERKI)
             await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
