@@ -43,9 +43,10 @@ def update_cache() -> dict[str, str or list[int or str]]:
     Returns the old cache so that it can be compared with the new one.
     """
     global cached_data
-    old_cache = dict(cached_data)
+    old_cache = dict(cached_data or {})
     res = web.make_request(SOURCE_URL, ignore_request_limit=True)
     cached_data = res.json()
+    # If the date string is present in the dictionary, convert it into a date object.
     if cached_data["date"]:
         data_timestamp = datetime.strptime(cached_data["date"], "%d/%m/%Y")
         cached_data["date"] = data_timestamp.date()
