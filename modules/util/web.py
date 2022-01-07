@@ -7,7 +7,7 @@ import time
 import requests
 
 # Local application imports
-from .api.steam_market import NoSuchItemException
+# from .api.steam_market import NoSuchItemException
 
 
 def send_log(*msg, force: bool = False):
@@ -56,14 +56,15 @@ class InvalidResponseException(WebException):
 
 
 def get_error_message(web_exc: WebException) -> str:
+    if not isinstance(web_exc, WebException):
+        raise web_exc from TypeError
     if isinstance(web_exc, InvalidResponseException):
         return f"Nastąpił błąd w połączeniu: {web_exc.status_code}"
     if isinstance(web_exc, TooManyRequestsException):
         return f"Musisz poczekać jeszcze {MAX_REQUEST_COOLDOWN - web_exc.time_passed:.2f}s."
-    if isinstance(web_exc, NoSuchItemException):
-        return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
-                f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")
-    raise web_exc
+    # The exception must be steam_api.NoSuchItemException
+    return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
+            f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")
 
 
 def make_request(url: str, ignore_request_limit: bool = False) -> requests.Response:
