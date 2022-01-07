@@ -297,8 +297,8 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         util.current_period = -1
         is_weekend = query_time.weekday() >= Weekday.FRIDAY
         new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
-    send_log(f"... new status message is '{new_status_msg}'.", force=True)
-    send_log(f"Current period: {util.current_period}", force=True)
+    status_log_msg = f"'{new_status_msg}'.\nCurrent period: {util.current_period}"
+    send_log("... new status message is " + status_log_msg, force=True)
     return new_status_msg
 
 
@@ -485,11 +485,9 @@ async def check_for_lucky_numbers_updates() -> None:
         send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
     else:
         if old_cache != lucky_numbers_api.cached_data:
-            send_log("Lucky numbers data updated!", force=True)
-            new_str: str = lucky_numbers_api.serialise(pretty=True)
             old_str: str = lucky_numbers_api.serialise(old_cache, pretty=True)
-            send_log(f"New data:\n{new_str}", force=True)
-            send_log(f"Old data:\n{old_str}", force=True)
+            send_log(
+                f"Lucky numbers data updated! Old data:\n{old_str}", force=True)
             target_channel = client.get_channel(
                 testing_channel or ChannelID.NUMERKI)
             await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])

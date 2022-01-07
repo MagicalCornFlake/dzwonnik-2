@@ -14,7 +14,8 @@ def read_data_file(filename: str = "data.json") -> None:
     """Reads data file and updates settings."""
     bot.send_log(f"Reading data file '{filename}'...", force=True)
     if not os.path.isfile(filename):
-        bot.send_log("Data file not found. Writing default values.", force=True)
+        data_file_404 = "Data file not found. Writing default values."
+        bot.send_log(data_file_404, force=True)
         with open(filename, 'w', encoding="UTF-8") as file:
             default_settings = {
                 "lesson_links": {},
@@ -28,7 +29,8 @@ def read_data_file(filename: str = "data.json") -> None:
     try:
         util.lesson_links.update(data.get("lesson_links", {}))
     except KeyError:
-        bot.send_log("Lesson links not found in data file. Using blank values.", force=True)
+        lesson_links_404 = "Lesson links not found in data file. Using blank values."
+        bot.send_log(lesson_links_404, force=True)
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
     for event_id in data.get("homework_events", []):
@@ -55,12 +57,12 @@ def read_data_file(filename: str = "data.json") -> None:
         # Make datetime object from saved lucky numbers data
         date: str = data["lucky_numbers"]["date"]
         data_timestamp = datetime.strptime(date, "%Y-%m-%d")
-    except (KeyError, TypeError, ValueError) as ex:
+    except (KeyError, TypeError, ValueError) as exception:
         # Saved lucky numbers data contains an invalid date; don't update cache
         bad_numbers = lucky_numbers.serialise(data["lucky_numbers"], pretty=True)
-        bad_lucky_numbers = f"Invalid lucky numbers: {bad_numbers}"
+        fmt_exc = util.format_exception_info(exception)
+        bad_lucky_numbers = f"Invalid lucky numbers:\n{bad_numbers}\nException trace:\n{fmt_exc}"
         bot.send_log(bad_lucky_numbers, force=True)
-        bot.send_log(util.format_exception_info(ex), force=True)
     else:
         lucky_numbers.cached_data["date"] = data_timestamp.date()
     bot.send_log(f"... successfully read data file '{filename}'.", force=True)

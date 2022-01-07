@@ -41,7 +41,8 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
         return False, "Type an expression or command to execute."
     try:
         if "return " in expression:
-            injected_code = expression.replace("return ", "locals()['temp'] += ")
+            inj_snippet = "locals()['temp'] += "
+            injected_code = expression.replace("return ", inj_snippet)
             expression_to_be_executed = f"""ExecResultList()\n{injected_code}"""
         else:
             expression_to_be_executed = expression
@@ -49,10 +50,10 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
             exec("locals()['temp'] = " + expression_to_be_executed)
             execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
             bot.send_log(*execing, force=True)
-        except SyntaxError as ex:
-            bot.send_log("Caught SyntaxError in 'exec' command:", force=True)
-            bot.send_log(util.format_exception_info(ex), force=True)
-            bot.send_log("Executing raw code:\n" + expression, force=True)
+        except SyntaxError as syntax_error:
+            fmt_exc = util.format_exception_info(syntax_error)
+            caught_exc_msg = f"Caught SyntaxError:\n{fmt_exc}\nExecuting raw code:\n{expression}"
+            bot.send_log(caught_exc_msg, force=True)
             exec(expression)
     except Exception as ex:
         exec_result = util.format_exception_info(ex)
