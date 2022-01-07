@@ -9,6 +9,7 @@ import subprocess
 # Local application imports
 from . import bot, file_manager, util, commands
 
+
 def start_bot() -> bool:
     """Log in to the Discord bot and start its functionality.
     This function is blocking -- once the bot is connected, it will run until it's disconnected.
@@ -35,7 +36,8 @@ def start_bot() -> bool:
         except KeyError:
             file_manager.log()
             file_manager.log("    --- CRITICAL ERROR! ---")
-            file_manager.log("'BOT_TOKEN' OS environment variable not found. Program exiting.")
+            env_404_msg = "'BOT_TOKEN' OS environment variable not found. Program exiting."
+            file_manager.log(env_404_msg)
             save_on_exit = False
             # Do not restart bot
             return False
@@ -51,24 +53,32 @@ def start_bot() -> bool:
             event_loop.run_until_complete(bot.client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (e.g. Ctrl+C in terminal).
-            file_manager.log("    --- Bot manually terminated by user (KeyboardInterrupt exception). ---")
+            exit_msg = "    --- Bot manually terminated by user (KeyboardInterrupt exception). ---"
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
             # The bot was exited gracefully (e.g. !exit, !restart command issued in Discord)
-            file_manager.log("    --- Bot execution terminated successfully. ---")
+            exit_msg = "    --- Bot execution terminated successfully. ---"
     finally:
         # Remove the python cache files so that the program does not cache the modules on restart.
-        result = subprocess.run(["pyclean", "."], capture_output=True, text=True)
+        params = {
+            "capture_output": True,
+            "text": True,
+            "check": False
+        }
+        result = subprocess.run(["pyclean", "."], **params)
         file_manager.log(f"Pyclean: {result.stderr or result.stdout}")
         # Execute this in most cases; ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() function returns.
             # Do not send a debug message since the bot is already offline.
             file_manager.save_data_file(allow_logs=False)
-            file_manager.log("Successfully saved data file 'data.json'. Program exiting.")
-    # By default, when the program is exited gracefully (see above), it is later restarted in 'run.pyw'.
-    # If the user issues a command like !exit, !quit, the return_on_exit global variable is set to False,
+            saved_msg = "Successfully saved data file 'data.json'. Program exiting."
+            file_manager.log(saved_msg)
+        file_manager.log(exit_msg)
+        file_manager.log()
+    # By default, when the program is exited gracefully, it is later restarted in 'run.pyw'.
+    # If the user issues a command like !exit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
     return bot.restart_on_exit
 

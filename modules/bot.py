@@ -544,7 +544,8 @@ async def ping_konrad(channel_id: int = ChannelID.BOT_LOGS) -> None:
     """Sends a message to the specified channel mentioning MagicalCornFlake#0520.
 
     Arguments:
-        channel_id -- the ID of the channel to send the message to. By default, this is the ID of the `bot_logs` channel.
+        channel_id -- the ID of the channel to send the message to. By default,
+        this is the ID of the `bot_logs` channel.
     """
     await client.get_channel(channel_id).send(f"<@{MEMBER_IDS[8 - 1]}>")
 
