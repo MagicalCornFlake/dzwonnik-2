@@ -217,8 +217,9 @@ async def on_message(message: discord.Message) -> None:
         args = {"embed" if reply_is_embed else "content": reply}
         reply_msg = await try_send_message(message, True, args, reply)
         on_success_coroutine = command_info.get("on_completion")
-        if on_success_coroutine:
-            await on_success_coroutine(message, reply_msg)
+        if not on_success_coroutine:
+            return
+        await on_success_coroutine(message, reply_msg)
 
 
 def get_new_status_msg(query_time: datetime.datetime = None) -> str:

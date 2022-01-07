@@ -22,13 +22,14 @@ def start_bot() -> bool:
     for module in (bot, file_manager, util, commands):
         importlib.reload(module)
     if __name__ == "__main__":
-        bot.send_log("Started bot from main file! Assuming this is debug behaviour.")
+        starting_msg = "Started bot from main file! Assuming this is debug behaviour."
     else:
-        bot.send_log("Program starting...")
+        starting_msg = "Program starting..."
+    bot.send_log(f"    --- {starting_msg} ---", force=True)
+    file_manager.read_env_file()
+    file_manager.read_data_file('data.json')
+    event_loop = asyncio.get_event_loop()
     try:
-        file_manager.read_env_file()
-        file_manager.read_data_file('data.json')
-        event_loop = asyncio.get_event_loop()
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
@@ -41,28 +42,26 @@ def start_bot() -> bool:
         else:
             # No problems finding OS variable containing bot token. Can login successfully.
             event_loop.run_until_complete(bot.client.login(token))
-            bot.send_log("Successfully authorised bot client!")
+            bot.send_log("    --- Successfully authorised bot client! ---")
         # Bot has been logged in, continue with attempt to connect
         try:
             # Blocking call:
             # The program will stay on this line until the bot is disconnected.
-            bot.send_log("Connecting to Discord...")
+            bot.send_log("    --- Connecting to Discord... ---")
             event_loop.run_until_complete(bot.client.connect())
         except KeyboardInterrupt:
             # Raised when the program is forcefully closed (e.g. Ctrl+C in terminal).
-            file_manager.log()
-            file_manager.log("    --- Program manually closed by user (KeyboardInterrupt exception). ---")
+            file_manager.log("    --- Bot manually terminated by user (KeyboardInterrupt exception). ---")
             # Do not restart, since the closure of the bot was specifically requested by the user.
             return False
         else:
             # The bot was exited gracefully (e.g. !exit, !restart command issued in Discord)
-            file_manager.log()
             file_manager.log("    --- Bot execution terminated successfully. ---")
     finally:
-        # Remove the python cache files so that the program does not cache the modules on restart
+        # Remove the python cache files so that the program does not cache the modules on restart.
         result = subprocess.run(["pyclean", "."], capture_output=True, text=True)
         file_manager.log(f"Pyclean: {result.stderr or result.stdout}")
-        # Execute this no matter the circumstances, ensures data file is always up-to-date.
+        # Execute this in most cases; ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() function returns.
             # Do not send a debug message since the bot is already offline.
