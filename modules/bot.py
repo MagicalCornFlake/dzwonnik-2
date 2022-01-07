@@ -531,8 +531,8 @@ async def check_for_substitutions_updates() -> None:
 async def close() -> None:
     """Sets the bot's Discord status to 'offline' and terminates it."""
     await client.change_presence(status=discord.Status.offline)
-    # Sleep for 250 ms to ensure that the client.close() coroutine is the last to execute.
-    await asyncio.sleep(0.25)
+    # Sleep for 500 ms to ensure that the client.close() coroutine is the last to execute.
+    await asyncio.sleep(0.5)
     await client.close()
 
 
