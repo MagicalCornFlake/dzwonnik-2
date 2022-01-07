@@ -62,5 +62,5 @@ def serialise(data: dict = None, pretty: bool = False) -> dict or str:
         except TypeError:
             temp[key] = str(value)
     if pretty:
-        return json.dumps(temp, indent=2, encoding="UTF-8")
+        return json.dumps(temp, indent=2)
     return temp
