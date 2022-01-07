@@ -102,9 +102,12 @@ def send_log(*raw_message, force: bool = False) -> None:
 
 async def send_log_message(message) -> None:
     """Send the log message to the `bot_logs` channel."""
-    await client.wait_until_ready()
-    log_channel: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
-    await log_channel.send(f"```py\n{message}\n```")
+    try:
+        await client.wait_until_ready()
+        log_channel: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
+        await log_channel.send(f"```py\n{message}\n```")
+    except RuntimeError as exception:
+        file_manager.log(f"Could not log the above message. Exception: {exception}")
 
 
 @client.event
