@@ -52,9 +52,9 @@ def update_cache() -> dict[str, str or list[int or str]]:
     return old_cache
 
 
-def serialise(data: dict = {}, pretty: bool = False):
+def serialise(data: dict = None, pretty: bool = False):
     """Returns the cached data as a JSON-serialisable dictionary."""
-    temp: dict = dict(data or cached_data)
+    temp: dict = dict(data or cached_data or {})
     for key, value in temp.items():
         try:
             json.dumps(value)
