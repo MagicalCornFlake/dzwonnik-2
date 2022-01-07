@@ -63,7 +63,7 @@ def read_data_file(filename: str = "data.json") -> None:
         bot.send_log(util.format_exception_info(ex), force=True)
     else:
         lucky_numbers.cached_data["date"] = data_timestamp.date()
-    bot.send_log(f"Successfully read data file '{filename}'.", force=True)
+    bot.send_log(f"... successfully read data file '{filename}'.", force=True)
 
 
 def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None:
@@ -97,7 +97,7 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
 
     # Sends a log with the formatted data
     if allow_logs:
-        saved_file_msg = f"Successfully saved data file '{filename}'.\nData:\n{formatted_data}"
+        saved_file_msg = f"... successfully saved data file '{filename}'.\nData:\n{formatted_data}"
         bot.send_log(saved_file_msg, force=True)
 
 

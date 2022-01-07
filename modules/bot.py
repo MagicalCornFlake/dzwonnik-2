@@ -531,6 +531,7 @@ async def check_for_substitutions_updates() -> None:
 async def close() -> None:
     """Sets the bot's Discord status to 'offline' and terminates it."""
     await client.change_presence(status=discord.Status.offline)
+    await asyncio.sleep(1)
     await client.close()
 
 
