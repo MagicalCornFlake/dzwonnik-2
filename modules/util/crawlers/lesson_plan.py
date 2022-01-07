@@ -37,9 +37,11 @@ def get_plan_id(class_id: str or int = None) -> int:
         # 6 and 5 are the numbers of classes in year 3 and 2, respectively
         # noinspection SpellCheckingInspection
         base_id = "abcde".index(class_letter.lower()) + 1
-        return base_id + ((3 * (class_id[2].lower() == "p")) if class_year == 3 else (6 + 5 * (class_year == 1)))
+        if class_year == 3:
+            return base_id + 3 * (class_id[2].lower() == "p")
+        return base_id + 6 + 5 * (class_year == 1)
     except (ValueError, IndexError):
-        raise ValueError(f"Invalid class name: {class_id}.")
+        raise ValueError(f"Invalid class name: {class_id}.") from None
 
 
 def get_plan_link(class_id: str or int) -> str:
@@ -191,8 +193,8 @@ if __name__ == "__main__":
     input_msg = f"{Colour.OKBLUE}Enter {Colour.OKGREEN}{Colour.UNDERLINE}class name{Colour.ENDC}{Colour.OKBLUE}...\n{Colour.WARNING}> "
     try:
         while True:
-            data = get_lesson_plan(input(input_msg), force_update=True)[0]
-            plan = json.dumps(data, indent=2, ensure_ascii=False)
+            raw_data = get_lesson_plan(input(input_msg), force_update=True)[0]
+            plan = json.dumps(raw_data, indent=2, ensure_ascii=False)
             print(Colour.ENDC)
             _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
     except KeyboardInterrupt:

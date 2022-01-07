@@ -18,21 +18,20 @@ DESC = """Mówi kiedy jest następna przerwa.
     *Domyślnie pokazana jest najbliższa przerwa od aktualnego czasu*"""
 
 
-# Calculates the time of the next break
 def get_next_break(message: Message) -> tuple[bool, str]:
-    success, result = get_datetime_from_input(message, 'nb')
-    if not success:
-        return False, result
-    current_time: datetime = result
+    """Event handler for the 'nb' command."""
+    time = get_datetime_from_input(message, 'nb')
+    if not isinstance(time, datetime):
+        return False, time
 
-    next_period_is_today, lesson_period = get_next_period(current_time)[:2]
+    next_period_is_today, lesson_period = get_next_period(time)[:2]
 
     if next_period_is_today:
-        lesson = get_lesson_by_roles(lesson_period % 10, current_time.weekday(), message.author.roles)
+        lesson = get_lesson_by_roles(lesson_period % 10, time.weekday(), message.author.roles)
         if not lesson:
             return False, f"{Emoji.INFO} Dzisiaj już nie ma dla Ciebie żadnych lekcji!"
-        break_start_datetime = util.get_time(lesson['period'], current_time, True)
-        break_countdown = break_start_datetime - current_time
+        break_start_datetime = util.get_time(lesson['period'], time, True)
+        break_countdown = break_start_datetime - time
         mins = ceil(break_countdown.seconds / 60)
         minutes = f"{(util.conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{util.conjugate_numeric(mins % 60, 'minut')}"
         msg = f"{Emoji.INFO} Następna przerwa jest za {minutes} o __{util.get_formatted_period_time(lesson['period']).split('-')[1]}"

@@ -32,8 +32,8 @@ def parse_html(html: str) -> dict:
     post_xpath: str = "//div[@id='content']/div"
     try:
         post_elem: lxml.html.Element = root.xpath(post_xpath)[0]
-    except Exception as e:
-        return {"error": util.format_exception_info(e)}
+    except IndexError as no_matches_exc:
+        return {"error": util.format_exception_info(no_matches_exc)}
     subs_data = {"post": dict(post_elem.attrib), "events": [], "lessons": {}}
     lesson_list: dict[int, dict[str, list]] = subs_data["lessons"]
 
@@ -103,7 +103,7 @@ def parse_html(html: str) -> dict:
             if child_elem.tag != "strong":
                 return
             if elem.attrib.get("style") == "text-align: center;":
-                text = child_elem.xpath(f"./text()")
+                text = child_elem.xpath("./text()")
                 child_elem_text = child_elem.text
                 if text:
                     child_elem_text = ''.join(text)
@@ -131,12 +131,12 @@ def parse_html(html: str) -> dict:
         try:
             # Attempt to extract the relevant data using a hard-coded algorithm
             extract_data(p_elem, i)
-        except Exception as e:
+        except (LookupError, TypeError, ValueError, AttributeError) as no_matches_exc:
             # Page structure has changed, return the nature of the error.
-            subs_data["error"] = util.format_exception_info(e)
+            subs_data["error"] = util.format_exception_info(no_matches_exc)
             if __name__ == "__main__":
                 # Makes the error easier to see for debugging
-                raise e from None
+                raise no_matches_exc from None
             break
 
     # Add the list of tables to the data

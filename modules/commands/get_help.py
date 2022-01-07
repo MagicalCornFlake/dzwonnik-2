@@ -4,17 +4,22 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions, meet, exec as execute, terminate
+from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions
+from . import meet, exec as execute, terminate
 from .. import bot
 
 
 def get_help_message(_: Message) -> tuple[bool, Embed]:
-    embed = Embed(title="Lista komend", description=f"Prefiks dla komend: `{bot.prefix}`")
+    """Event handler for the 'help' command."""
+    desc = f"Prefiks dla komend: `{bot.prefix}`"
+    embed = Embed(title="Lista komend", description=desc)
     for command_name, info in INFO.items():
         command_description = info["description"]
         if command_description:
-            embed.add_field(name=command_name, value=command_description.format(p=bot.prefix), inline=False)
-    embed.set_footer(text=f"Użyj komendy {bot.prefix}help lub mnie @oznacz, aby pokazać tą wiadomość.")
+            cmd_desc = command_description.format(p=bot.prefix)
+            embed.add_field(name=command_name, value=cmd_desc, inline=False)
+    footer = f"Użyj komendy {bot.prefix}help lub mnie @oznacz, aby pokazać tą wiadomość."
+    embed.set_footer(text=footer)
     return True, embed
 
 

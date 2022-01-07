@@ -9,7 +9,7 @@ from discord import Message, Embed
 # Local application imports
 from .. import bot, util
 from ..util import web
-from ..util.crawlers import substitutions as substitutions_crawler
+from ..util.crawlers import substitutions as substitutions_api
 
 
 DESC = """Podaje zastępstwa na dany dzień."""
@@ -18,8 +18,8 @@ DESC = """Podaje zastępstwa na dany dzień."""
 def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
     try:
         # No need to set the force argument if the function is called from the API update loop since the cache has already been updated
-        data = substitutions_crawler.get_substitutions()[0]
-    except Exception as e:
+        data = substitutions_api.get_substitutions()[0]
+    except web.WebException as e:
         ex: str = util.format_exception_info(e)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
         return False, web.get_error_message(e)
@@ -32,7 +32,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
 
     # Initialise the embed
     date = datetime.strptime(data["date"], "%Y-%m-%d")
-    url = substitutions_crawler.SOURCE_URL
+    url = substitutions_api.SOURCE_URL
     embed = Embed(title=f"Zastępstwa na {date:%d.%m.%Y}", url=url)
     footer = f"Użyj komendy {bot.prefix}zast, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
@@ -55,7 +55,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
             standard_msg = f"**{class_name}**: {' | '.join(sub_msgs)}"
             if class_name == util.format_class():
                 our_substitutions += 1
-                hyperlinked_msg = f"[{standard_msg}]({substitutions_crawler.SOURCE_URL})"
+                hyperlinked_msg = f"[{standard_msg}]({substitutions_api.SOURCE_URL})"
                 class_msgs.append(hyperlinked_msg)
                 continue
             class_msgs.append(standard_msg)

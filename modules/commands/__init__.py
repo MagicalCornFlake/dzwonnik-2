@@ -1,8 +1,7 @@
 """__init__.py file for all modules responsible for functionality behind each user command."""
 
 # Standard library imports
-from datetime import datetime
-from typing import Text
+from datetime import datetime, timedelta
 
 # Third-party imports
 from discord import Role, Message, TextChannel
@@ -12,21 +11,25 @@ from .. import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, util, bot
 
 
 class HomeworkEvent:
-    def __init__(self, title, group, author_id, deadline, reminder_date=None, reminder_is_active=True):
+    """Custom object type for homework events."""
+
+    def __init__(self, title: str, group: int, author_id: int, deadline: str,
+                 reminder_date_str: str = None, reminder_is_active: bool = True):
         self.id = None
         self.title = title
         self.group = group
         self.author_id = author_id
         self.deadline = deadline.split(' ')[0]
-        if reminder_date is None:
-            reminder_date = datetime.datetime.strftime(datetime.datetime.strptime(
-                deadline, "%d.%m.%Y %H") - datetime.timedelta(days=1), "%d.%m.%Y %H")
-        self.reminder_date = reminder_date
+        if reminder_date_str is None:
+            deadline = datetime.strptime(deadline, "%d.%m.%Y %H")
+            reminder_date = deadline - timedelta(days=1)
+            reminder_date_str = datetime.strftime(reminder_date, "%d.%m.%Y %H")
+        self.reminder_date = reminder_date_str
         self.reminder_is_active = reminder_is_active
 
     @property
-    def serialised(self):
-        # Returns a dictionary with all the necessary data for a given instance to be able to save it in a .json file
+    def serialised(self) -> dict[str, str or int or bool]:
+        """Serialises the instance' attributes so that it can be saved in JSON format."""
         event_details = {
             'title': self.title,
             'group': self.group,
@@ -39,47 +42,55 @@ class HomeworkEvent:
 
     @property
     def id_string(self):
-        # Returns a more human-readable version of the id with the 'event-id-' suffix
+        """Returns a more human-readable version of the id with the 'event-id-' prefix."""
         return 'event-id-' + str(self.id)
 
-    def sort_into_container(self, event_container):
-        # Places the the event in chronological order into homework_events
+    def sort_into_container(self, event_container: list):
+        """Places the the event into homework_events in chronological order."""
         try:
             self.id = event_container[-1].id + 1
         except (IndexError, TypeError):
             self.id = 1
         for comparison_event in event_container:
-            new_event_time = datetime.datetime.strptime(
-                self.deadline, "%d.%m.%Y")
-            old_event_time = datetime.datetime.strptime(
-                comparison_event.deadline, "%d.%m.%Y")
+            assert isinstance(comparison_event, HomeworkEvent)
+            new_event_time = datetime.strptime(self.deadline, "%d.%m.%Y")
+            comp_deadline: str = comparison_event.deadline
+            old_event_time = datetime.strptime(comp_deadline, "%d.%m.%Y")
             # Dumps debugging data
             if new_event_time < old_event_time:
-                # The new event should be placed chronologically before the one it is currently being compared to
+                # The new event should be placed before the one it is currently being compared to
                 # Inserts event id in the place of the one it's being compared to, so every event
-                # after this event (including the comparison one) is pushed one spot ahead in the list
+                #   after this event (including the comparison one) is pushed ahead by one spot.
                 event_container.insert(
                     event_container.index(comparison_event), self)
                 return
-            # The new event should not be placed before the one it is currently being compared to, continue evaluating
-        # At this point the algorithm was unable to place the event before any others, so it shall be put at the end
+            # The new event should not be placed before; continue evaluating.
+        # Algorithm was unable to place the event before any others, so it shall be put at the end.
         event_container.append(self)
 
 
 class HomeworkEventContainer(list[HomeworkEvent]):
+    """Custom object class that derives from the list base type.
+    This object serves as a container for HomeworkEvent objects.
+    Defines methods for JSON serialisation as well as contents optimisation.
+    """
     @property
     def serialised(self):
+        """Serialises each event in the container."""
         return [event.serialised for event in self]
 
-    def remove_disjunction(self, reference_container):
+    def remove_disjunction(self, reference_container: list):
+        """Removes events from this container that are not present in the reference container."""
+        assert isinstance(reference_container, HomeworkEventContainer)
         for event in self:
             if event.serialised not in reference_container.serialised:
-                bot.send_log(
-                    f"Removing obsolete event '{event.title}' from container")
+                rm_obsolete_event_msg = f"Removing obsolete event '{event.title}' from container"
+                bot.send_log(rm_obsolete_event_msg)
                 self.remove(event)
 
 
 class TrackedItem:
+    """Custom object type that contains information about a tracked item on the Steam Market."""
     def __init__(self, name, min_price, max_price, author_id):
         self.name = name
         self.min_price = min_price
@@ -88,6 +99,7 @@ class TrackedItem:
 
     @property
     def serialised(self):
+        """Serialises the instance's attributes so that it can be saved in JSON format."""
         return {
             "name": self.name,
             "min_price": self.min_price,
@@ -106,7 +118,7 @@ tracked_market_items: list[TrackedItem] = []
 
 
 def ensure_sender_is_admin(message: Message, error_message: str = None) -> None:
-    """Raises the `modules.bot.MissingPermissionsException` if the message author is not an administrator."""
+    """Raises an exception if the message author is not an administrator."""
     message_content: str = message.content
     msg_first_word = message_content.split(' ', maxsplit=1)[0]
     default_msg = f"korzystania z komendy `{bot.prefix}{msg_first_word}`"
@@ -121,7 +133,8 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     Arguments:
         given_time -- the start time to base the search off of.
 
-    Returns a tuple consisting of a boolean indicating if that day is today, the period number, and the day of the week.
+    Returns a tuple consisting of a boolean indicating if that day is today, the period number,
+    and the day of the week.
     If the current time is during a lesson, the period number will be incremented by 10.
     """
     bot.send_log(f"Getting next period for {given_time:%d/%m/%Y %X} ...")
@@ -132,12 +145,13 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
             for is_during_lesson, time in enumerate(times):
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
-                    bot.send_log(
-                        f"... this is before {hour:02}:{minute:02} (period {period} {'lesson' if is_during_lesson else 'break'}).")
+                    when = "lesson" if is_during_lesson else "break"
+                    found_lesson_msg = f"... this is before {hour:02}:{minute:02} (period {period} {when})."
+                    bot.send_log(found_lesson_msg)
                     return True, period + 10 * is_during_lesson, current_day_index
         # Could not find any such lesson.
-        # current_day_index == Weekday.friday == 4  -->  next_school_day == (current_day_index + 1) % Weekday.saturday == (4 + 1) % 5 == 0 == Weekday.monday
-        next_school_day = (current_day_index + 1) % Weekday.SATURDAY
+        # If it's currently Friday, the modulo operation will return 0 (Monday).
+        next_school_day: Weekday = (current_day_index + 1) % Weekday.SATURDAY
     else:
         next_school_day = Weekday.MONDAY
 
@@ -180,8 +194,11 @@ def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, 
     return {}
 
 
-def get_datetime_from_input(message: Message, calling_command: str) -> tuple[bool, str or datetime]:
-    args = message.content.split(" ")
+def get_datetime_from_input(message: Message, calling_command: str) -> datetime or str:
+    """Parses the message content and returns a datetime object if it contains a valid time.
+    Otherwise, returns the current date and time.
+    """
+    args: list[str] = message.content.split(" ")
     current_time = datetime.now()
     if len(args) > 1:
         try:
@@ -195,15 +212,21 @@ def get_datetime_from_input(message: Message, calling_command: str) -> tuple[boo
                     raise RuntimeError(
                         f"Minuta ('{args[1]}') nie znajduje się w przedziale `0, 23`.")
             except IndexError:
-                # Minute not specified by user
-                args.append(00)
+                # Minute not specified by user; use default of :00.
+                args.append("00")
             except ValueError:
                 # NaN
-                raise RuntimeError(f"`{':'.join(args[1:])}` nie jest godziną.") from None
-        except RuntimeError as e:
-            msg = f"{Emoji.WARNING} {e}\nNależy napisać po komendzie `{bot.prefix}{calling_command}` godzinę" \
-                  f" i ewentualnie minutę oddzieloną spacją, lub zostawić parametry komendy puste. "
-            return False, msg
-        current_time = current_time.replace(
-            hour=int(args[1]), minute=int(args[2]), second=0, microsecond=0)
+                error_description = f"`{':'.join(args[1:])}` nie jest godziną."
+                raise RuntimeError(error_description) from None
+        except RuntimeError as invalid_arg_exc:
+            msg = f"{Emoji.WARNING} {invalid_arg_exc}\nNależy napisać po komendzie " + \
+                f"`{bot.prefix}{calling_command}` godzinę i ewentualnie minutę oddzieloną spacją"
+            return False, msg + ", lub zostawić parametry komendy puste."
+        params = {
+            "hour": int(args[1]),
+            "minute": int(args[2]),
+            "second": 0,
+            "microsecond": 0
+        }
+        current_time = current_time.replace(**params)
     return True, current_time

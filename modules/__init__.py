@@ -1,7 +1,11 @@
-"""__init__.py file for the general modules containing definitions for constant values that are used repeatedly in the program."""
+"""
+__init__.py file for the general modules containing definitions for constant values
+that are used repeatedly in the program.
+"""
 
 
 class Colour:
+    """Constant definitions for colours used in the console."""
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKCYAN = '\033[96m'
@@ -13,7 +17,8 @@ class Colour:
     UNDERLINE = '\033[4m'
 
 
-class Emoji:
+class Emoji(str):
+    """Constant definitions for Discord message emoji."""
     CASH: str = ":moneybag:"
     CHECK: str = ":white_check_mark:"
     CHECK_2: str = ":ballot_box_with_check:"
@@ -25,7 +30,8 @@ class Emoji:
     UNICODE_DETECTIVE: str = "\N{SLEUTH OR SPY}"
 
 
-class Weekday:
+class Weekday(int):
+    """Constant definitions for the integers corresponding to each day of the week."""
     MONDAY: int = 0
     TUESDAY: int = 1
     WEDNESDAY: int = 2

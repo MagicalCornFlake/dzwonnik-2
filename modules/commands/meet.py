@@ -25,6 +25,7 @@ class InvalidFormatException(Exception):
 
 
 def update_meet_link(message: Message) -> tuple[bool, str]:
+    """Event handler for the 'meet' command."""
     args = message.content.split(" ")[1:]
     try:
         if not args:

@@ -55,7 +55,7 @@ def read_data_file(filename: str = "data.json") -> None:
         # Make datetime object from saved lucky numbers data
         date: str = data["lucky_numbers"]["date"]
         data_timestamp = datetime.strptime(date, "%Y-%m-%d")
-    except Exception as ex:
+    except (KeyError, TypeError, ValueError) as ex:
         # Saved lucky numbers data contains an invalid date; don't update cache
         bad_numbers = lucky_numbers.serialise(data["lucky_numbers"], pretty=True)
         bad_lucky_numbers = f"Invalid lucky numbers: {bad_numbers}"

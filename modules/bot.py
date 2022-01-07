@@ -10,15 +10,16 @@ import discord
 from discord.ext.tasks import loop
 
 # Local application imports
-from . import file_manager, commands, util, ROLE_CODES, MEMBER_IDS, WEEKDAY_NAMES, GROUP_NAMES, Emoji, Weekday
+from . import file_manager, commands, util
+from . import Emoji, Weekday, ROLE_CODES, MEMBER_IDS, WEEKDAY_NAMES, GROUP_NAMES
 from .commands import get_help, homework, steam_market, lucky_numbers, substitutions
 from .util import web
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
-from .util.crawlers import lesson_plan as lesson_plan_crawler, substitutions as substitutions_crawler
+from .util.crawlers import lesson_plan as lesson_plan_api, substitutions as substitutions_api
 
 
 # These settings ensure that data from the SU ILO API is only fetched a maximum of 45 times a day.
-# If the bot finds new data for a given day, it stops checking, so in practice this is usually less than 45.
+# If the bot finds new data for a given day, it stops checking, so usually less than 45.
 UPDATE_NUMBERS_AT = 1  # Hours; i.e. check only if it's 01:00 AM
 UPDATE_NUMBERS_FOR = 15  # Minutes; i.e. only check from 01:00:00 - 01:14:59
 UPDATE_NUMBERS_EVERY = 20  # Seconds; i.e. only check 3 times a minute
@@ -29,9 +30,9 @@ MAX_MESSAGE_LENGTH = 4000  # Characters
 MY_SERVER_ID: int = 766346477874053130
 
 # The message template to be used when an API call returned an invalid response.
-BAD_RESPONSE = "Error! Received an invalid response when performing the web request. Exception trace:\n"
+BAD_RESPONSE = "Error! Received an invalid response from web request. Exception trace:\n"
 
-# When somebody sends a message starting with any of the below keys, it replies with the value of that dict pair.
+# If a message starts with any of the below keys, the bot will reply appropriately.
 # noinspection SpellCheckingInspection
 AUTOMATIC_BOT_REPLIES = {
     MY_SERVER_ID: {
@@ -53,7 +54,8 @@ class ChannelID:
 
 
 class MissingPermissionsException(Exception):
-    """Raised when the user does not have the appropriate permissions for performing a command or other action.
+    """Raised when the user does not have the appropriate permissions.
+    Can be used when the user is attempting to use a command or perform another restricted action.
 
     Attributes:
         message -- explanation of the error
@@ -70,10 +72,6 @@ desired_intents = ["guilds", "members", "messages", "reactions", "typing"]
 intents = discord.Intents(**{intent: True for intent in desired_intents})
 client = discord.Client(intents=intents)
 
-# Initialise the object reference to our Discord server
-# The value is set once the bot is logged in and ready.
-my_server: discord.Guild = None
-
 # Determines the prefix that is to be used before each user command.
 prefix: str = '!'
 
@@ -83,15 +81,14 @@ enable_log_messages: bool = False
 # Determines whether or not the bot should save the data file once it terminates.
 restart_on_exit: bool = True
 
-# Used to show the current lesson in the lesson plan (e.g. '!plan' command).
-current_period: int = -1
-
 # If this is set, it will override most output channels to be the channel with the given ID.
 testing_channel: int = None
 
 
 def send_log(*raw_message, force: bool = False) -> None:
-    """Determine if the message should actually be logged, and if so, generate the string that should be sent."""
+    """Determine if the message should actually be logged.
+    If it should, generate the string that should be sent.
+    """
     if not (enable_log_messages or force):
         return
 
@@ -113,23 +110,20 @@ async def send_log_message(message) -> None:
 @client.event
 async def on_ready() -> None:
     """Initialise the bot when it comes online."""
-    # Enable the circular reference in the 'web' module, since it only works when called from this module.
-    web.enable_circular_reference()
+
+    # Redefine the 'web' module's internal 'send_log' function to enable Discord channel logging.
+    web.send_log = send_log
 
     # Report information about logged in guilds
     guilds = {guild.id: guild.name for guild in client.guilds}
     login_message = f"Successfully connected as {client.user}.\nActive guilds:"
     send_log(login_message, guilds, force=True)
 
-    # Initialise server reference
-    global my_server
-    my_server = client.get_guild(MY_SERVER_ID)  # Konrad's Discord Server
-
-    # Initialise lesson plan forcefully as bot loads; force_update switch bypasses checking for cache
+    # Initialise lesson plan forcefully; force_update switch bypasses checking for cache.
     try:
-        result = lesson_plan_crawler.get_lesson_plan(force_update=True)
-    except web.InvalidResponseException as e:
-        exc = util.format_exception_info(e)
+        result = lesson_plan_api.get_lesson_plan(force_update=True)
+    except web.InvalidResponseException as web_exc:
+        exc = util.format_exception_info(web_exc)
         send_log(f"{BAD_RESPONSE}{exc}", force=True)
     else:
         plan: dict = result[0]
@@ -164,8 +158,8 @@ async def on_ready() -> None:
         try:
             last_test_message = await channel.fetch_message(channel.last_message_id)
         except discord.errors.NotFound:
-            last_message_404 = f"Could not find last message in channel {channel.name}. It was probably deleted."
-            send_log(last_message_404)
+            last_message_404 = f"Could not find last message in channel {channel.name}."
+            send_log(last_message_404 + " It was probably deleted.")
         else:
             if last_test_message is None:
                 send_log(f"Last message in channel {channel.name} is None.")
@@ -173,7 +167,7 @@ async def on_ready() -> None:
                 if last_test_message.content == "Restarting bot...":
                     await last_test_message.edit(content="Restarted bot!")
             else:
-                last_message_not_mine = f"Last message in channel {channel.name} was not sent by me."
+                last_message_not_mine = f"Last message in channel {channel.name} is not mine."
                 send_log(last_message_not_mine)
 
 
@@ -189,13 +183,16 @@ async def on_message(message: discord.Message) -> None:
             await message.reply(AUTOMATIC_BOT_REPLIES[reply], mention_author=False)
             return
     author_role_names = [str(role) for role in message.author.roles]
-    if message.author == client.user or "Bot" in author_role_names or not message.content.startswith(prefix):
+    if message.author == client.user or "Bot" in author_role_names:
+        return
+    if not message.content.startswith(prefix):
         return
     if not any(group_role in author_role_names for group_role in ["Grupa 1", "Grupa 2"]):
         await message.channel.send(
-            f"{Emoji.WARNING} **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy pierwszej "
-            f"ani do grupy drugiej.\nUstaw sobie grupę, do której należysz reagując na wiadomość w kanale "
-            f"{client.get_channel(ChannelID.RANGI).mention} numerem odpowiedniej grupy.**\n"
+            f"{Emoji.WARNING} **Uwaga, {message.author.mention}: nie posiadasz rangi ani do grupy "
+            f"pierwszej ani do grupy drugiej.\nUstaw sobie grupę, do której należysz reagując na "
+            f"wiadomość w kanale {client.get_channel(ChannelID.RANGI).mention} numerem "
+            f"odpowiedniej grupy.**\n"
             f"Możesz sobie tam też ustawić język, na który chodzisz oraz inne rangi.")
     msg_first_word = message.content.lower().lstrip(prefix).split(" ")[0]
 
@@ -208,15 +205,17 @@ async def on_message(message: discord.Message) -> None:
     callback_function = command_info["function"]
     try:
         reply_is_embed, reply = callback_function(message)
-    except MissingPermissionsException as e:
-        error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {e}."
+    except MissingPermissionsException as invalid_perms_exc:
+        error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
         message.reply(error_message)
-    except Exception as e:
+    except Exception as invalid_perms_exc:
         await ping_konrad()
-        send_log(util.format_exception_info(e), force=True)
-        await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. Administrator bota (Konrad) został o tym powiadomiony.")
+        send_log(util.format_exception_info(invalid_perms_exc), force=True)
+        await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
+                            "Administrator bota (Konrad) został o tym powiadomiony.")
     else:
-        reply_msg = await try_send_message(message, True, {"embed" if reply_is_embed else "content": reply}, reply)
+        args = {"embed" if reply_is_embed else "content": reply}
+        reply_msg = await try_send_message(message, True, args, reply)
         on_success_coroutine = command_info.get("on_completion")
         if on_success_coroutine:
             await on_success_coroutine(message, reply_msg)
@@ -228,7 +227,6 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
     Arguments:
         query_time -- the time to get the status for.
     """
-    global current_period
     # Default time to check is current time
     query_time = query_time or datetime.datetime.now()
     send_log("Updating bot status ...", force=True)
@@ -241,20 +239,24 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         params = next_period % 10, next_lesson_weekday, roles
         lesson = commands.get_lesson_by_roles(*params)
         if lesson:
-            current_period = lesson['period']
+            util.current_period = lesson['period']
             send_log("The next lesson is on period", lesson['period'])
         # Get the period of the first lesson
-        for first_period, lessons in enumerate(util.lesson_plan[WEEKDAY_NAMES[query_time.weekday()]]):
+        first_period = -1  # Initialise period so that PyLint does not complain
+        weekday_name = WEEKDAY_NAMES[query_time.weekday()]
+        plan_for_given_day: list[list] = util.lesson_plan[weekday_name]
+        for first_period, lessons in enumerate(plan_for_given_day):
             if lessons:
                 send_log("The first lesson is on period", first_period)
                 break
 
         if next_period < 10:
             # Currently break time
-            time = util.get_formatted_period_time(current_period).split('-')[0]
-            if current_period == first_period:
+            formatted_time = util.get_formatted_period_time()
+            time = formatted_time.split('-', maxsplit=1)[0]
+            if util.current_period == first_period:
                 # Currently before school
-                current_period = -1
+                util.current_period = -1
                 new_status_msg = "szkoła o " + time
             else:
                 new_status_msg = "przerwa do " + time
@@ -263,18 +265,18 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             # Dictionary with lesson group code and lesson name
             msgs: dict[str, str] = {}
             for role_code in list(ROLE_CODES.keys())[1:]:
-                params = current_period, next_lesson_weekday, [role_code]
+                params = util.current_period, next_lesson_weekday, [role_code]
                 lesson = commands.get_lesson_by_roles(*params)
-                if not lesson or lesson["period"] > current_period:
+                if not lesson or lesson["period"] > util.current_period:
                     # No lesson for that group
-                    skipping_lesson_msg = f"Skipping lesson: {lesson} on period {current_period}."
-                    send_log(skipping_lesson_msg)
+                    skipping_msg = f"Skipping lesson: {lesson} on period {util.current_period}."
+                    send_log(skipping_msg)
                     continue
                 send_log("Validated lesson:", lesson)
                 msgs[lesson['group']] = util.get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
                 if lesson['group'] == "grupa_0":
-                    found_lesson_msg = "Found lesson for entire class, skipping checking individual groups."
+                    found_lesson_msg = "Found lesson for entire class, skipping individual groups."
                     send_log(found_lesson_msg)
                     break
             # set(msgs.values()) returns a list of unique lesson names
@@ -282,25 +284,30 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
             if len(msgs) == 1 and list(msgs.keys())[0] != "grupa_0":
                 # Specify the group the current lesson is for if only one group has it
                 lesson_text += " " + GROUP_NAMES[list(msgs.keys())[0]]
-            new_status_msg = f"{lesson_text} do {util.get_formatted_period_time(current_period).split('-')[1]}"
+            formatted_time = util.get_formatted_period_time()
+            new_status_msg = f"{lesson_text} do {formatted_time.split('-')[1]}"
     else:
         # After the last lesson for the given day
-        current_period = -1
+        util.current_period = -1
         is_weekend = query_time.weekday() >= Weekday.FRIDAY
         new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
     send_log(f"... new status message is '{new_status_msg}'.", force=True)
-    send_log(f"Current period: {current_period}", force=True)
+    send_log(f"Current period: {util.current_period}", force=True)
     return new_status_msg
 
 
 async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str) -> None:
     """Send a message reminding about the homework event."""
+
+    # Initialise server reference
+    my_server: discord.Guild = client.get_guild(
+        MY_SERVER_ID)  # Konrad's Discord Server
+
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
-    for role in ROLE_CODES:
+    for role, name in ROLE_CODES.items():
         if role == event.group:
-            mention_role = discord.utils.get(
-                my_server.roles, name=ROLE_CODES[role])
+            mention_role = discord.utils.get(my_server.roles, name=name)
             if role != "grupa_0":
                 mention_text = my_server.get_role(mention_role.id).mention
             break
@@ -314,29 +321,34 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
         # 'future' is not really needed but I added it cause why not
         "future": f"{event.deadline} jest"
     }[tense]  # tense can have a value of 'today', 'tomorrow' or 'past'
-    message: discord.Message = await target_channel.send(f"{mention_text} Na {when} zadanie: **{event_name}**.")
+    reminder_message = f"{mention_text} Na {when} zadanie: **{event_name}**."
+    message: discord.Message = await target_channel.send(reminder_message)
     emojis = [Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK]
     for emoji in emojis:
         await message.add_reaction(emoji)
 
-    def check_for_valid_reaction(test_reaction, reaction_user):
+    def validate_reaction(test_reaction: discord.Reaction, reaction_user: discord.Member) -> bool:
+        """Checks whether or not the reaction contains the correct emoji."""
         return reaction_user != client.user and str(test_reaction.emoji) in emojis
 
-    async def snooze_event():
+    async def snooze_event() -> None:
+        """Increases the event's due date by one hour."""
         new_reminder_time = datetime.datetime.now() + datetime.timedelta(hours=1)
         event.reminder_date = new_reminder_time.strftime("%d.%m.%Y %H")
-        await message.edit(content=":alarm_clock: Przełożono powiadomienie dla zadania `" +
-                                   f"{event_name}` na {str(new_reminder_time.hour).zfill(2)}:00.")
+        snoozed_message = (f":alarm_clock: Przełożono powiadomienie dla zadania `{event_name}`"
+                           f" na {str(new_reminder_time.hour).zfill(2)}:00.")
+        await message.edit(content=snoozed_message)
 
     try:
-        reaction, user = await client.wait_for('reaction_add', timeout=120.0, check=check_for_valid_reaction)
+        reaction, _ = await client.wait_for('reaction_add', timeout=120.0, check=validate_reaction)
     except asyncio.TimeoutError:  # 120 seconds have passed with no user input
         await snooze_event()
     else:
         if str(reaction.emoji) == emojis[0]:
             # Reaction emoji is ':ballot_box_with_check:'
             event.reminder_is_active = False
-            await message.edit(content=f"{Emoji.CHECK_2} Zaznaczono zadanie `{event_name}` jako odrobione.")
+            completed_msg = f"{Emoji.CHECK_2} Zaznaczono zadanie `{event_name}` jako odrobione."
+            await message.edit(content=completed_msg)
         else:  # Reaction emoji is :alarm_clock:
             await snooze_event()
     await message.clear_reactions()
@@ -346,7 +358,8 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
 
 @loop(seconds=1)
 async def main_update_loop() -> None:
-    """Routinely fetches data from various APIs to ensure the cache is up-to-date, and also regularly performs non-resource-intensive tasks that do not connect to APIs.
+    """Routinely fetches data from various APIs to ensure the cache is up-to-date.
+    And also regularly performs non-resource-intensive tasks that do not connect to APIs.
 
     API updates:
         - Steam Community Market item prices -- every 30 min
@@ -378,10 +391,11 @@ async def main_update_loop() -> None:
     try:
         # Try to parse the lucky numbers data date
         cached_date: datetime.datetime = lucky_numbers_api.cached_data["date"]
-    except (KeyError, AttributeError) as e:
+    except (KeyError, AttributeError) as bad_numbers_exc:
         # Lucky numbers data does not contain a date
         await ping_konrad()
-        send_log(util.format_exception_info(e), force=True)
+        fmt_exc = util.format_exception_info(bad_numbers_exc)
+        send_log(fmt_exc, force=True)
     else:
         # Lucky numbers data contains a valid date
 
@@ -438,9 +452,9 @@ async def check_for_steam_market_updates() -> None:
         try:
             result = steam_api.get_item(item.name)
             price = steam_api.get_item_price(result)
-        except Exception as http_exc:
+        except web.WebException as web_exc:
             await ping_konrad()
-            send_log(web.get_error_message(http_exc), force=True)
+            send_log(web.get_error_message(web_exc), force=True)
             return
         # Strips the price string of any non-digit characters and returns it as an integer
         char_list = [char if char in "0123456789" else '' for char in price]
@@ -456,12 +470,14 @@ async def check_for_steam_market_updates() -> None:
 
 
 async def check_for_lucky_numbers_updates() -> None:
-    """Updates the lucky numbers cache and announces announces the new numbers in the specified channel if it has changed."""
+    """Updates the lucky numbers cache.
+    If it has changed, announces announces the new numbers in the specified channel.
+    """
     try:
         old_cache = lucky_numbers_api.update_cache()
-    except web.InvalidResponseException as e:
+    except web.InvalidResponseException as web_exc:
         await ping_konrad()
-        exc: str = util.format_exception_info(e)
+        exc: str = util.format_exception_info(web_exc)
         send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
     else:
         if old_cache != lucky_numbers_api.cached_data:
@@ -476,19 +492,21 @@ async def check_for_lucky_numbers_updates() -> None:
 
 
 async def check_for_substitutions_updates() -> None:
-    """Updates the substitutions cache and announces the new data in the specified channel if it has changed."""
+    """Updates the substitutions cache.
+    If it has changed, announces the new data in the specified channel.
+    """
     try:
         # old_cache = file_manager.cache_exists("subs")
-        result = substitutions_crawler.get_substitutions(True)
+        result = substitutions_api.get_substitutions(True)
         new_cache, cache_existed = result
         if "error" in new_cache:
             raise RuntimeError("Substitutions data could not be parsed.")
-    except web.InvalidResponseException as e:
+    except web.InvalidResponseException as web_exc:
         # The web request returned an invalid response; log the error details
-        if e.status_code == 403:
+        if web_exc.status_code == 403:
             send_log("Suppressing 403 Forbidden on substitutions page.", force=True)
             return
-        exc: str = util.format_exception_info(e)
+        exc: str = util.format_exception_info(web_exc)
         exception_message = f"Substitutions update: {BAD_RESPONSE}{exc}"
     except RuntimeError as err_desc:
         # The HTML parser returned an error; log the error details
@@ -523,17 +541,20 @@ async def ping_konrad(channel_id: int = ChannelID.BOT_LOGS) -> None:
     await client.get_channel(channel_id).send(f"<@{MEMBER_IDS[8 - 1]}>")
 
 
-async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict, on_fail_data, on_fail_msg: str = None) -> discord.message:
+async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict,
+                           on_fail_data, on_fail_msg: str = None) -> discord.Message:
+    default_fail_msg = ("Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa."
+                        " Załączam ją jako plik tekstowy.")
     send_method = user_message.reply if should_reply else user_message.channel.send
     try:
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException:
         send_log("Message too long. Length of data:", len(str(on_fail_data)))
-        reply_msg = await send_method(on_fail_msg or "Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa. Załączam ją jako plik tekstowy.")
+        reply_msg = await send_method(on_fail_msg or default_fail_msg)
         should_iterate = on_fail_msg and isinstance(on_fail_data, list)
         if isinstance(on_fail_data, discord.Embed):
             on_fail_data = {"embed": on_fail_data.to_dict()}
-        with open("result.txt", 'w') as file:
+        with open("result.txt", 'w', encoding="UTF-8") as file:
             results: list[str] = []
             for element in on_fail_data if should_iterate else [on_fail_data]:
                 processing_element_msg = f"Processing element with type {type(element)}"

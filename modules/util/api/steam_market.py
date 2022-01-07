@@ -49,7 +49,7 @@ def get_currency_id(currency: str):
 
 
 # Define custom exceptions
-class NoSuchItemException(Exception):
+class NoSuchItemException(web.WebException):
     """Raised when there is no item with the given name on the Steam Community Market
 
     Attributes:
@@ -57,7 +57,9 @@ class NoSuchItemException(Exception):
         message -- explanation of the error
     """
 
-    def __init__(self, query: str, message="There is no item called '{query}' on the Steam Community Market."):
+    _default_message = "There is no item called '{query}' on the Steam Community Market."
+
+    def __init__(self, query: str, message=_default_message):
         self.query = query
         self.message = message.format(query=query)
         super().__init__(self.message)
@@ -73,7 +75,7 @@ class NoSuchItemException(Exception):
 
 def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bool = False) -> dict[str, bool or str]:
     """Makes a web query on the Steam Community Market API for the specified search term and returns a dictionary containing the JSON response.
-    
+
     Arguments:
         raw_query -- the string that is to be searched for on the API
         app_id -- the ID of the game whose market contains the searched item (default 730 for CS:GO)
@@ -96,7 +98,7 @@ def get_item_price(item_data: dict[str, bool or str]) -> str:
     try:
         price = item_data['lowest_price']
     except KeyError:
-        print(f"Could not find item's lowest price. Check if this is true:\n{item_data}")
+        print(
+            f"Could not find item's lowest price. Check if this is true:\n{item_data}")
         price = item_data['median_price']
     return price
-

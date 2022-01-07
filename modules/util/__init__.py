@@ -5,10 +5,13 @@ import traceback
 from datetime import datetime
 
 
+OUR_CLASS = "2d"
+
 lesson_plan: dict[str, any] = {}
 lesson_links: dict[str, str] = {}
 
-OUR_CLASS = "2d"
+# Used to show the current lesson in the lesson plan (e.g. '!plan' command).
+current_period: int = -1
 
 
 def format_class(class_name: str = None):
@@ -18,7 +21,7 @@ def format_class(class_name: str = None):
     E.g. '2d' -> 'IID'
 
     Arguments:
-        class_name -- the name of the class. By default this is the value of the `our_class` variable."""
+        class_name -- the name of the class. Defaults to the value of the `our_class` variable."""
     class_name = class_name or OUR_CLASS
     if len(class_name) < 2:
         err_msg = f"Invalid class name: '{class_name}' is too short (min. 2 characters)."
@@ -27,14 +30,20 @@ def format_class(class_name: str = None):
         formatted = 'I' * int(class_name[0])
     except ValueError:
         err_msg = f"Invalid class name: '{class_name}' does not start with a number."
-        raise ValueError(err_msg)
+        raise ValueError(err_msg) from None
     else:
         return formatted + class_name[1:].upper()
 
 
-def format_exception_info(e: Exception):
-    info = traceback.format_exception(type(e), e, e.__traceback__)
-    return ''.join(info)
+def format_exception_info(exception: Exception):
+    """Returns the exception stack trace in the form of a string as it is displayed in the shell.
+
+    Arguments:
+        exception -- the exception to format.
+    """
+    info = type(exception), exception, exception.__traceback__
+    fmt_info = traceback.format_exception(*info)
+    return ''.join(fmt_info)
 
 
 def conjugate_numeric(num: int, word: str) -> str:
@@ -95,9 +104,12 @@ def get_lesson_link(lesson_code: str) -> str:
     return lesson_links[lesson_code]
 
 
-def get_formatted_period_time(period: int or str) -> str:
+def get_formatted_period_time(period: int or str = None) -> str:
     """Get a string representing the start and end times for a given period, according to the lesson plan.
     e.g. [[8, 0], [8, 45]] -> "08:00-08:45
+
+    Arguments:
+        period -- the period to get the times for. Defaults to the current period.
     """
-    times: list[list[int]] = lesson_plan["Godz"][int(period)]
+    times: list[list[int]] = lesson_plan["Godz"][int(period or current_period)]
     return "-".join([':'.join([f"{t:02}" for t in time]) for time in times])

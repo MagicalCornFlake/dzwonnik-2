@@ -1,9 +1,10 @@
 """Utility functions for all web APIs."""
 
 # Standard library imports
-import importlib
-import requests
 import time
+
+# Third-party imports
+import requests
 
 # Local application imports
 from .api.steam_market import NoSuchItemException
@@ -11,56 +12,36 @@ from .api.steam_market import NoSuchItemException
 
 def send_log(*msg, force: bool = False):
     """Function that defines the log behaviour when the 'bot' module has not been imported to the namespace.
-    Function `enable_circular_reference` redefines this function as the 'send_log' function of the 'bot' module."""
+    The 'bot' module redefines this function in the client on_ready event."""
     if not force:
         return
     print(*msg)
 
-# The 'bot' module imports this module first, by which time the lower-defined TooManyRequestsException class has been initialised.
-# This allows this module to later import functionality from the 'bot' module.
-# However, if this module is imported outside of the 'bot' module, it tries to import that module, which causes an error.
-# This is because, as mentioned above, the 'bot' module tries to access TooManyRequestsException which has not been initialised yet.
-# For this reason, circular references are disabled by default, and can only be enabled by calling this function (from the 'bot' module).
-
-
-def enable_circular_reference():
-    from .. import bot
-    global send_log
-    send_log = bot.send_log
-
-
-last_request_time: int = 0
 
 MAX_REQUEST_COOLDOWN: int = 3  # Must wait 3s since last request
 
 
-def get_error_message(ex: Exception) -> str:
-    if isinstance(ex, InvalidResponseException):
-        return f"Nastąpił błąd w połączeniu: {ex.status_code}"
-    if isinstance(ex, TooManyRequestsException):
-        return f"Musisz poczekać jeszcze {MAX_REQUEST_COOLDOWN - ex.time_since_last_request:.2f}s."
-    if isinstance(ex, NoSuchItemException):
-        return f":x: Nie znaleziono przedmiotu `{ex.query}`. Spróbuj ponownie i upewnij się, że nazwa się zgadza."
-    else:
-        raise ex
+class WebException(Exception):
+    """Base class for all web request-related exceptions."""
 
 
-class TooManyRequestsException(Exception):
+class TooManyRequestsException(WebException):
     """Raised when the user tries to make more than one request per second.
 
     Attributes:
         time_since_last_request -- the time since the last request, in milliseconds
         message -- explanation of the error
     """
+    last_request_time: int = 0
 
-    def __init__(self, time_since_last_request: int, message="You must must wait for another {cooldown}s."):
-        self.time_since_last_request = time_since_last_request
-        self.message = message.format(
-            cooldown=f"{(MAX_REQUEST_COOLDOWN * 1000) - time_since_last_request:.2f}")
+    def __init__(self, current_time: int, message="You must must wait for another {cooldown}s."):
+        self.time_passed = current_time * 1000 - self.last_request_time * 1000
+        cooldown = f"{(MAX_REQUEST_COOLDOWN * 1000) - self.time_passed:.2f}"
+        self.message = message.format(cooldown=cooldown)
         super().__init__(self.message)
 
 
-class InvalidResponseException(Exception):
+class InvalidResponseException(WebException):
     """Raised when the request returns with an invalid status code.
 
     Attributes:
@@ -74,6 +55,17 @@ class InvalidResponseException(Exception):
         super().__init__(self.message)
 
 
+def get_error_message(web_exc: WebException) -> str:
+    if isinstance(web_exc, InvalidResponseException):
+        return f"Nastąpił błąd w połączeniu: {web_exc.status_code}"
+    if isinstance(web_exc, TooManyRequestsException):
+        return f"Musisz poczekać jeszcze {MAX_REQUEST_COOLDOWN - web_exc.time_passed:.2f}s."
+    if isinstance(web_exc, NoSuchItemException):
+        return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
+                f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")
+    raise web_exc
+
+
 def make_request(url: str, ignore_request_limit: bool = False) -> requests.Response:
     """Make a web request.
 
@@ -84,17 +76,16 @@ def make_request(url: str, ignore_request_limit: bool = False) -> requests.Respo
         TooManyRequestsException if there was more than one request made per 3 seconds
         InvalidResponseException if the request timed out or if it returned an invalid response
     """
-    global last_request_time
     current_time = time.time()
-    if current_time - last_request_time < MAX_REQUEST_COOLDOWN and not ignore_request_limit:
-        raise TooManyRequestsException(
-            int(current_time * 1000 - last_request_time * 1000))
-    last_request_time = current_time
+    time_passed = current_time - TooManyRequestsException.last_request_time
+    if time_passed < MAX_REQUEST_COOLDOWN and not ignore_request_limit:
+        raise TooManyRequestsException(int(current_time))
+    TooManyRequestsException.last_request_time = current_time
     send_log(f"Fetching content from {url} ...", force=True)
     try:
         response = requests.get(url, timeout=10)  # Waits 10s for response
-    except requests.exceptions.ReadTimeout:
-        raise InvalidResponseException(408)
+    except requests.exceptions.ReadTimeout as timeout_exc:
+        raise InvalidResponseException(408) from timeout_exc
     if not 200 <= response.status_code < 300:
         raise InvalidResponseException(response.status_code)
     return response

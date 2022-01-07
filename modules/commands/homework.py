@@ -5,7 +5,7 @@ import datetime
 import asyncio
 
 # Third-party imports
-import discord
+from discord import Member, Message, Embed, Reaction
 
 # Local application imports
 from . import HomeworkEvent, homework_events
@@ -13,7 +13,7 @@ from .. import bot, Emoji, file_manager, ROLE_CODES, GROUP_NAMES
 
 
 DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
-    Natomiast, jeśli w parametrach podane jest hasło 'del' oraz nr zadania, zadanie to zostanie usunięte.
+    Jeśli w parametrach podane jest hasło 'del' oraz nr zadania, **zadanie to zostanie usunięte**.
     Parametry: __data__, __grupa__, __treść__ | 'del', __ID zadania__
     Przykłady:
     `{p}zad 31.12.2024 @Grupa 1 Zrób ćwiczenie 5` - stworzyłoby się zadanie na __31.12.2024__\
@@ -23,21 +23,24 @@ DESC_2 = "Pokazuje wszystkie zadania domowe, które zostały stworzone za pomoc�
 DESC_3 = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
 
 
-def process_homework_events_alias(message: discord.Message) -> tuple[bool, str or discord.Embed]:
+def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]:
+    """Event handler for the 'zad' command."""
     args = message.content.split(" ")
     if len(args) == 1:
         return get_homework_events(message)
     elif len(args) < 4:
-        return False, f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin oddania zadania, oznaczenie " + \
-            "grupy, dla której jest zadanie oraz jego treść, lub 'del' i ID zadania, którego się chce usunąć."
+        return False, (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
+                       f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
+                       f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
     return create_homework_event(message)
 
 
-def get_homework_events(message: discord.Message, should_display_event_ids=False) -> tuple[bool, str or discord.Embed]:
+def get_homework_events(message: Message, with_event_ids=False) -> tuple[bool, str or Embed]:
+    """Event handler for the 'zadania' command."""
     file_manager.read_data_file()
     amount_of_homeworks = len(homework_events)
     if amount_of_homeworks > 0:
-        embed = discord.Embed(
+        embed = Embed(
             title="Zadania", description=f"Lista zadań ({amount_of_homeworks}) jest następująca:")
     else:
         return False, f"{Emoji.INFO} Nie ma jeszcze żadnych zadań. " + \
@@ -52,7 +55,7 @@ def get_homework_events(message: discord.Message, should_display_event_ids=False
             # Adjusts the mention string if the homework event is not for everyone
             for role in message.guild.roles:
                 if str(role) == group_role_name:
-                    # Gets the role id from its name, sets the mention text to a discord mention using format <@&ID>
+                    # Sets the role_mention variable to a valid Discord user mention string.
                     role_mention = f"<@&{role.id}>"
                     break
         if homework_event.reminder_is_active:
@@ -62,7 +65,7 @@ def get_homework_events(message: discord.Message, should_display_event_ids=False
                 # The homework event hasn't been snoozed
                 field_name = homework_event.deadline
             else:
-                # Show an alarm clock emoji next to the event if it has been snoozed (reminder time is not 17:00)
+                # Shows an alarm clock emoji next to the event if it has been snoozed.
                 field_name = f"{homework_event.deadline} :alarm_clock: {event_reminder_hour}:00"
         else:
             # Show a check mark emoji next to the event if it has been marked as complete
@@ -70,7 +73,7 @@ def get_homework_events(message: discord.Message, should_display_event_ids=False
 
         field_value = f"**{homework_event.title}**\n"\
                       f"Zadanie dla {role_mention} (stworzone przez <@{homework_event.author_id}>)"
-        if should_display_event_ids:
+        if with_event_ids:
             field_value += f"\n*ID: event-id-{homework_event.id}*"
         embed.add_field(name=field_name, value=field_value, inline=False)
     embed.set_footer(
@@ -78,7 +81,8 @@ def get_homework_events(message: discord.Message, should_display_event_ids=False
     return True, embed
 
 
-def create_homework_event(message: discord.Message) -> tuple[bool, str]:
+def create_homework_event(message: Message) -> tuple[bool, str]:
+    """Event handler for the 'zadanie' command."""
     args = message.content.split(" ")
     # Args is asserted to have at least 4 elements
     if args[1] == "del":
@@ -132,9 +136,16 @@ def delete_homework_event(event_id: int) -> str:
     raise ValueError
 
 
-async def wait_for_zadania_reaction(original_msg: discord.Message, reply_msg: discord.Message) -> None:
-    def check_for_valid_reaction(test_reaction: discord.Reaction, reaction_author: discord.User or discord.Member):
-        return str(test_reaction.emoji) == Emoji.UNICODE_DETECTIVE and reaction_author != bot.client.user
+async def wait_for_zadania_reaction(original_msg: Message, reply_msg: Message) -> None:
+    """Callback function for the 'zadania' command.
+    Reacts to the previously sent embedwith the detective emoji.
+    If somebody else reacts with that emoji, it edits that embed to contain homework event IDs. 
+    """
+    def check_for_valid_reaction(test_reaction: Reaction, reaction_author: Member) -> bool:
+        """Util function for validating the reaction.
+        Returns a boolean indicating if the emoji was correct and the user was someone else."""
+        reaction_valid = str(test_reaction.emoji) == Emoji.UNICODE_DETECTIVE
+        return reaction_valid and reaction_author != bot.client.user
 
     await reply_msg.add_reaction(Emoji.UNICODE_DETECTIVE)
     try:

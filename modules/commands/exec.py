@@ -15,7 +15,9 @@ DESC = None
 
 
 class ExecResultList(list):
-    """Defines a custom class that derives from the `list` base type but redefines the += operator to append new items rather than merge lists."""
+    """Defines a custom class that derives from the `list` base type.
+    This class redefines the += operator to append new items rather than merge lists.
+    """
 
     def __init__(self):
         super().__init__(self)
@@ -27,8 +29,10 @@ class ExecResultList(list):
 
 
 def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
+    """Event handler for the 'exec' command."""
     if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        raise bot.MissingPermissionsException("synchronicznego egzekowania kodu")
+        missing_perms_msg = "synchronicznego egzekowania kodu"
+        raise bot.MissingPermissionsException(missing_perms_msg)
     msg_content: str = message.content
     args = msg_content.split(' ', maxsplit=1)
     try:
@@ -36,7 +40,11 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     except IndexError:
         return False, "Type an expression or command to execute."
     try:
-        expression_to_be_executed = f"""ExecResultList()\n{expression.replace("return ", "locals()['temp'] += ")}""" if "return " in expression else expression
+        if "return " in expression:
+            injected_code = expression.replace("return ", "locals()['temp'] += ")
+            expression_to_be_executed = f"""ExecResultList()\n{injected_code}"""
+        else:
+            expression_to_be_executed = expression
         try:
             exec("locals()['temp'] = " + expression_to_be_executed)
             execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
@@ -70,7 +78,9 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
             res_msg.append(str(res))
 
     def fmt_res(index: int) -> str:
-        """Util function for formatting the returned result. If the result has been marked as JSON content, it prepends the `detected JSON content` message."""
+        """Util function for formatting the returned result.
+        If the result has been marked as JSON content, 'detected JSON content' is prepended.
+        """
         result = res_msg[index]
         if index in json_responses:
             result = "```\nDetected JSON content:```json\n" + result
@@ -83,10 +93,12 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
 
 
 def execute_async(message: discord.Message) -> tuple[bool, str or discord.Embed]:
+    """Event handler for the 'exec_async' command."""
     if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        raise bot.MissingPermissionsException("asynchronicznego egzekowania kodu")
+        raise bot.MissingPermissionsException(
+            "asynchronicznego egzekowania kodu")
     return False, ""
 
 
 async def run_async_code(_original_msg: discord.Message, _reply_msg: discord.Message) -> None:
-    pass
+    """Executes code asynchronously."""

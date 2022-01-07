@@ -18,10 +18,10 @@ DESC = """Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wyk
 def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     try:
         data = numbers_api.get_lucky_numbers()
-    except Exception as ex:
-        exc: str = util.format_exception_info(ex)
+    except web.WebException as web_exc:
+        exc: str = util.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{exc}", force=True)
-        return False, web.get_error_message(ex)
+        return False, web.get_error_message(web_exc)
     date_str: str = datetime.strftime(data["date"], "%d.%m.%Y")
     msg = f"Szczęśliwe numerki na {date_str}:"
     embed = Embed(title="Szczęśliwe numerki", description=msg)
