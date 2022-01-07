@@ -6,7 +6,7 @@ import discord
 from modules.commands import ensure_sender_is_admin
 
 # Local application imports
-from .. import file_manager, bot
+from .. import bot
 DESC = None
 
 
@@ -26,5 +26,4 @@ def exit_bot(message: discord.Message) -> tuple[bool, str]:
 async def terminate_bot(_original_msg: discord.Message, _reply_msg: discord.Message) -> None:
     """Terminates the bot client process."""
     bot.main_update_loop.stop()
-    await bot.set_offline_status()
-    await bot.client.close()
+    await bot.close()

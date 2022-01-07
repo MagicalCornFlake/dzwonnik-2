@@ -528,9 +528,11 @@ async def check_for_substitutions_updates() -> None:
     send_log(exception_message, force=True)
 
 
-async def set_offline_status() -> None:
-    """Sets the bot's Discord status to 'offline'."""
+async def close() -> None:
+    """Sets the bot's Discord status to 'offline' and terminates it."""
     await client.change_presence(status=discord.Status.offline)
+    await asyncio.sleep(0.5)
+    await client.close()
 
 
 async def ping_konrad(channel_id: int = ChannelID.BOT_LOGS) -> None:
