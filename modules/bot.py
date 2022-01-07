@@ -536,7 +536,7 @@ async def close() -> None:
     await client.wait_until_ready()
     await client.change_presence(status=discord.Status.offline)
     # Sleep for 500 ms to ensure that the client.close() coroutine is the last to execute.
-    # await asyncio.sleep(0.5)
+    await asyncio.sleep(0.5)
     await client.close()
 
 
