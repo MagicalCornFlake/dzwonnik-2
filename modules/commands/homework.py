@@ -74,7 +74,7 @@ def get_homework_events(message: Message, with_event_ids=False) -> tuple[bool, s
         field_value = f"**{homework_event.title}**\n"\
                       f"Zadanie dla {role_mention} (stworzone przez <@{homework_event.author_id}>)"
         if with_event_ids:
-            field_value += f"\n*ID: event-id-{homework_event.id}*"
+            field_value += f"\n*ID: event-id-{homework_event.event_id}*"
         embed.add_field(name=field_name, value=field_value, inline=False)
     embed.set_footer(
         text=f"Użyj komendy {bot.prefix}zadania, aby pokazać tą wiadomość.")
@@ -90,13 +90,14 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
         try:
             deleted_event = delete_homework_event(int(user_inputted_id))
         except ValueError:
-            return False, f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. " + \
-                          f"Wpisz `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID."
+            return False, (f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. Wpisz"
+                           f" `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID.")
         return False, f"{Emoji.CHECK} Usunięto zadanie z treścią: `{deleted_event}`"
     try:
         datetime.datetime.strptime(args[1], "%d.%m.%Y")
     except ValueError:
-        return False, f"{Emoji.WARNING} Drugim argumentem komendy musi być data o formacie: `DD.MM.YYYY`."
+        msg = f"{Emoji.WARNING} Drugim argumentem komendy musi być data o formacie: `DD.MM.YYYY`."
+        return False, msg
     title = args[3]
     for word in args[4:]:
         title += " " + word
@@ -105,12 +106,13 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
         group_id = "grupa_0"
         group_text = ""
     else:
-        # Removes redundant characters from the third argument in order to have just the numbers (role id)
+        # Removes redundant characters from the third argument in order to have just the role id
         group_id = int(args[2].lstrip("<&").rstrip(">"))
         try:
             message.guild.get_role(group_id)
         except ValueError:
-            return False, f"{Emoji.WARNING} Trzecim argumentem komendy musi być oznaczenie grupy, dla której jest zadanie."
+            return False, (f"{Emoji.WARNING} Trzecim argumentem komendy musi być oznaczenie grupy,"
+                           f" dla której jest zadanie.")
         group_text = GROUP_NAMES[group_id] + " "
 
     new_event = HomeworkEvent(title, group_id, author, args[1] + " 17")
@@ -118,8 +120,8 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
         return False, f"{Emoji.WARNING} Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)
     file_manager.save_data_file()
-    return False, f"{Emoji.CHECK} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}` {group_text}" + \
-                  "z powiadomieniem na dzień przed o **17:00.**"
+    return False, (f"{Emoji.CHECK} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}`"
+                   f" {group_text}z powiadomieniem na dzień przed o **17:00.**")
 
 
 def delete_homework_event(event_id: int) -> str:
@@ -129,7 +131,7 @@ def delete_homework_event(event_id: int) -> str:
     Raises ValueError if an event with the given ID is not found.
     """
     for event in homework_events:
-        if event.id == event_id:
+        if event.event_id == event_id:
             homework_events.remove(event)
             file_manager.save_data_file()
             return event.title
@@ -138,8 +140,9 @@ def delete_homework_event(event_id: int) -> str:
 
 async def wait_for_zadania_reaction(original_msg: Message, reply_msg: Message) -> None:
     """Callback function for the 'zadania' command.
+
     Reacts to the previously sent embedwith the detective emoji.
-    If somebody else reacts with that emoji, it edits that embed to contain homework event IDs. 
+    If somebody else reacts with that emoji, it edits that embed to contain homework event IDs.
     """
     def check_for_valid_reaction(test_reaction: Reaction, reaction_author: Member) -> bool:
         """Util function for validating the reaction.

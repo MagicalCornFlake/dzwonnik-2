@@ -11,8 +11,9 @@ import requests
 
 
 def send_log(*msg, force: bool = False):
-    """Function that defines the log behaviour when the 'bot' module has not been imported to the namespace.
-    The 'bot' module redefines this function in the client on_ready event."""
+    """Function that defines the log behaviour when the 'bot' module has not been imported to the
+    namespace. The 'bot' module redefines this function in the client on_ready event.
+    """
     if not force:
         return
     print(*msg)
@@ -49,13 +50,16 @@ class InvalidResponseException(WebException):
         message -- explanation of the error
     """
 
-    def __init__(self, status_code: int, message="Invalid web response! Status code: {status_code}."):
+    _MESSAGE_TEMPLATE = "Invalid web response! Status code: {status_code}."
+
+    def __init__(self, status_code: int, message=_MESSAGE_TEMPLATE):
         self.status_code = status_code
         self.message = message.format(status_code=status_code)
         super().__init__(self.message)
 
 
 def get_error_message(web_exc: WebException) -> str:
+    """Returns the error message to be displayed to the user if a web exception occurs."""
     if not isinstance(web_exc, WebException):
         raise web_exc from TypeError
     if isinstance(web_exc, InvalidResponseException):
@@ -93,6 +97,7 @@ def make_request(url: str, ignore_request_limit: bool = False) -> requests.Respo
 
 
 def get_html(url: str, ignore_max_requests_cooldown: bool) -> str:
+    """Same as `make_request`, but returns the response's decoded HTML content."""
     res = make_request(url, ignore_max_requests_cooldown)
     html = res.content.decode('UTF-8')
     return html.replace("<html><head>", "<html>\n<head>", 1)

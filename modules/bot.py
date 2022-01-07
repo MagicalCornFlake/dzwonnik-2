@@ -446,6 +446,7 @@ async def check_for_due_homework(current_time: datetime.datetime) -> None:
 
 @main_update_loop.before_loop
 async def wait_before_starting_loop() -> None:
+    """Wait for the client to initialise before starting loops."""
     await client.wait_until_ready()
 
 
@@ -551,6 +552,14 @@ async def ping_konrad(channel_id: int = ChannelID.BOT_LOGS) -> None:
 
 async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict,
                            on_fail_data, on_fail_msg: str = None) -> discord.Message:
+    """Attempts to send a message. If it's too long, sends a text file with the contents instead.
+
+    Arguments:
+        user_message -- the user message reference to reply to, if necessary.
+        should_reply -- a boolean indicating if the message should be a reply to the user message.
+        send_args -- a dictionary containing either the key 'content' or 'embed'.
+        on_fail_data -- the data to send in the text file if sending fails.
+    """
     default_fail_msg = ("Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa."
                         " Załączam ją jako plik tekstowy.")
     send_method = user_message.reply if should_reply else user_message.channel.send

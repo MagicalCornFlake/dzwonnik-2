@@ -15,12 +15,12 @@ class HomeworkEvent:
 
     def __init__(self, title: str, group: int, author_id: int, deadline: str,
                  reminder_date_str: str = None, reminder_is_active: bool = True):
-        self.id = None
-        self.title = title
-        self.group = group
-        self.author_id = author_id
-        self.deadline = deadline.split(' ')[0]
-        if reminder_date_str is None:
+        self.event_id: int = None
+        self.title: str = title
+        self.group: int = group
+        self.author_id: int = author_id
+        self.deadline: str = deadline.split(' ')[0]
+        if not reminder_date_str:
             deadline = datetime.strptime(deadline, "%d.%m.%Y %H")
             reminder_date = deadline - timedelta(days=1)
             reminder_date_str = datetime.strftime(reminder_date, "%d.%m.%Y %H")
@@ -41,16 +41,16 @@ class HomeworkEvent:
         return event_details
 
     @property
-    def id_string(self):
+    def id_string(self) -> str:
         """Returns a more human-readable version of the id with the 'event-id-' prefix."""
-        return 'event-id-' + str(self.id)
+        return 'event-id-' + str(self.event_id)
 
-    def sort_into_container(self, event_container: list):
+    def sort_into_container(self, event_container: list) -> None:
         """Places the the event into homework_events in chronological order."""
         try:
-            self.id = event_container[-1].id + 1
+            self.event_id = event_container[-1].id + 1
         except (IndexError, TypeError):
-            self.id = 1
+            self.event_id = 1
         for comparison_event in event_container:
             assert isinstance(comparison_event, HomeworkEvent)
             new_event_time = datetime.strptime(self.deadline, "%d.%m.%Y")
@@ -59,7 +59,7 @@ class HomeworkEvent:
             # Dumps debugging data
             if new_event_time < old_event_time:
                 # The new event should be placed before the one it is currently being compared to
-                # Inserts event id in the place of the one it's being compared to, so every event
+                # Inserts event ID in the place of the one it's being compared to, so every event
                 #   after this event (including the comparison one) is pushed ahead by one spot.
                 event_container.insert(
                     event_container.index(comparison_event), self)
@@ -74,12 +74,13 @@ class HomeworkEventContainer(list[HomeworkEvent]):
     This object serves as a container for HomeworkEvent objects.
     Defines methods for JSON serialisation as well as contents optimisation.
     """
+
     @property
-    def serialised(self):
+    def serialised(self) -> list[dict[str, str or int or bool]]:
         """Serialises each event in the container."""
         return [event.serialised for event in self]
 
-    def remove_disjunction(self, reference_container: list):
+    def remove_disjunction(self, reference_container: list) -> None:
         """Removes events from this container that are not present in the reference container."""
         assert isinstance(reference_container, HomeworkEventContainer)
         for event in self:
@@ -91,14 +92,15 @@ class HomeworkEventContainer(list[HomeworkEvent]):
 
 class TrackedItem:
     """Custom object type that contains information about a tracked item on the Steam Market."""
-    def __init__(self, name, min_price, max_price, author_id):
-        self.name = name
-        self.min_price = min_price
-        self.max_price = max_price
-        self.author_id = author_id
+
+    def __init__(self, name: str, min_price: int, max_price: int, author_id: int) -> None:
+        self.name: str = name
+        self.min_price: int = min_price
+        self.max_price: int = max_price
+        self.author_id: int = author_id
 
     @property
-    def serialised(self):
+    def serialised(self) -> dict[str, int or str]:
         """Serialises the instance's attributes so that it can be saved in JSON format."""
         return {
             "name": self.name,
@@ -107,9 +109,10 @@ class TrackedItem:
             "author_id": self.author_id
         }
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, type(self)):
-            return self.name.lower() == other.name.lower()
+            # return self.name.lower() == other.name.lower()
+            return self.serialised == other.serialised
         return False
 
 
@@ -146,8 +149,8 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
                     when = "lesson" if is_during_lesson else "break"
-                    found_lesson_msg = f"... this is before {hour:02}:{minute:02} (period {period} {when})."
-                    bot.send_log(found_lesson_msg)
+                    found = f"... this is before {hour:02}:{minute:02} (period {period} {when})."
+                    bot.send_log(found)
                     return True, period + 10 * is_during_lesson, current_day_index
         # Could not find any such lesson.
         # If it's currently Friday, the modulo operation will return 0 (Monday).
@@ -166,27 +169,31 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     return False, first_period, next_school_day
 
 
-def get_lesson_by_roles(query_period: int, weekday_index: int, roles: list[str, Role]) -> dict[str, str]:
+def get_lesson_by_roles(query_period: int, weekday: int, roles: list[str, Role]) -> dict[str, str]:
     """Get the lesson details for a given period, day and user roles list.
     Arguments:
         query_period -- the period number to look for.
-        weekday_index -- the index of the weekday to look at.
+        weekday -- the index of the weekday to look at.
         roles -- the roles of the user that the lesson is defined to be intended for.
 
-    Returns a dictionary containing the lesson details including the period, or an empty dictionary if no lesson was found.
+    Returns a dictionary containing the lesson details including the period, or an empty dictionary
+    if no lesson was found.
     """
-    target_roles = [
-        "grupa_0"] + [str(role) for role in roles if role in ROLE_CODES or str(role) in ROLE_CODES.values()]
-    weekday_name = WEEKDAY_NAMES[weekday_index]
-    bot.send_log(
-        f"Looking for lesson of period {query_period} on {weekday_name} with roles: {target_roles})")
+    target_roles = ["grupa_0"]
+    for role in roles:
+        if role in ROLE_CODES or str(role) in ROLE_CODES.values():
+            target_roles.append(str(role))
+    weekday_name = WEEKDAY_NAMES[weekday]
+    looking_msg = f"{query_period} on {weekday_name} with roles: {target_roles})"
+    bot.send_log("Looking for lesson of period " + looking_msg)
     for period, lessons in enumerate(util.lesson_plan[weekday_name]):
         if period < query_period:
             continue
         for lesson in lessons:
             if lesson["group"] in target_roles or ROLE_CODES[lesson["group"]] in target_roles:
-                bot.send_log(
-                    f"Found lesson '{lesson['name']}' for group '{lesson['group']}' on period {period}.")
+                found_lesson_msg = (f"Found lesson '{lesson['name']}' for '{lesson['group']}'"
+                                    f" on period {period}.")
+                bot.send_log(found_lesson_msg)
                 lesson["period"] = period
                 return lesson
     bot.send_log(

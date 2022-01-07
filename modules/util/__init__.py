@@ -21,7 +21,8 @@ def format_class(class_name: str = None):
     E.g. '2d' -> 'IID'
 
     Arguments:
-        class_name -- the name of the class. Defaults to the value of the `our_class` variable."""
+        class_name -- the name of the class. Defaults to the value of the `our_class` variable.
+    """
     class_name = class_name or OUR_CLASS
     if len(class_name) < 2:
         err_msg = f"Invalid class name: '{class_name}' is too short (min. 2 characters)."
@@ -62,6 +63,13 @@ def conjugate_numeric(num: int, word: str) -> str:
 
 
 def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tuple[str, datetime]:
+    """Returns a datetime on the same day of `base_time` with the time corresponding to the
+    start (or end) time of the given period.
+
+    Arguments:
+        period: an integer representing the number of the period.
+        base_time: the base datetime that will be used to construct the returned value.
+        get_period_end_time: if this is true, the period's end time will be used."""
     times = lesson_plan["Godz"][period]
     hour, minute = times[get_period_end_time]
     replace_args = {
@@ -75,7 +83,8 @@ def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tup
 
 
 def get_lesson_name(lesson_code: str) -> str:
-    # Mappings contain a boolean indicating if the entire word should be mapped or only if it starts with the phrase
+    """Returns a lesson's name from its code."""
+    # The boolean indicates if the word should only be mapped if it starts with the given phrase.
     mappings: dict[str, tuple[bool, str]] = {
         "zaj.z-wych.": (False, "zajęcia z wychowawcą"),
         "WF": (False, "wychowanie fizyczne"),
@@ -99,13 +108,18 @@ def get_lesson_name(lesson_code: str) -> str:
 
 
 def get_lesson_link(lesson_code: str) -> str:
+    """Returns the lesson link corresponding to the given lesson. If lesson_links does not contain
+    data for the lesson, assigns its link to None and returns that.
+
+    Arguments:
+        lesson_code -- a string containing the code of the lesson."""
     if lesson_code not in lesson_links:
         lesson_links[lesson_code] = None
     return lesson_links[lesson_code]
 
 
 def get_formatted_period_time(period: int or str = None) -> str:
-    """Get a string representing the start and end times for a given period, according to the lesson plan.
+    """Returns a string representing the start and end times of a given period in the lesson plan.
     e.g. [[8, 0], [8, 45]] -> "08:00-08:45
 
     Arguments:

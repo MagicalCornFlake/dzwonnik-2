@@ -1,4 +1,6 @@
-"""Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson substitution details."""
+"""Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson substitution
+details.
+"""
 
 # Standard library imports
 import json
@@ -21,12 +23,14 @@ SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
 def parse_html(html: str) -> dict:
-    """Parses the HTML and finds a specific hard-coded substitutions post, then collects the relevant data from it.
+    """Parses the HTML and finds a specific hard-coded substitutions post, then collects the
+    relevant data from it.
 
     Arguments:
-        html -- a string containing whole HTML code, e.g. from the contents of a web request's response.
+        html -- a string containing whole HTML code, e.g. from the contents of a web request's
+        response.
 
-    Returns a dictionary.
+    Returns a dictionary containing the extracted data.
     """
     root: lxml.html.Element = lxml.html.fromstring(html)
     post_xpath: str = "//div[@id='content']/div"
@@ -40,7 +44,8 @@ def parse_html(html: str) -> dict:
     tables = []
 
     def extract_data(elem: lxml.html.Element, elem_index: int):
-        """Extract the relevant information from each element in the post. Adds result to the subs_data dictionary."""
+        """Extract the relevant information from each element in the post. Adds result to the
+        subs_data dictionary."""
         if elem.tag == "table":
             rows = elem[0]
             table_data: dict[str, any] = tables[-1]
@@ -147,8 +152,8 @@ def parse_html(html: str) -> dict:
 
 
 def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
-    """Gets the current lesson substitutions.
-    Returns the data itself and a tuple containing a boolean indicating if the cache already existed.
+    """Gets the current lesson substitutions. Returns the data itself and a tuple containing a
+    boolean indicating if the cache already existed.
 
     Arguments:
         force_update -- a boolean indicating if the cache should be forcefully updated.

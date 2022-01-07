@@ -33,21 +33,19 @@ def read_data_file(filename: str = "data.json") -> None:
         bot.send_log(lesson_links_404, force=True)
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
-    for event_id in data.get("homework_events", []):
-        attributes = data["homework_events"][event_id]
-        title, group, author_id, deadline, reminder_date, reminder_is_active = [
-            attributes[attr] for attr in attributes]
-        new_event_candidate = commands.HomeworkEvent(
-            title, group, author_id, deadline, reminder_date, reminder_is_active)
+    for attributes in data.get("homework_events", {}).values():
+        assert isinstance(attributes, dict)
+        # Unpack the attributes and create a new homework event
+        new_event_candidate = commands.HomeworkEvent(*attributes.values())
         new_event_candidates.append(new_event_candidate)
     commands.homework_events.remove_disjunction(new_event_candidates)
     for new_event_candidate in new_event_candidates:
         if new_event_candidate.serialised not in commands.homework_events.serialised:
             new_event_candidate.sort_into_container(commands.homework_events)
 
-    for attribs in data.get("tracked_market_items", []):
-        item_attributes = [attribs[attrib] for attrib in attribs]
-        item_name, min_price, max_price, author_id = item_attributes
+    for attributes in data.get("tracked_market_items", []):
+        assert isinstance(attributes, dict)
+        item_name, min_price, max_price, author_id = attributes.values()
         item = commands.TrackedItem(item_name, min_price, max_price, author_id)
         if item not in commands.tracked_market_items:
             commands.tracked_market_items.append(item)
@@ -59,7 +57,8 @@ def read_data_file(filename: str = "data.json") -> None:
         data_timestamp = datetime.strptime(date, "%Y-%m-%d")
     except (KeyError, TypeError, ValueError) as exception:
         # Saved lucky numbers data contains an invalid date; don't update cache
-        bad_numbers = lucky_numbers.serialise(data["lucky_numbers"], pretty=True)
+        bad_numbers = data["lucky_numbers"]
+        bad_numbers = lucky_numbers.serialise(bad_numbers, pretty=True)
         fmt_exc = util.format_exception_info(exception)
         bad_lucky_numbers = f"Invalid lucky numbers:\n{bad_numbers}\nException trace:\n{fmt_exc}"
         bot.send_log(bad_lucky_numbers, force=True)
@@ -72,8 +71,9 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
     """Saves the settings stored in the program's memory to the file provided.
 
     Arguments:
-        filename -- the name of the file relative to the program root directory to write to (default 'data.json').
-        should_log -- whether or not the save should be logged in the Discord Log and in the console.
+        filename -- the name of the file relative to the program root directory to write to.
+        Defaults to 'data.json'.
+        allow_logs -- a boolean indicating whether or not the save should be logged.
     """
     if allow_logs:
         bot.send_log(f"Saving data file '{filename}'...", force=True)
@@ -104,16 +104,20 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
 
 
 def clear_log_file(filename: str) -> None:
-    """Truncates the given file and writes to it a log header to identify when the log was started."""
+    """Truncates the log file and writes to it a log header to identify when it was started."""
+    formatted_time = f"{datetime.now():%Y-%m-%d @ %H.%M.%S}"
+    log_template = f"START TIMESTAMP {formatted_time} END TIMESTAMP Started bot log.\n"
     with open(filename, 'w', encoding="UTF-8") as file:
-        file.write(
-            f"START TIMESTAMP {datetime.now():%Y-%m-%d @ %H.%M.%S} END TIMESTAMP Started bot log.\n")
+        file.write(log_template)
 
 
 def log(*raw_message: str) -> str:
-    """Writes the message to the current log file, and returns the message formatted with the current time and proper indentation."""
+    """Writes the message to the current log file, and returns the message formatted with the
+    current time and proper indentation.
+    """
     timestamp = f"{datetime.now():%Y-%m-%d @ %H:%M:%S}: "
-    # Add spaces after each newline so that the actual message is in line to make up for the timestamp at the beginning
+
+    # Adds spaces after each newline so that the actual message is in line with the timestamp.
     message = timestamp + \
         ' '.join(map(str, raw_message)).replace(
             "\n", "\n" + " " * len(timestamp))
@@ -134,7 +138,8 @@ def save_log_file() -> None:
                     "START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
                 log_start_time = log_start_time.rstrip('\n')
                 # Copy active log contents to new file
-                with open(f"bot_logs{os.path.sep}{log_start_time}.log", 'w', encoding="UTF-8") as file:
+                filename = f"bot_logs{os.path.sep}{log_start_time}.log"
+                with open(filename, 'w', encoding="UTF-8") as file:
                     file.write(log_contents)
     except FileNotFoundError:
         # bot.log file does not exist
@@ -154,13 +159,13 @@ def cache_exists(cache_name: str) -> dict:
 
 
 def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[bool, dict]:
-    """Attempts to get the cache if it exists and the 'force_update' argument is set to False.
-    If the above criterion are not met, the callback function is called and its return value is saved as the new cache.
-    Returns the cached data and a boolean indicating if it previously existed.
+    """Attempts to get the cache if it exists and the 'force_update' argument is set to False. If
+    the above criterion are not met, the callback function is called and its return value is saved
+    as the new cache. Returns the cached data and a boolean indicating if it previously existed.
 
     Arguments:
         cache_name -- the filename of the cache without the .json extension.
-        force_update -- a boolean indicating if the cache should be forcefully updated even if it already exists.
+        force_update -- a boolean indicating if any existing caches should be updated forcefully.
         callback_function -- a lambda function that generates the new cache.
     """
     cache = cache_exists(cache_name)
@@ -175,7 +180,8 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
 
 
 def clear_cache(cache_path: str = "cache") -> bool:
-    """Removes all files in the given directory, as well as the directory itself. Returns True if the directory previously existed, otherwise False."""
+    """Removes all files in the given directory, as well as the directory itself.
+    Returns True if the directory previously existed, otherwise False."""
     if os.path.exists(cache_path):
         for filename in os.listdir(cache_path):
             os.remove(cache_path + os.path.sep + filename)
@@ -189,7 +195,7 @@ def clear_cache(cache_path: str = "cache") -> bool:
 
 
 def read_env_file() -> bool:
-    """Reads the .env file in the current directory and sets its contents in the program's local memory.
+    """Reads the .env file in the current directory and sets its contents in the program's memory.
     Returns a boolean indicating if any system environment variables were set as a result of this.
     """
     if not os.path.isfile(".env"):
@@ -204,18 +210,18 @@ def read_env_file() -> bool:
             # Line does not contain a variable assignment
             if '=' not in line:
                 continue
-            # Extract environment variable name and value from each line, stripping them from whitespaces
+            # Extracts environment variable name and value from each line, stripping whitespaces.
             env_name, env_value = [
                 s.strip() for s in line.rstrip('\n').split('=', maxsplit=1)]
             # Don't reassign value if already set in memory
             if env_name in os.environ:
                 log(
-                    f"Environment variable '{env_name}' is already set, ignoring assignment in .env file.")
+                    f"Environment variable '{env_name}' is already set, ignoring .env assignment.")
                 continue
             # Actually assign the environment variable value in memory
             os.environ[env_name] = env_value
             log(
-                f"Set environment variable value '{env_name}' to '{env_value}' in program local memory.")
+                f"Set environment variable value '{env_name}' to '{env_value}'.")
             # Make the function return True since there was an env set
             return_value = True
     log("    --- Finished processing environment variable files. ---")

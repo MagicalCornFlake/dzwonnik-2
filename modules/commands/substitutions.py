@@ -14,18 +14,20 @@ from ..util.crawlers import substitutions as substitutions_api
 
 DESC = """Podaje zastępstwa na dany dzień."""
 
+BAD_SUBSTITUTIONS_MSG = ":x: Nie udało się odzyskać zastępstw. Proszę spróbowac ponownie w krótce."
+
 
 def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
+    """Event handler for 'zast' command."""
     try:
-        # No need to set the force argument if the function is called from the API update loop since the cache has already been updated
         data = substitutions_api.get_substitutions()[0]
-    except web.WebException as e:
-        ex: str = util.format_exception_info(e)
+    except web.WebException as web_exc:
+        ex: str = util.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
-        return False, web.get_error_message(e)
+        return False, web.get_error_message(web_exc)
     else:
         if "error" in data:
-            return False, ":x: Nie można było odzyskać zastępstw. Proszę spróbowac ponownie w krótce."
+            return False, BAD_SUBSTITUTIONS_MSG
 
     # Number of substitutions for our class
     our_substitutions: int = 0
