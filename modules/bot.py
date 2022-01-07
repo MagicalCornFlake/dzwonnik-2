@@ -155,6 +155,7 @@ async def on_ready() -> None:
     # Starts loops that run continuously
     main_update_loop.start()
 
+    # TODO: save the last 'exit' or 'restart' command reply instead of searching for it
     # Checks if the bot was just restarted
     for channel_id in [ChannelID.BOT_TESTING, ChannelID.BOT_LOGS]:
         channel = client.get_channel(channel_id)
@@ -395,10 +396,10 @@ async def main_update_loop() -> None:
     try:
         # Try to parse the lucky numbers data date
         cached_date: datetime.datetime = lucky_numbers_api.cached_data["date"]
-    except (KeyError, AttributeError) as bad_numbers_exc:
+    except (TypeError, KeyError) as exception:
         # Lucky numbers data does not contain a date
         await ping_konrad()
-        fmt_exc = util.format_exception_info(bad_numbers_exc)
+        fmt_exc = util.format_exception_info(exception)
         send_log(fmt_exc, force=True)
     else:
         # Lucky numbers data contains a valid date
