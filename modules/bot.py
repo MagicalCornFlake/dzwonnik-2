@@ -402,17 +402,15 @@ async def main_update_loop() -> None:
         fmt_exc = util.format_exception_info(exception)
         send_log(fmt_exc, force=True)
     else:
-        # Lucky numbers data contains a valid date
-
         if cached_date == current_time.date() or current_time.hour != UPDATE_NUMBERS_AT:
             # Data does not need to be updated; only update at the given time
             return
-         # The bot will update every x seconds so that it doesn't exceed the max
+            # The bot will update every x seconds so that it doesn't exceed the max
         if current_time.minute < UPDATE_NUMBERS_FOR or current_time.second % UPDATE_NUMBERS_EVERY:
             # Initial update period of API update window; don't update more than the maximum
             return
-        # Lucky numbers data is not current; update it
-        await check_for_lucky_numbers_updates()
+    # Lucky numbers data is not current; update it
+    await check_for_lucky_numbers_updates()
 
 
 async def check_for_status_updates(current_time: datetime.datetime) -> None:
