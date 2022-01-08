@@ -59,11 +59,12 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     except Exception as ex:
         exec_result = util.format_exception_info(ex)
     else:
+        # Default the temp variable to an empty ExecResultList if it's not been assigned
         exec_result = locals().get("temp", ExecResultList())
         # Check if the results list is empty
         if isinstance(exec_result, ExecResultList) and exec_result:
             return False, "Code executed (return value was not specified)."
-    bot.send_log(f"Temp variable: {exec_result}")
+    bot.send_log(f"Temp variable: {exec_result}", force=True)
     results = []
     json_result_indices = []
     for res in exec_result if isinstance(exec_result, ExecResultList) else [exec_result]:
