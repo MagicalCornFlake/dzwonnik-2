@@ -13,8 +13,10 @@ from .. import bot, util
 
 
 DESC = None
-MISSING_PERMS_MSG_SYNC = "synchronicznego egzekowania kodu"
-MISSING_PERMS_MSG_ASYNC = "asynchronicznego egzekowania kodu"
+MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
+ASYNC_EXPRESSION_TEMPLATE = ("async def _execute_async():\n{}\n\n"
+                             "event_loop = asyncio.get_event_loop()\n"
+                             "event_loop.create_task(_execute_async())")
 
 
 class ExecResultList(list):
@@ -32,20 +34,14 @@ class ExecResultList(list):
         return self
 
 
-def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
-    """Event handler for the 'exec' command."""
-    if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        raise bot.MissingPermissionsException(MISSING_PERMS_MSG_SYNC)
-    msg_content: str = message.content
-    args = msg_content.split(' ', maxsplit=1)
-    try:
-        expression = args[1]
-    except IndexError:
-        return False, "Type an expression or command to execute."
-    else:
-        fmt_expr = expression.replace("\n", "\n>>> ")
-        result_template = f"Code executed:\n```py\n>>> {fmt_expr}\n{{}}"
+def inject_code(expression: str) -> str:
+    """Attempts to inject code so that the evaluation result of the expression is saved in memory.
 
+    Arguments:
+        expression -- a string containing the raw code to be executed.
+
+    Returns a string that may or may not contain injected code, depending on the input structure.
+    """
     if "return " in expression:
         # Inject temp variable storage in place of 'return' statements
         inj_snippet = "locals()['temp'] += "
@@ -71,10 +67,23 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
 
     executing_log_msg = f"Executing code:\n{expression_to_be_executed}"
     bot.send_log(executing_log_msg, force=True)
+    return expression_to_be_executed
+
+
+def execute(expression: str) -> str:
+    """Executes the code and returns the message that should be sent to the user.
+    
+    Arguments:
+        expression -- the raw expression to be executed.
+        
+    Returns the message that should be sent back directly to the user.
+    """
+    fmt_expr = expression.replace("\n", "\n>>> ")
+    result_template = f"Code executed:\n```py\n>>> {fmt_expr}\n{{}}"
 
     try:
-        # Actually execute the code
-        exec(expression_to_be_executed)  # pylint: disable=exec-used
+        # Inject result-storing code to the user input and execute it
+        exec(inject_code(expression))  # pylint: disable=exec-used
     except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(exec_exc)
@@ -84,7 +93,7 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
 
         # Check if the results list is empty
         if isinstance(exec_result, ExecResultList) and not exec_result:
-            return False, result_template.format("```(return value was not specified)")
+            return result_template.format("```(return value was not specified)")
     temp_variable_log_msg = f"Temp variable ({type(exec_result)}):\n{exec_result}"
     bot.send_log(temp_variable_log_msg, force=True)
     results = []
@@ -115,15 +124,35 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
 
     results = "\n".join([fmt_res(i) for i in range(len(results))])
 
-    return False, result_template.format(results + "```")
+    return result_template.format(results + "```")
 
 
-def execute_async(message: discord.Message) -> tuple[bool, str or discord.Embed]:
+def execute_sync(message: discord.Message) -> tuple[bool, str]:
+    """Event handler for the 'exec' command."""
+    if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
+        raise bot.MissingPermissionsException(MISSING_PERMS_MSG)
+    msg_content: str = message.content
+    args = msg_content.split(' ', maxsplit=1)
+    try:
+        expression = args[1]
+    except IndexError:
+        return False, "Type an expression or command to execute."
+    else:
+        return False, execute(expression)
+
+
+def execute_async(message: discord.Message) -> tuple[bool, str]:
     """Event handler for the 'exec_async' command."""
     if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        raise bot.MissingPermissionsException(MISSING_PERMS_MSG_ASYNC)
-    return False, ""
-
-
-async def run_async_code(_original_msg: discord.Message, _reply_msg: discord.Message) -> None:
-    """Executes code asynchronously."""
+        # Prepend "a"; sync... -> async...
+        raise bot.MissingPermissionsException("a" + MISSING_PERMS_MSG)
+    msg_content: str = message.content
+    args = msg_content.split(' ', maxsplit=1)
+    try:
+        expression = args[1]
+    except IndexError:
+        return False, "Type an expression or command to execute."
+    else:
+        indented_expression = expression.replace("\n", "\n    ")
+        expr = ASYNC_EXPRESSION_TEMPLATE.format(indented_expression)
+        return False, execute(expr)
