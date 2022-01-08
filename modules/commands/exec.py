@@ -2,6 +2,7 @@
 
 
 # Standard library imports
+import ast
 import json
 
 # Third-party imports
@@ -44,32 +45,39 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     else:
         fmt_expr = expression.replace("\n", "\n>>> ")
         result_template = f"Code executed:\n```py\n>>> {fmt_expr}\n{{}}"
-    try:
-        if "return " in expression:
-            # Inject temp variable storage in place of 'return' statements
-            inj_snippet = "locals()['temp'] += "
-            injected_code = expression.replace("return ", inj_snippet)
-            expression_to_be_executed = f"""ExecResultList()\n{injected_code}"""
-        else:
-            # Use code as-is
-            expression_to_be_executed = expression
-        try:
-            # Initialise the 'temp' local variable
-            exec("locals()['temp'] = " + expression_to_be_executed)
 
-            execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
-            bot.send_log(*execing, force=True)
+    if "return " in expression:
+        # Inject temp variable storage in place of 'return' statements
+        inj_snippet = "locals()['temp'] += "
+        injected_code = expression.replace("return ", inj_snippet)
+        expression_to_be_executed = f"""locals()['temp'] = ExecResultList()\n{injected_code}"""
+    else:
+        # No user-specified return value
+        # Attempt to inject code so that the evaluation of the first line is returned
+        try:
+            # Check if such a code injection would be valid Python code
+            ast.parse("locals()['temp'] = " + expression)
         except SyntaxError as syntax_error:
-            # Ignore syntax error if temp variable assignment is invalid
+            # Code injection raises a syntax error; ignore it and don't inject code
             fmt_exc = util.format_exception_info(syntax_error)
-            caught_exc_msg = f"Caught SyntaxError:\n{fmt_exc}\nExecuting raw code:\n{expression}"
+            caught_exc_msg = f"Caught SyntaxError in code injection:\n\n{fmt_exc}"
             bot.send_log(caught_exc_msg, force=True)
 
             # Execute the code without temp variable assignment
-            exec(expression)
-    except Exception as ex:
+            expression_to_be_executed = expression
+        else:
+            # No syntax error; initialise the 'temp' local variable in code injection
+            expression_to_be_executed = f"locals()['temp'] = {expression}"
+
+    executing_log_msg = f"Executing code:\n{expression_to_be_executed}"
+    bot.send_log(executing_log_msg, force=True)
+
+    try:
+        # Actually execute the code
+        exec(expression_to_be_executed)
+    except Exception as exec_exc:
         # If the code logic is malformed or otherwise raises an exception, return the error info.
-        exec_result = util.format_exception_info(ex)
+        exec_result = util.format_exception_info(exec_exc)
     else:
         # Default the temp variable to an empty ExecResultList if it's not been assigned
         exec_result = locals().get("temp", ExecResultList())
