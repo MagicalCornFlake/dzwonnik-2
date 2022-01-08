@@ -34,6 +34,8 @@ BAD_RESPONSE = "Error! Received an invalid response from web request. Exception 
 # The template for the log message sent when the bot's status is updated
 STATUS_LOG_TEMPLATE = "... new status message is '{}'.\n... current period: {}"
 
+RESTARTED_BOT_MSG = "Restarted bot!"
+
 # If a message starts with any of the below keys, the bot will reply appropriately.
 # noinspection SpellCheckingInspection
 AUTOMATIC_BOT_REPLIES = {
@@ -152,25 +154,6 @@ async def on_ready() -> None:
 
     # Starts loops that run continuously
     main_update_loop.start()
-
-    # TODO: save the last 'exit' or 'restart' command reply instead of searching for it
-    # Checks if the bot was just restarted
-    for channel_id in [ChannelID.BOT_TESTING, ChannelID.BOT_LOGS]:
-        channel = client.get_channel(channel_id)
-        try:
-            last_test_message = await channel.fetch_message(channel.last_message_id)
-        except discord.errors.NotFound:
-            last_message_404 = f"Could not find last message in channel {channel.name}."
-            send_log(last_message_404 + " It was probably deleted.")
-        else:
-            if last_test_message is None:
-                send_log(f"Last message in channel {channel.name} is None.")
-            elif last_test_message.author == client.user:
-                if last_test_message.content == "Restarting bot...":
-                    await last_test_message.edit(content="Restarted bot!")
-            else:
-                last_message_not_mine = f"Last message in channel {channel.name} is not mine."
-                send_log(last_message_not_mine)
 
 
 # This function is called when someone sends a message in the server
@@ -465,6 +448,18 @@ async def wait_before_starting_loop() -> None:
     """Wait for the client to initialise before starting loops."""
     await client.wait_until_ready()
     await check_for_status_updates(datetime.datetime.now(), force=True)
+
+    # If there was a message sent the last time the bot closed, edit or reply to it.
+    msg_info = file_manager.on_exit_msg
+    try:
+        last_msg_chnl: discord.TextChannel = await client.fetch_channel(msg_info["channel_id"])
+        last_msg: discord.Message = await last_msg_chnl.fetch_message(msg_info["message_id"])
+        if msg_info["is_restart"]:
+            await last_msg.edit(RESTARTED_BOT_MSG)
+        else:
+            await last_msg.reply(RESTARTED_BOT_MSG)
+    finally:
+        file_manager.on_exit_msg = {}
 
 
 async def check_for_steam_market_updates() -> None:
