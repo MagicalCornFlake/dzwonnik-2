@@ -42,7 +42,6 @@ def inject_code(expression: str) -> str:
 
     Returns a string that may or may not contain injected code, depending on the input structure.
     """
-    bot.send_log("Attempting to inject into:\n" + expression, force=True)
     if "return " in expression:
         # Inject temp variable storage in place of 'return' statements
         inj_snippet = "locals()['temp'] += "
@@ -58,7 +57,7 @@ def inject_code(expression: str) -> str:
             # Code injection raises a syntax error; ignore it and don't inject code
             fmt_exc = util.format_exception_info(syntax_error)
             caught_exc_msg = f"Caught SyntaxError in code injection:\n\n{fmt_exc}"
-            bot.send_log(caught_exc_msg, force=True)
+            bot.send_log(caught_exc_msg)
 
             # Execute the code without temp variable assignment
             expression_to_be_executed = expression
@@ -94,7 +93,7 @@ def execute(expression: str) -> str:
 
         # Check if the results list is empty
         if isinstance(exec_result, ExecResultList) and not exec_result:
-            return result_template.format("```(return value was not specified)")
+            return result_template.format("```*(return value unspecified)*")
     temp_variable_log_msg = f"Temp variable ({type(exec_result)}):\n{exec_result}"
     bot.send_log(temp_variable_log_msg, force=True)
     results = []
