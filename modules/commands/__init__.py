@@ -10,6 +10,9 @@ from discord import Role, Message, TextChannel
 from .. import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, util, bot
 
 
+LINK_404_URL = "https://guzek.uk/error/404/?lang=pl-PL&source=discord"
+
+
 class HomeworkEvent:
     """Custom object type for homework events."""
 
@@ -210,7 +213,7 @@ def get_datetime_from_input(message: Message, calling_command: str) -> datetime 
     current_time = datetime.now()
     if len(args) == 1:
         # No input parameters; return the current time as-is
-        return True, current_time
+        return current_time
     try:
         # Input validation
         try:
@@ -229,13 +232,14 @@ def get_datetime_from_input(message: Message, calling_command: str) -> datetime 
             error_description = f"`{':'.join(args[1:])}` nie jest godziną."
             raise RuntimeError(error_description) from None
     except RuntimeError as invalid_arg_exc:
-        msg = f"{Emoji.WARNING} {invalid_arg_exc}\nNależy napisać po komendzie " + \
-            f"`{bot.prefix}{calling_command}` godzinę i ewentualnie minutę oddzieloną spacją"
-        return False, msg + ", lub zostawić parametry komendy puste."
+        invalid_arg_msg = (f"{Emoji.WARNING} {invalid_arg_exc}\nNależy napisać po komendzie "
+                           f"`{bot.prefix}{calling_command}` godzinę i ewentualnie minutę "
+                           f"oddzieloną spacją, lub zostawić parametry komendy puste.")
+        return invalid_arg_msg
     params = {
         "hour": int(args[1]),
         "minute": int(args[2]),
         "second": 0,
         "microsecond": 0
     }
-    return True, current_time.replace(**params)
+    return current_time.replace(**params)

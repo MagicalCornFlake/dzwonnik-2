@@ -18,7 +18,7 @@ BAD_SUBSTITUTIONS_MSG = ":x: Nie udało się odzyskać zastępstw. Proszę spró
 
 
 def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
-    """Event handler for 'zast' command."""
+    """Event handler for the 'zast' command."""
     try:
         data = substitutions_api.get_substitutions()[0]
     except web.WebException as web_exc:

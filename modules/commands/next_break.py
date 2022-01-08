@@ -33,14 +33,17 @@ def get_next_break(message: Message) -> tuple[bool, str]:
         break_start_datetime = util.get_time(lesson['period'], time, True)
         break_countdown = break_start_datetime - time
         mins = ceil(break_countdown.seconds / 60)
-        minutes = f"{(util.conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{util.conjugate_numeric(mins % 60, 'minut')}"
-        msg = f"{Emoji.INFO} Następna przerwa jest za {minutes} o __{util.get_formatted_period_time(lesson['period']).split('-')[1]}"
+        hours = (util.conjugate_numeric(mins // 60, 'godzin') + " ") * (mins >= 60)
+        minutes = f"{util.conjugate_numeric(mins % 60, 'minut')}"
+        break_time_str = util.get_formatted_period_time(lesson['period']).split('-')[1]
+        msg = f"{Emoji.INFO} Następna przerwa jest za {hours}{minutes} o __{break_time_str}"
         more_lessons_today, next_period = get_next_period(break_start_datetime)[:2]
         bot.send_log("More lessons today:", more_lessons_today)
         if more_lessons_today:
             break_end_datetime = util.get_time(next_period, break_start_datetime, False)
-            break_length = break_end_datetime - break_start_datetime
-            msg += f"—{util.get_formatted_period_time(next_period).split('-')[0]}__ ({break_length.seconds // 60} min)."
+            minutes = (break_end_datetime - break_start_datetime).seconds // 60
+            break_time_str = util.get_formatted_period_time(next_period).split('-', maxsplit=1)[0]
+            msg += f"—{break_time_str}__ ({minutes} min)."
         else:
             msg += "__ i jest to ostatnia przerwa."
     else:

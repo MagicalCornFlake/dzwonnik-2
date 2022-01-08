@@ -8,7 +8,7 @@ from math import ceil
 from discord import Message, Embed
 
 # Local application imports
-from . import get_datetime_from_input, get_next_period, get_lesson_by_roles
+from . import LINK_404_URL, get_datetime_from_input, get_next_period, get_lesson_by_roles
 from .. import bot, util, Emoji, Weekday, GROUP_NAMES
 
 
@@ -25,41 +25,55 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
         return False, time
 
     def process(time: datetime) -> tuple[bool, str, str]:
-        next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
-        lesson = get_lesson_by_roles(lesson_period if lesson_period < 10 else lesson_period - 9, weekday_index, message.author.roles)
+        # next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
+        next_lesson = get_next_period(time)
+        lesson = next_lesson[1] % 10, next_lesson[-1], message.author.roles
+        lesson = get_lesson_by_roles(*lesson)
         if not lesson:
-            return False, f"{Emoji.INFO} Nie ma żadnych zajęć dla Twojej grupy po godz. {time:%H:%M}.", ""
+            return False, (f"{Emoji.INFO} Nie ma żadnych zajęć dla Twojej grupy"
+                           f" po godzinie {time:%H:%M}.")
         bot.send_log("Received lesson:", lesson)
-        if next_lesson_is_today:
+        if next_lesson[0]:
             if lesson['period'] > 10:
                 # Currently lesson
-                lesson_end_datetime = util.get_time(lesson['period'] - 10, time, True)
+                lesson_end_datetime = lesson['period'] - 10, time, True
+                lesson_end_datetime = util.get_time(*lesson_end_datetime)
                 bot.send_log("Lesson ending at:", lesson_end_datetime)
                 # Get the next lesson after the end of this one, recursive call
                 return process(lesson_end_datetime)
             # Currently break
             when = " "
-            lesson_start_datetime = util.get_time(lesson['period'], time, False)
+            lesson_start_datetime = lesson['period'], time, False
+            lesson_start_datetime = util.get_time(*lesson_start_datetime)
             bot.send_log("Lesson starting at:", lesson_start_datetime)
             mins = ceil((lesson_start_datetime - time).seconds / 60)
-            countdown = f" (za {(util.conjugate_numeric(mins // 60, 'godzin') + ' ') * (mins >= 60)}{util.conjugate_numeric(mins % 60, 'minut')})"
+            hours = util.conjugate_numeric(mins // 60, 'godzin')
+            hours = (hours + " ") * (mins >= 60)
+            countdown = f" (za {hours}{util.conjugate_numeric(mins % 60, 'minut')})"
         else:
-            when = " w poniedziałek" if Weekday.FRIDAY <= time.weekday() <= Weekday.SATURDAY else " jutro"
+            when = Weekday.FRIDAY <= time.weekday() <= Weekday.SATURDAY
+            when = " w poniedziałek" if when else " jutro"
             countdown = ""
-        next_period_time = util.get_formatted_period_time(lesson["period"]).split("-")[0]
-        # Check if the group name has been mapped to a more user-friendly version; otherwise use the group code
-        group_name: str = GROUP_NAMES.get(lesson['group'], lesson['group'])
+        next_period_time = util.get_formatted_period_time(lesson["period"])
+        next_period_time = next_period_time.split("-", maxsplit=1)[0]
+        # Check if the group name has been mapped to a more user-friendly version
+        temp_str: str = GROUP_NAMES.get(lesson['group'], lesson['group'])
         # Append a space if the group is not the entire class
-        group = group_name + " " * (lesson['group'] != "grupa_0")
-        return True, f"{Emoji.INFO} Następna lekcja {group}to **{util.get_lesson_name(lesson['name'])}**" \
-                     f"{when} o godzinie __{next_period_time}__{countdown}.", util.get_lesson_link(lesson['name'])
+        group = temp_str + " " * (lesson['group'] != "grupa_0")
+        temp_str = util.get_lesson_name(lesson['name'])
+        return True, (f"{Emoji.INFO} Następna lekcja {group}to **{temp_str}**{when} o godzinie "
+                      f"__{next_period_time}__{countdown}."), util.get_lesson_link(lesson['name'])
 
-    success, msg, raw_link = process(time)
-    if not success:
-        return False, msg
+    temp_var = process(time)
+    if not temp_var[0]:
+        # First element of tuple indicates success of operation
+        # Second element represents error message
+        return False, temp_var[1]
+    msg, raw_link = temp_var[1:]
 
     embed = Embed(title=f"Następna lekcja ({time:%H:%M})", description=msg)
-    link = f"[meet.google.com](https://meet.google.com/{raw_link})" if raw_link else "[brak](http://guzek.uk/error/404?lang=pl-PL&source=discord)"
+    link = f"[meet.google.com](https://meet.google.com/{raw_link})" if raw_link else LINK_404_URL
     embed.add_field(name="Link do lekcji", value=link)
-    embed.set_footer(text=f"Użyj komendy {bot.prefix}nl, aby pokazać tą wiadomość.")
+    temp_var = f"Użyj komendy {bot.prefix}nl, aby pokazać tą wiadomość."
+    embed.set_footer(text=temp_var)
     return True, embed

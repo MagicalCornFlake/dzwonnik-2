@@ -74,8 +74,8 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
 
     try:
         # Actually execute the code
-        exec(expression_to_be_executed)
-    except BaseException as exec_exc:
+        exec(expression_to_be_executed)  # pylint: disable=exec-used
+    except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(exec_exc)
     else:

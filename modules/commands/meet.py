@@ -41,7 +41,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             return False, f"{Emoji.INFO} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
         else:
             ensure_sender_is_admin(message, "zmieniania linków Google Meet")
-            if not (re.match(link_pattern, args[1])):
+            if not re.match(link_pattern, args[1]):
                 # Display codes list if the specified link is of invalid format
                 raise InvalidFormatException(args[1])
             # User-given link is valid
@@ -51,8 +51,10 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
                 f"'__{lesson_name}__' z `{link}` na **{args[1]}**."
     except InvalidFormatException:
         # noinspection SpellCheckingInspection
-        msg_first_line = ":warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx` bądź `lookup/xxxxxxxxxx`."
-        return False, msg_first_line + f"\nArgument '__{args[1]}__' nie spełnia tego wymogu."
+        invalid_format_msg = (f":warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx`"
+                              f" bądź `lookup/xxxxxxxxxx`.\n"
+                              f"Argument '__{args[1]}__' nie spełnia tego wymogu.")
+        return False, invalid_format_msg
     except ValueError:
         msg = f"Należy napisać po komendzie `{bot.prefix}meet` kod lekcji, " + \
             "aby zobaczyć jaki jest ustawiony link do Meeta dla tej lekcji, " + \

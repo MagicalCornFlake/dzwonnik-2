@@ -7,7 +7,8 @@ from datetime import datetime
 from discord import Message, Embed
 
 # Local application imports
-from .. import Weekday, WEEKDAY_NAMES, Emoji, GROUP_NAMES, util, bot
+from . import LINK_404_URL
+from .. import util, bot, Weekday, Emoji, WEEKDAY_NAMES, GROUP_NAMES
 from ..util import web
 from ..util.crawlers import lesson_plan as lesson_plan_api
 
@@ -22,7 +23,8 @@ DESC = """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na 
 
 
 def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
-    args = message.content.split(" ")
+    """Event handler for the 'plan' command."""
+    args: list[str] = message.content.split(" ")
     today = datetime.now().weekday()
     class_lesson_plan = util.lesson_plan
     class_code = util.OUR_CLASS
@@ -41,9 +43,8 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                         # It is, but of invalid format
                         err_msg = f"{args[1]} is not a number between 1 and 5."
                         raise RuntimeError(err_msg) from None
-                    else:
-                        # It is, and of correct format
-                        query_day = int(args[1]) - 1
+                    # It is, and of correct format
+                    query_day = int(args[1]) - 1
                 except ValueError:
                     # The input is not a number.
                     # Check if it is a day of the week
@@ -56,7 +57,8 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                     if query_day == -1:
                         # The input is not a valid weekday name.
                         # ValueError can't be used since it has already been caught
-                        raise RuntimeError(f"invalid weekday name: {args[1]}") from None
+                        err_msg = f"invalid weekday name: {args[1]}"
+                        raise RuntimeError(err_msg) from None
             if len(args) > 2:
                 try:
                     plan_id = lesson_plan_api.get_plan_id(args[2])
@@ -67,27 +69,27 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                     try:
                         result = lesson_plan_api.get_lesson_plan(plan_id)
                     except web.WebException as web_exc:
-                        # Invalid web response; if the exception is something else, it is raised again
+                        # Invalid web response
                         return False, web.get_error_message(web_exc)
                     else:
                         class_lesson_plan = result[0]
-        except RuntimeError as val_exc:
-            handling_exception = f"Handling exception with args: '{' '.join(args[1:])}' ({type(val_exc).__name__}: \"{val_exc}\")"
-            bot.send_log(handling_exception, force=True)
-            return False, f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer dnia (1-5) " \
-                          f"bądź dzień tygodnia, lub zostawić parametry komendy puste. Drugim opcjonalnym argumentem jest nazwa klasy."
+        except RuntimeError:
+            return False, (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer "
+                           f"dnia (1-5) bądź dzień tygodnia, lub zostawić parametry komendy puste."
+                           f" Drugim opcjonalnym argumentem jest nazwa klasy.")
 
-    plan = class_lesson_plan[WEEKDAY_NAMES[query_day]]
+    plan: list[list[dict[str, any]]] = class_lesson_plan[WEEKDAY_NAMES[query_day]]
 
-    # The generator expression creates a list that maps each element from 'plan' to the boolean it evaluates to.
-    # Empty lists are evaluated as False, non-empty lists are evaluated as True.
-    # The sum() function adds the contents of the list, keeping in mind that True == 1 and False == 0.
-    # In essence, 'periods' evaluates to the number of non-empty lists in 'plan' (i.e. the number of lessons on that day).
-    periods: int = sum([bool(lesson) for lesson in plan])
+    # The generator expression creates a list that maps each element from 'plan' to the boolean it
+    # evaluates to. Empty lists are evaluated as False, non-empty lists are evaluated as True.
+    # The sum function adds the contents of the list, keeping in mind that True = 1 and False = 0.
+    # In essence, 'periods' evaluates to the number of non-empty lists in 'plan'.
+    periods: int = sum([bool(lesson) for lesson in plan])  #  number of lessons on the given day
     first_period: int = 0
 
     title = f"Plan lekcji {class_code}"
-    desc = f"Liczba lekcji na **{WEEKDAY_NAMES[query_day].lower().replace('środa', 'środę')}**: {periods}"
+    weekday = WEEKDAY_NAMES[query_day].lower().replace('środa', 'środę')
+    desc = f"Liczba lekcji na **{weekday}**: {periods}"
     lesson_plan_url = lesson_plan_api.get_plan_link(class_code)
     embed = Embed(title=title, description=desc, url=lesson_plan_url)
     footer = f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość."
@@ -101,7 +103,7 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
         lesson_texts = []
         for lesson in plan[period]:
             raw_link = util.get_lesson_link(lesson['name'])
-            link = f"https://meet.google.com/{raw_link}" if raw_link else "http://guzek.uk/error/404?lang=pl-PL&source=discord"
+            link = f"https://meet.google.com/{raw_link}" if raw_link else LINK_404_URL
             lesson_name = util.get_lesson_name(lesson['name'])
             room = lesson['room_id']
             lesson_texts.append(f"[{lesson_name} - sala {room}]({link})")

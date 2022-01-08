@@ -193,7 +193,7 @@ async def on_message(message: discord.Message) -> None:
     except MissingPermissionsException as invalid_perms_exc:
         error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
         message.reply(error_message)
-    except BaseException as invalid_perms_exc:
+    except Exception as invalid_perms_exc:  # pylint: disable=broad-except
         await ping_konrad()
         send_log(util.format_exception_info(invalid_perms_exc), force=True)
         await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
