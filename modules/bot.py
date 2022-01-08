@@ -31,6 +31,8 @@ MY_SERVER_ID: int = 766346477874053130
 
 # The message template to be used when an API call returned an invalid response.
 BAD_RESPONSE = "Error! Received an invalid response from web request. Exception trace:\n"
+# The template for the log message sent when the bot's status is updated
+STATUS_LOG_TEMPLATE = "... new status message is '{}'.\n... current period: {}"
 
 # If a message starts with any of the below keys, the bot will reply appropriately.
 # noinspection SpellCheckingInspection
@@ -148,11 +150,6 @@ async def on_ready() -> None:
     for lesson_name in sorted(lesson_names):
         util.lesson_links.setdefault(lesson_name, None)
 
-    # Sets status message on bot start
-    status = discord.Activity(
-        type=discord.ActivityType.watching, name=get_new_status_msg())
-    await client.change_presence(activity=status)
-
     # Starts loops that run continuously
     main_update_loop.start()
 
@@ -227,11 +224,13 @@ async def on_message(message: discord.Message) -> None:
         await on_success_coroutine(message, reply_msg)
 
 
-def get_new_status_msg(query_time: datetime.datetime = None) -> str:
+def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     """Determine the current lesson status message.
 
     Arguments:
         query_time -- the time to get the status for.
+
+    Returns the new status as a string, or False indicating that the status does not need updating.
     """
     # Default time to check is current time
     query_time = query_time or datetime.datetime.now()
@@ -297,8 +296,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str:
         util.current_period = -1
         is_weekend = query_time.weekday() >= Weekday.FRIDAY
         new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
-    status_log_msg = f"'{new_status_msg}'.\nCurrent period: {util.current_period}"
-    send_log("... new status message is " + status_log_msg, force=True)
+    if new_status_msg == client.activity.name:
+        send_log("... new status message is unchanged.", force=True)
+        return False
+    fmt_vars = new_status_msg, util.current_period
+    status_log_msg = STATUS_LOG_TEMPLATE.format(*fmt_vars)
+    send_log(status_log_msg, force=True)
     return new_status_msg
 
 
@@ -329,13 +332,14 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
     }[tense]  # tense can have a value of 'today', 'tomorrow' or 'past'
     reminder_message = f"{mention_text} Na {when} zadanie: **{event_name}**."
     message: discord.Message = await target_channel.send(reminder_message)
-    emojis = [Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK]
-    for emoji in emojis:
+    complete_emoji, snooze_emoji = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
+    for emoji in complete_emoji, snooze_emoji:
         await message.add_reaction(emoji)
 
     def validate_reaction(test_reaction: discord.Reaction, reaction_user: discord.Member) -> bool:
         """Checks whether or not the reaction contains the correct emoji."""
-        return reaction_user != client.user and str(test_reaction.emoji) in emojis
+        emoji_valid = str(test_reaction.emoji) in complete_emoji, snooze_emoji
+        return reaction_user != client.user and emoji_valid
 
     async def snooze_event() -> None:
         """Increases the event's due date by one hour."""
@@ -350,7 +354,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
     except asyncio.TimeoutError:  # 120 seconds have passed with no user input
         await snooze_event()
     else:
-        if str(reaction.emoji) == emojis[0]:
+        if str(reaction.emoji) == complete_emoji:
             # Reaction emoji is ':ballot_box_with_check:'
             event.reminder_is_active = False
             completed_msg = f"{Emoji.CHECK_2} Zaznaczono zadanie `{event_name}` jako odrobione."
@@ -414,13 +418,25 @@ async def main_update_loop() -> None:
     await check_for_lucky_numbers_updates()
 
 
-async def check_for_status_updates(current_time: datetime.datetime) -> None:
+async def check_for_status_updates(current_time: datetime.datetime, force: bool = False) -> None:
     """Checks if the current hour and minute is in any time slot for the lesson plan timetable."""
-    if any([current_time.hour, current_time.minute] in times for times in util.lesson_plan["Godz"]):
-        # Check is successful, bot updates Discord status
-        msg: str = get_new_status_msg()
-        status = discord.Activity(type=discord.ActivityType.watching, name=msg)
-        await client.change_presence(activity=status)
+    now = current_time.hour, current_time.minute
+    # Loop throught each period to see if the current time is the same as either start or end time
+    if not force:
+        for start_end_times in util.lesson_plan["Godz"]:
+            if now in start_end_times:
+                # Current time is either the period's start or end time; stop checking further times
+                break
+        else:
+            # We have reached the end of the loop without finding a match
+            return
+    # Check is successful; update bot's Discord status
+    msg: str = get_new_status_msg()
+    if not msg:
+        # Do not update the status if it evaluates to False (i.e. status does not need updating)
+        return
+    status = discord.Activity(type=discord.ActivityType.watching, name=msg)
+    await client.change_presence(activity=status)
 
 
 async def check_for_due_homework(current_time: datetime.datetime) -> None:
@@ -448,6 +464,7 @@ async def check_for_due_homework(current_time: datetime.datetime) -> None:
 async def wait_before_starting_loop() -> None:
     """Wait for the client to initialise before starting loops."""
     await client.wait_until_ready()
+    await check_for_status_updates(datetime.datetime.now(), force=True)
 
 
 async def check_for_steam_market_updates() -> None:

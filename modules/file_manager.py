@@ -10,6 +10,9 @@ from . import bot, commands, util
 from .util.api import lucky_numbers
 
 
+on_exit_msg = {}
+
+
 def read_data_file(filename: str = "data.json") -> None:
     """Reads data file and updates settings."""
     bot.send_log(f"Reading data file '{filename}'...", force=True)
@@ -26,11 +29,10 @@ def read_data_file(filename: str = "data.json") -> None:
             json.dump(default_settings, file, indent=2)
     with open(filename, 'r', encoding="UTF-8") as file:
         data: dict[str, any] = json.load(file)
-    try:
-        util.lesson_links.update(data.get("lesson_links", {}))
-    except KeyError:
-        lesson_links_404 = "Lesson links not found in data file. Using blank values."
-        bot.send_log(lesson_links_404, force=True)
+    # Read the lesson links data and update the local dictionary if it exists
+    util.lesson_links.update(data.get("lesson_links", {}))
+    # Read the on exit message saved in data file if it exists
+    on_exit_msg.update(data.get("on_exit_msg", {}))
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
     for attributes in data.get("homework_events", {}).values():
@@ -45,8 +47,7 @@ def read_data_file(filename: str = "data.json") -> None:
 
     for attributes in data.get("tracked_market_items", []):
         assert isinstance(attributes, dict)
-        item_name, min_price, max_price, author_id = attributes.values()
-        item = commands.TrackedItem(item_name, min_price, max_price, author_id)
+        item = commands.TrackedItem(*attributes.values())
         if item not in commands.tracked_market_items:
             commands.tracked_market_items.append(item)
 
@@ -87,7 +88,8 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
         "lesson_links": {code: link for code, link in util.lesson_links.items() if link},
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
-        "lucky_numbers": lucky_numbers.serialise()
+        "lucky_numbers": lucky_numbers.serialise(),
+        "on_exit_msg": on_exit_msg
     }
 
     # Format the data to be JSON-serialisable

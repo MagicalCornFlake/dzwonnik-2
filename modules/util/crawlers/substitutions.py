@@ -15,9 +15,9 @@ from .. import web
 from ... import Colour, file_manager, util
 
 
-sub_info_pattern = re.compile(
-    r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,\s]+)*\s(.*)")
-sub_groups_pattern = re.compile(r"(?:\sgr.\s|,\s|\si\s)(p. [^,\s]+)")
+SUB_INFO_PATTERN = r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,\s]+)*\s(.*)"
+SUB_INFO_PATTERN = re.compile(SUB_INFO_PATTERN)
+SUB_GROUPS_PATTERN = re.compile(r"(?:\sgr.\s|,\s|\si\s)(p. [^,\s]+)")
 
 SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
@@ -91,8 +91,8 @@ def parse_html(html: str) -> dict:
                 else:
                     lesson_ints.append(int(lesson))
             for lesson in lesson_ints:
-                info_match = re.match(sub_info_pattern, info)
-                groups = re.findall(sub_groups_pattern, info)
+                info_match = re.match(SUB_INFO_PATTERN, info)
+                groups = re.findall(SUB_GROUPS_PATTERN, info)
                 class_year, classes, class_info, details = info_match.groups()
                 lesson_list.setdefault(lesson, {})
                 for class_letter in classes:

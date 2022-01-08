@@ -42,6 +42,7 @@ def update_cache() -> dict[str, str or list[int or str]]:
 
     Returns the old cache so that it can be compared with the new one.
     """
+    # TODO: Change cached_data storage method
     global cached_data
     old_cache = dict(cached_data or {})
     res = web.make_request(SOURCE_URL, ignore_request_limit=True)

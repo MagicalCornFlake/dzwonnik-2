@@ -1,4 +1,4 @@
-"""Functionality for scraping the data from lo1.gliwice.pl website to retrieve lesson plan details."""
+"""Functionality for parsing the data from lo1.gliwice.pl to retrieve lesson plan details."""
 
 # Standard library imports
 import json
@@ -8,21 +8,24 @@ import re
 from .. import web
 from ... import Colour, file_manager
 
-period_pattern = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
-duration_pattern = re.compile(
-    r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$")
-lesson_pattern = re.compile(r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">(.+?)</a>"
-                            r"|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
+PERIOD_PATTERN = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
+DURATION_PATTERN = r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$"
+DURATION_PATTERN = re.compile(DURATION_PATTERN)
+LESSON_PATTERN = (r"<span class=\"p\">([^#]+?)(?:-(\d+)/(\d+))?</span>.*?(?:<a .*?class=\"n\">"
+                  r"(.+?)</a>|<span class=\"p\">(#.+?)</span>) <a .*?class=\"s\">(.+?)</a>")
+LESSON_PATTERN = re.compile(LESSON_PATTERN)
 
 # Tags that should not increment or decrement a line's tag depth
 IGNORED_TAGS = ["hr", "br"]
+SOURCE_URL = "http://www.lo1.gliwice.pl/wp-content/uploads/static/plan/plany/o{id}.html"
 
 
 def get_plan_id(class_id: str or int = None) -> int:
     """Gets the plan ID that is used on the school website of a given class.
 
     Arguments:
-        class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
+        class_id -- a string representing the name of the class,
+        or an integer representing the lesson plan ID.
     """
 
     if isinstance(class_id, int) and 1 <= class_id <= 16:
@@ -48,18 +51,20 @@ def get_plan_link(class_id: str or int) -> str:
     """Gets the link to a given class' lesson plan.
 
     Arguments:
-        class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
+        class_id -- a string representing the name of the class,
+        or an integer representing the lesson plan ID.
     """
-    return f"http://www.lo1.gliwice.pl/wp-content/uploads/static/plan/plany/o{get_plan_id(class_id)}.html"
+    return SOURCE_URL.format(id=get_plan_id(class_id))
 
 
 def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
-    """Parses the HTML and finds a specific hard-coded table, then collects the timetable data from it.
+    """Parses the HTML and finds a specific table, then collects the timetable data from it.
 
     Arguments:
-        html -- a string containing whole HTML code, e.g. from the contents of a web request's response.
+        html -- a string containing whole HTML code, e.g. from the contents of a web response.
 
-    Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher]) to each weekday name.
+    Returns a dictionary that assigns a list of lessons (lesson, group, room_id, [teacher])
+    to each weekday name.
     """
     tag_index = seen_tables = row_number = column_number = 0
     headers = []
@@ -73,18 +78,18 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             return []
         elif raw_line.startswith("<td class=\"nr\">"):
             # Row containing the lesson period number
-            return int(period_pattern.match(raw_line).groups()[-1])
+            return int(PERIOD_PATTERN.match(raw_line).groups()[-1])
         elif raw_line.startswith("<td class=\"g\">"):
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # e.g. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
             times = [int(time)
-                     for time in duration_pattern.match(raw_line).groups()]
-            # Check if the start hour of the lesson is less than 12:00 (i.e. old timetable is still relevant)
+                     for time in DURATION_PATTERN.match(raw_line).groups()]
+            # Check if the lesson start hour is less than 12:00 (i.e. old timetable still relevant)
             lesson_start_hour = times[0]
             if lesson_start_hour < 12:
                 return [times[:2], times[2:]]
-            # The lesson is after or 12:00
-            # We must manually change the returned values since the timetable is not up-to-date on the website
+            # The lesson is after or 12:00.
+            # We must manually change the returned values since the timetable is not up-to-date.
             # After 12:00, the breaks last 5 minutes instead of 10.
             new_times = {
                 12: [[12, 50], [13, 35]],
@@ -96,31 +101,43 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         else:
             # Row containing lesson information for a given period
             tmp: list[dict[str, str]] = []
-            for match in lesson_pattern.findall(raw_line):
+            for match in LESSON_PATTERN.findall(raw_line):
                 lesson_name, group, groups, teacher, code, room_id = match
                 if group:
                     if int(groups) == 5:
                         group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
                 else:
-                    # If the group is not specified but the room code is, use that instead
-                    # If neither are, check if the current lesson is Religious Studies (and set the group accordingly)
-                    # Finally, if none of the above, set the group to 'grupa_0' (whole class)
-                    group = code.lstrip(
-                        '#') if code else 'rel' if lesson_name == "religia" else '0'
-                name = lesson_name.replace("r_j.", "j.").replace(
-                    " DW", "").replace("j. ", "j.").replace('r_', 'r-')
+                    # Group is not specified in timetable
+                    if code:
+                        # If the room code is specified, use that instead.
+                        group = code.lstrip('#')
+                    elif lesson_name == "religia":
+                        # If the current lesson is Religious Studies, use that code.
+                        group = "rel"
+                    else:
+                        # Set group to 'grupa_0' (whole class).
+                        group = "0"
+                mappings = (
+                    ("r_j.", "j."),
+                    (" DW", ""),
+                    ("j. ", "j."),
+                    ("r_", "r-"),
+                    (" ", "-")
+                )
+                name: str = lesson_name
+                for mapping in mappings:
+                    name = name.replace(*mapping)
                 if name == "mat":
                     name = "r-mat"
                 elif name in ["mat.", "matematyka"]:
                     name = "mat"
                 tmp.append({
-                    # Replace extended language lessons with the regular variant since there is no practical distinction
-                    "name": name.replace(' ', '-'),
+                    "name": name,
                     "group": "grupa_" + group,
                     "room_id": room_id
                 })
                 if teacher:
-                    # Add the teacher to the returned lesson info if they are specified in the given data
+                    # Add the teacher to the returned lesson info if they are specified
                     tmp[-1]["teacher"] = teacher
             return tmp
 
@@ -159,11 +176,11 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
 
 
 def get_lesson_plan(class_id="2d", force_update=False) -> tuple[dict, bool]:
-    """Gets the lesson plan for a given class.
-    Returns a tuple containing the data itself and a boolean indicating if the cache already existed.
+    """Gets the lesson plan for a given class. Returns a tuple containing the data itself
+    and a boolean indicating if the cache already existed.
 
     Arguments:
-        class_id -- a string representing the name of the class, or an integer representing the lesson plan ID.
+        class_id -- the lesson plan ID integer, or a string representing the name of the class.
         force_update -- a boolean indicating if the cache should be forcefully updated.
     """
     plan_id = get_plan_id(class_id)
@@ -190,7 +207,8 @@ if __name__ == "__main__":
         if not col.startswith('_') and col is not None:
             _log(f"Colour {colours[col]}{col}{Colour.ENDC}")
     _log()
-    input_msg = f"{Colour.OKBLUE}Enter {Colour.OKGREEN}{Colour.UNDERLINE}class name{Colour.ENDC}{Colour.OKBLUE}...\n{Colour.WARNING}> "
+    input_msg = (f"{Colour.OKBLUE}Enter {Colour.OKGREEN}{Colour.UNDERLINE}class name{Colour.ENDC}"
+                 f"{Colour.OKBLUE}...\n{Colour.WARNING}> ")
     try:
         while True:
             raw_data = get_lesson_plan(input(input_msg), force_update=True)[0]

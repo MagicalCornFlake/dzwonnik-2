@@ -3,10 +3,10 @@
 # Third-party imports
 import discord
 
-from modules.commands import ensure_sender_is_admin
 
 # Local application imports
-from .. import bot
+from .. import bot, file_manager
+from modules.commands import ensure_sender_is_admin
 DESC = None
 
 
@@ -23,7 +23,15 @@ def exit_bot(message: discord.Message) -> tuple[bool, str]:
     return False, "Exiting program."
 
 
-async def terminate_bot(_original_msg: discord.Message, _reply_msg: discord.Message) -> None:
-    """Terminates the bot client process."""
+async def terminate_bot(original_msg: discord.Message, reply_msg: discord.Message) -> None:
+    """Save's the ID of the bot's exit message and terminates the bot client process."""
+    command_content: str = original_msg.content
+    is_restart = command_content.startswith(f"{bot.prefix}restart")
+    file_manager.on_exit_msg = {
+        "is_restart": is_restart,
+        "guild_id": reply_msg.guild.id,
+        "channel_id": reply_msg.channel.id,
+        "message_id": reply_msg.id
+    }
     bot.main_update_loop.stop()
     await bot.close()
