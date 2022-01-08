@@ -203,37 +203,39 @@ def get_lesson_by_roles(query_period: int, weekday: int, roles: list[str, Role])
 
 def get_datetime_from_input(message: Message, calling_command: str) -> datetime or str:
     """Parses the message content and returns a datetime object if it contains a valid time.
-    Otherwise, returns the current date and time.
+    
+    Returns the current date and time if there are no valid time parameters in the message content.
     """
     args: list[str] = message.content.split(" ")
     current_time = datetime.now()
-    if len(args) > 1:
+    if len(args) == 1:
+        # No input parameters; return the current time as-is
+        return True, current_time
+    try:
+        # Input validation
         try:
-            # Input validation
-            try:
-                if 0 <= int(args[1]) < 24:
-                    if not 0 <= int(args[2]) < 60:
-                        raise RuntimeError(
-                            f"Godzina ('{args[2]}') nie znajduje się w przedziale `0, 59`.")
-                else:
+            if 0 <= int(args[1]) < 24:
+                if not 0 <= int(args[2]) < 60:
                     raise RuntimeError(
-                        f"Minuta ('{args[1]}') nie znajduje się w przedziale `0, 23`.")
-            except IndexError:
-                # Minute not specified by user; use default of :00.
-                args.append("00")
-            except ValueError:
-                # NaN
-                error_description = f"`{':'.join(args[1:])}` nie jest godziną."
-                raise RuntimeError(error_description) from None
-        except RuntimeError as invalid_arg_exc:
-            msg = f"{Emoji.WARNING} {invalid_arg_exc}\nNależy napisać po komendzie " + \
-                f"`{bot.prefix}{calling_command}` godzinę i ewentualnie minutę oddzieloną spacją"
-            return False, msg + ", lub zostawić parametry komendy puste."
-        params = {
-            "hour": int(args[1]),
-            "minute": int(args[2]),
-            "second": 0,
-            "microsecond": 0
-        }
-        current_time = current_time.replace(**params)
-    return True, current_time
+                        f"Godzina ('{args[2]}') nie znajduje się w przedziale `0, 59`.")
+            else:
+                raise RuntimeError(
+                    f"Minuta ('{args[1]}') nie znajduje się w przedziale `0, 23`.")
+        except IndexError:
+            # Minute not specified by user; use default of :00.
+            args.append("00")
+        except ValueError:
+            # NaN
+            error_description = f"`{':'.join(args[1:])}` nie jest godziną."
+            raise RuntimeError(error_description) from None
+    except RuntimeError as invalid_arg_exc:
+        msg = f"{Emoji.WARNING} {invalid_arg_exc}\nNależy napisać po komendzie " + \
+            f"`{bot.prefix}{calling_command}` godzinę i ewentualnie minutę oddzieloną spacją"
+        return False, msg + ", lub zostawić parametry komendy puste."
+    params = {
+        "hour": int(args[1]),
+        "minute": int(args[2]),
+        "second": 0,
+        "microsecond": 0
+    }
+    return True, current_time.replace(**params)
