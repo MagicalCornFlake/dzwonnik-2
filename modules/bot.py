@@ -457,8 +457,9 @@ async def wait_before_starting_loop() -> None:
         if msg_info["is_restart"]:
             await last_msg.edit(RESTARTED_BOT_MSG)
         else:
-            await last_msg.reply(RESTARTED_BOT_MSG)
+            await last_msg.reply(content=RESTARTED_BOT_MSG)
     finally:
+        # Reset the on exit message so that it is not replied to twice.
         file_manager.on_exit_msg = {}
 
 
