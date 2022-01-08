@@ -3,6 +3,7 @@
 
 # Standard library imports
 import ast
+import asyncio
 import json
 
 # Third-party imports
@@ -15,8 +16,7 @@ from .. import bot, util
 DESC = None
 MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
 ASYNC_EXPRESSION_TEMPLATE = ("async def _execute_async():\n{}\n\n"
-                             "event_loop = asyncio.get_event_loop()\n"
-                             "event_loop.create_task(_execute_async())")
+                             "_event_loop.create_task(_execute_async())")
 
 
 class ExecResultList(list):
@@ -157,4 +157,6 @@ def execute_async(message: discord.Message) -> tuple[bool, str]:
         indented_expression = expression.replace("\n", "\n    ")
         expr = ASYNC_EXPRESSION_TEMPLATE.format(indented_expression)
         bot.send_log("Async expression template:\n" + expr, force=True)
+
+        _event_loop = asyncio.get_event_loop()
         return False, execute(expr)
