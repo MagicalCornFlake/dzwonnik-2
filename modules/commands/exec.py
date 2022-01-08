@@ -12,6 +12,8 @@ from .. import bot, util
 
 
 DESC = None
+MISSING_PERMS_MSG_SYNC = "synchronicznego egzekowania kodu"
+MISSING_PERMS_MSG_ASYNC = "asynchronicznego egzekowania kodu"
 
 
 class ExecResultList(list):
@@ -32,14 +34,16 @@ class ExecResultList(list):
 def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     """Event handler for the 'exec' command."""
     if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        missing_perms_msg = "synchronicznego egzekowania kodu"
-        raise bot.MissingPermissionsException(missing_perms_msg)
+        raise bot.MissingPermissionsException(MISSING_PERMS_MSG_SYNC)
     msg_content: str = message.content
     args = msg_content.split(' ', maxsplit=1)
     try:
         expression = args[1]
     except IndexError:
         return False, "Type an expression or command to execute."
+    else:
+        fmt_expr = expression.replace("\n", "\n>>> ")
+        result_template = f"Code executed:\n```py\n>>> {fmt_expr}\n{{}}"
     try:
         if "return " in expression:
             # Inject temp variable storage in place of 'return' statements
@@ -60,7 +64,7 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
             fmt_exc = util.format_exception_info(syntax_error)
             caught_exc_msg = f"Caught SyntaxError:\n{fmt_exc}\nExecuting raw code:\n{expression}"
             bot.send_log(caught_exc_msg, force=True)
-            
+
             # Execute the code without temp variable assignment
             exec(expression)
     except Exception as ex:
@@ -69,10 +73,10 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     else:
         # Default the temp variable to an empty ExecResultList if it's not been assigned
         exec_result = locals().get("temp", ExecResultList())
-        
+
         # Check if the results list is empty
         if isinstance(exec_result, ExecResultList) and not exec_result:
-            return False, "Code executed (return value was not specified)."
+            return False, result_template.format("```(return value was not specified)")
     temp_variable_log_msg = f"Temp variable ({type(exec_result)}):\n{exec_result}"
     bot.send_log(temp_variable_log_msg, force=True)
     results = []
@@ -101,17 +105,15 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
             result = "```\nDetected JSON content:```json\n" + result
         return result
 
-    fmt_expr = expression.replace("\n", "\n>>> ")
     results = "\n".join([fmt_res(i) for i in range(len(results))])
 
-    return False, f"Code executed:\n```py\n>>> {fmt_expr}\n{results}```"
+    return False, result_template.format(results + "```")
 
 
 def execute_async(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     """Event handler for the 'exec_async' command."""
     if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        raise bot.MissingPermissionsException(
-            "asynchronicznego egzekowania kodu")
+        raise bot.MissingPermissionsException(MISSING_PERMS_MSG_ASYNC)
     return False, ""
 
 
