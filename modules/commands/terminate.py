@@ -29,7 +29,6 @@ async def terminate_bot(original_msg: discord.Message, reply_msg: discord.Messag
     is_restart = command_content.startswith(f"{bot.prefix}restart")
     file_manager.on_exit_msg = {
         "is_restart": is_restart,
-        "guild_id": reply_msg.guild.id,
         "channel_id": reply_msg.channel.id,
         "message_id": reply_msg.id
     }
