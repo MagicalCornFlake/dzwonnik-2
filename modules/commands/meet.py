@@ -13,7 +13,7 @@ from .. import bot, util, file_manager, Emoji
 
 DESC = None
 
-link_pattern = re.compile(r"[a-z]{3}-[a-z]{4}-[a-z]{3}$|lookup/[a-z]{10}$")
+LINK_PATTERN = re.compile(r"[a-z]{3}-[a-z]{4}-[a-z]{3}$|lookup/[a-z]{10}$")
 
 
 class InvalidFormatException(Exception):
@@ -41,14 +41,14 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             return False, f"{Emoji.INFO} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
         else:
             ensure_sender_is_admin(message, "zmieniania linków Google Meet")
-            if not re.match(link_pattern, args[1]):
+            if not re.match(LINK_PATTERN, args[1]):
                 # Display codes list if the specified link is of invalid format
                 raise InvalidFormatException(args[1])
             # User-given link is valid
             util.lesson_links[args[0]] = args[1]
             file_manager.save_data_file()
-            return False, f"{Emoji.CHECK} Zmieniono link dla lekcji " \
-                f"'__{lesson_name}__' z `{link}` na **{args[1]}**."
+            return False, (f"{Emoji.CHECK} Zmieniono link dla lekcji '__{lesson_name}__'"
+                           f" z `{link}` na **{args[1]}**.")
     except InvalidFormatException:
         # noinspection SpellCheckingInspection
         invalid_format_msg = (f":warning: Uwaga: link do Meeta powinien mieć formę `xxx-xxxx-xxx`"

@@ -36,6 +36,8 @@ STATUS_LOG_TEMPLATE = "... new status message is '{}'.\n... current period: {}"
 
 RESTARTED_BOT_MSG = "Restarted bot!"
 
+HOMEWORK_EMOJI = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
+
 # If a message starts with any of the below keys, the bot will reply appropriately.
 # noinspection SpellCheckingInspection
 AUTOMATIC_BOT_REPLIES = {
@@ -288,6 +290,12 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     return new_status_msg
 
 
+def validate_reaction(test_reaction: discord.Reaction, reaction_user: discord.Member) -> bool:
+    """Checks whether or not the reaction contains the correct emoji."""
+    emoji_valid = str(test_reaction.emoji) in HOMEWORK_EMOJI
+    return reaction_user != client.user and emoji_valid
+
+
 async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str) -> None:
     """Send a message reminding about the homework event."""
 
@@ -315,14 +323,8 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
     }[tense]  # tense can have a value of 'today', 'tomorrow' or 'past'
     reminder_message = f"{mention_text} Na {when} zadanie: **{event_name}**."
     message: discord.Message = await target_channel.send(reminder_message)
-    complete_emoji, snooze_emoji = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
-    for emoji in complete_emoji, snooze_emoji:
+    for emoji in HOMEWORK_EMOJI:
         await message.add_reaction(emoji)
-
-    def validate_reaction(test_reaction: discord.Reaction, reaction_user: discord.Member) -> bool:
-        """Checks whether or not the reaction contains the correct emoji."""
-        emoji_valid = str(test_reaction.emoji) in complete_emoji, snooze_emoji
-        return reaction_user != client.user and emoji_valid
 
     async def snooze_event() -> None:
         """Increases the event's due date by one hour."""
@@ -337,7 +339,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
     except asyncio.TimeoutError:  # 120 seconds have passed with no user input
         await snooze_event()
     else:
-        if str(reaction.emoji) == complete_emoji:
+        if str(reaction.emoji) == HOMEWORK_EMOJI[0]:
             # Reaction emoji is ':ballot_box_with_check:'
             event.reminder_is_active = False
             completed_msg = f"{Emoji.CHECK_2} Zaznaczono zadanie `{event_name}` jako odrobione."

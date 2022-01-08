@@ -88,7 +88,6 @@ INFO: dict[help, dict[str, any]] = {
     "exec_async": {
         "description": execute.DESC,
         "function": execute.execute_async,
-        "on_completion": execute.run_async_code,
     },
     "restart": {
         "description": terminate.DESC,
