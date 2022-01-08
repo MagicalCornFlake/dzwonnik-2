@@ -296,7 +296,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
         util.current_period = -1
         is_weekend = query_time.weekday() >= Weekday.FRIDAY
         new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
-    if new_status_msg == client.activity.name:
+    if client.activity and new_status_msg == client.activity.name:
         send_log("... new status message is unchanged.", force=True)
         return False
     fmt_vars = new_status_msg, util.current_period
@@ -411,7 +411,7 @@ async def main_update_loop() -> None:
             # Data does not need to be updated; only update at the given time
             return
             # The bot will update every x seconds so that it doesn't exceed the max
-        if current_time.minute < UPDATE_NUMBERS_FOR or current_time.second % UPDATE_NUMBERS_EVERY:
+        if current_time.minute >= UPDATE_NUMBERS_FOR or current_time.second % UPDATE_NUMBERS_EVERY:
             # Initial update period of API update window; don't update more than the maximum
             return
     # Lucky numbers data is not current; update it
