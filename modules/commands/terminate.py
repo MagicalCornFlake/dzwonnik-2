@@ -5,8 +5,8 @@ import discord
 
 
 # Local application imports
-from .. import bot, file_manager
 from modules.commands import ensure_sender_is_admin
+from .. import bot, file_manager
 DESC = None
 
 

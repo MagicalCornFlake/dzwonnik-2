@@ -203,7 +203,7 @@ def get_lesson_by_roles(query_period: int, weekday: int, roles: list[str, Role])
 
 def get_datetime_from_input(message: Message, calling_command: str) -> datetime or str:
     """Parses the message content and returns a datetime object if it contains a valid time.
-    
+
     Returns the current date and time if there are no valid time parameters in the message content.
     """
     args: list[str] = message.content.split(" ")
