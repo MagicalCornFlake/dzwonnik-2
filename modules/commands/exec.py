@@ -42,7 +42,7 @@ def inject_code(expression: str) -> str:
 
     Returns a string that may or may not contain injected code, depending on the input structure.
     """
-    bot.send_log("Attempting to inject into:\n" + expression, force = True)
+    bot.send_log("Attempting to inject into:\n" + expression, force=True)
     if "return " in expression:
         # Inject temp variable storage in place of 'return' statements
         inj_snippet = "locals()['temp'] += "
@@ -76,7 +76,7 @@ def execute(expression: str) -> str:
 
     Arguments:
         expression -- the raw expression to be executed.
-       
+
     Returns the message that should be sent back directly to the user.
     """
     fmt_expr = expression.replace("\n", "\n>>> ")
@@ -154,7 +154,7 @@ def execute_async(message: discord.Message) -> tuple[bool, str]:
     except IndexError:
         return False, "Type an expression or command to execute."
     else:
-        indented_expression = expression.replace("\n", "\n    ")
+        indented_expression = "    " + expression.replace("\n", "\n    ")
         expr = ASYNC_EXPRESSION_TEMPLATE.format(indented_expression)
         bot.send_log("Async expression template:\n" + expr, force=True)
 
