@@ -16,6 +16,7 @@ DESC = None
 
 class ExecResultList(list):
     """Defines a custom class that derives from the `list` base type.
+    
     This class redefines the += operator to append new items rather than merge lists.
     """
 
@@ -58,39 +59,41 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
     except Exception as ex:
         exec_result = util.format_exception_info(ex)
     else:
-        exec_result = locals().get("temp")
+        exec_result = locals().get("temp", ExecResultList())
+        # Check if the results list is empty
+        if isinstance(exec_result, ExecResultList) and exec_result:
+            return False, "Code executed (return value was not specified)."
     bot.send_log(f"Temp variable: {exec_result}")
-    if not exec_result:
-        return False, "Code executed (return value not specified)."
-    res_msg = []
-    json_responses = []
+    results = []
+    json_result_indices = []
     for res in exec_result if isinstance(exec_result, ExecResultList) else [exec_result]:
-        json_responses.append("")
+        json_result_indices.append("")
         if type(res) in [list, dict, tuple]:
             try:
-                # Add the index of the current result to the list of JSON result indicies
-                json_responses.append(len(res_msg))
+                # Add the index of the current result to the list of JSON result indices
+                json_result_indices.append(len(results))
 
                 tmp = json.dumps(res, indent=2, ensure_ascii=False)
-                res_msg.append(tmp)
+                results.append(tmp)
             except (TypeError, OverflowError):
-                res_msg.append(str(res))
+                results.append(str(res))
         else:
-            res_msg.append(str(res))
+            results.append(str(res))
 
     def fmt_res(index: int) -> str:
         """Util function for formatting the returned result.
-        If the result has been marked as JSON content, 'detected JSON content' is prepended.
+
+        If the result has been marked as JSON content, prepends 'detected JSON content' to it.
         """
-        result = res_msg[index]
-        if index in json_responses:
+        result = results[index]
+        if index in json_result_indices:
             result = "```\nDetected JSON content:```json\n" + result
         return result
 
     fmt_expr = expression.replace("\n", "\n>>> ")
-    res_msg = "\n".join([fmt_res(i) for i in range(len(res_msg))])
+    results = "\n".join([fmt_res(i) for i in range(len(results))])
 
-    return False, f"Code executed:\n```py\n>>> {fmt_expr}\n{res_msg}```"
+    return False, f"Code executed:\n```py\n>>> {fmt_expr}\n{results}```"
 
 
 def execute_async(message: discord.Message) -> tuple[bool, str or discord.Embed]:
