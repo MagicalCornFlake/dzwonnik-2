@@ -16,7 +16,7 @@ DESC = None
 
 class ExecResultList(list):
     """Defines a custom class that derives from the `list` base type.
-    
+
     This class redefines the += operator to append new items rather than merge lists.
     """
 
@@ -42,29 +42,39 @@ def execute_sync(message: discord.Message) -> tuple[bool, str or discord.Embed]:
         return False, "Type an expression or command to execute."
     try:
         if "return " in expression:
+            # Inject temp variable storage in place of 'return' statements
             inj_snippet = "locals()['temp'] += "
             injected_code = expression.replace("return ", inj_snippet)
             expression_to_be_executed = f"""ExecResultList()\n{injected_code}"""
         else:
+            # Use code as-is
             expression_to_be_executed = expression
         try:
+            # Initialise the 'temp' local variable
             exec("locals()['temp'] = " + expression_to_be_executed)
+
             execing = "Executing injected code:\nlocals()['temp'] =", expression_to_be_executed
             bot.send_log(*execing, force=True)
         except SyntaxError as syntax_error:
+            # Ignore syntax error if temp variable assignment is invalid
             fmt_exc = util.format_exception_info(syntax_error)
             caught_exc_msg = f"Caught SyntaxError:\n{fmt_exc}\nExecuting raw code:\n{expression}"
             bot.send_log(caught_exc_msg, force=True)
+            
+            # Execute the code without temp variable assignment
             exec(expression)
     except Exception as ex:
+        # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(ex)
     else:
         # Default the temp variable to an empty ExecResultList if it's not been assigned
         exec_result = locals().get("temp", ExecResultList())
+        
         # Check if the results list is empty
-        if isinstance(exec_result, ExecResultList) and exec_result:
+        if isinstance(exec_result, ExecResultList) and not exec_result:
             return False, "Code executed (return value was not specified)."
-    bot.send_log(f"Temp variable: {exec_result}", force=True)
+    temp_variable_log_msg = f"Temp variable ({type(exec_result)}):\n{exec_result}"
+    bot.send_log(temp_variable_log_msg, force=True)
     results = []
     json_result_indices = []
     for res in exec_result if isinstance(exec_result, ExecResultList) else [exec_result]:
