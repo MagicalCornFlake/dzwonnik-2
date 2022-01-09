@@ -1,9 +1,8 @@
-"""Module containing the code pertaining to the 'exec' and 'exec_async' commands."""
+"""Module containing the code pertaining to the 'exec' command."""
 
 
 # Standard library imports
 import ast
-import asyncio  # pylint: disable=unused-import
 import json
 
 # Third-party imports
@@ -16,8 +15,6 @@ from .. import bot, util
 DESC = None
 MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
 MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
-ASYNC_EXPRESSION_TEMPLATE = ("async def _execute_async():\n{}\n\n"
-                             "asyncio.new_event_loop().run_until_complete(_execute_async())")
 
 
 class ExecResultList(list):
@@ -71,7 +68,7 @@ def inject_code(expression: str) -> str:
     return expression_to_be_executed
 
 
-def execute(expression: str) -> str:
+async def process_execution(message: discord.Message) -> str:
     """Executes the code and returns the message that should be sent to the user.
 
     Arguments:
@@ -79,9 +76,8 @@ def execute(expression: str) -> str:
 
     Returns the message that should be sent back directly to the user.
     """
-    fmt_expr = expression.replace("\n", "\n>>> ")
-    result_template = f"Code executed:\n```py\n>>> {fmt_expr}\n{{}}"
-
+    msg_content: str = message.content
+    expression = msg_content.split(" ", maxsplit=1)[1]
     try:
         # Inject result-storing code to the user input and execute it
         exec(inject_code(expression))  # pylint: disable=exec-used
@@ -94,7 +90,7 @@ def execute(expression: str) -> str:
 
         # Check if the results list is empty
         if isinstance(exec_result, ExecResultList) and not exec_result:
-            return result_template.format("```*(return value unspecified)*")
+            return "*(return value unspecified)*"
     temp_variable_log_msg = f"Temp variable ({type(exec_result)}):\n{exec_result}"
     bot.send_log(temp_variable_log_msg, force=True)
     results = []
@@ -124,46 +120,28 @@ def execute(expression: str) -> str:
         return result
 
     results = "\n".join([fmt_res(i) for i in range(len(results))])
+    return f"```py\n{results}```"
 
-    return result_template.format(results + "```")
 
-
-def execute_sync(message: discord.Message) -> tuple[bool, str]:
+def exec_command_handler(message: discord.Message) -> tuple[bool, str]:
     """Event handler for the 'exec' command."""
+    msg_content: str = message.content
+    args = msg_content.split(' ', maxsplit=1)
     if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
         raise bot.MissingPermissionsException(MISSING_PERMS_MSG)
-    msg_content: str = message.content
-    args = msg_content.split(' ', maxsplit=1)
     try:
-        expression = args[1]
+        expression = args[0]
     except IndexError:
-        return False, "Type an expression or command to execute."
-    else:
-        return False, execute(expression)
-
-
-def execute_async(message: discord.Message) -> tuple[bool, str]:
-    """Event handler for the 'exec_async' command."""
-    if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        # Prepend "a"; sync... -> async...
-        raise bot.MissingPermissionsException("a" + MISSING_PERMS_MSG)
-    msg_content: str = message.content
-    args = msg_content.split(' ', maxsplit=1)
-    if len(args) == 1:
         return False, MISSING_ARGUMENTS_MSG
-    return False, "Executing..."
+    fmt_expr = expression.replace("\n", "\n>>> ")
+    return False, f"Code executing:\n```py\n>>> {fmt_expr}```"
 
 
-async def run_async_code(original_msg: discord.Message, reply_msg: discord.Message) -> None:
-    """Callback function for the 'exec_async' command. Executes after the bot replies initially."""
+async def execute_code(original_msg: discord.Message, reply_msg: discord.Message) -> None:
+    """Callback function for the 'exec' command. Executes after the bot replies initially."""
     if reply_msg.content == MISSING_ARGUMENTS_MSG:
         return
-    msg_content: str = original_msg.content
-    args = msg_content.split(' ', maxsplit=1)
-    expression = args[1]
-    indented_expression = "    " + expression.replace("\n", "\n    ")
-    expr = ASYNC_EXPRESSION_TEMPLATE.format(indented_expression)
-    async with reply_msg.channel.typing():
-        # Blocking call to "execute"
-        exec_result = execute(expr)
+    chnl: discord.TextChannel = reply_msg.channel
+    async with chnl.typing():
+        exec_result = process_execution(original_msg)
     await reply_msg.edit(content=exec_result)

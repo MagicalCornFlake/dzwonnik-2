@@ -83,12 +83,8 @@ INFO: dict[help, dict[str, any]] = {
     },
     "exec": {
         "description": execute.DESC,
-        "function": execute.execute_sync,
-    },
-    "exec_async": {
-        "description": execute.DESC,
-        "function": execute.execute_async,
-        "on_completion": execute.run_async_code
+        "function": execute.exec_command_handler,
+        "on_completion": execute.execute_code
     },
     "restart": {
         "description": terminate.DESC,
