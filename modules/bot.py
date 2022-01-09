@@ -241,17 +241,17 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
                 send_log(f"The first lesson is on period {first_period}.")
                 break
 
-        if current_period < 10:
+        if current_period < 10 or util.next_period != util.current_period:
             # Currently break time
             formatted_time = util.get_formatted_period_time()
             time = formatted_time.split('-', maxsplit=1)[0]
-            if util.next_period in (first_period, util.current_period + 1):
+            if util.next_period == first_period:
                 # Currently before school
                 util.current_period = -1
-                send_log(f"The current period is before school starts (-1).")
+                send_log("The current period is before school starts (-1).")
                 new_status_msg = "szkoła o " + time
             else:
-                send_log(f"The current period is period {util.current_period}.")
+                send_log(f"It is currently period {util.current_period}.")
                 new_status_msg = "przerwa do " + time
         else:
             # Currently lesson
