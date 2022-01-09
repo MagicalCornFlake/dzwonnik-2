@@ -116,7 +116,7 @@ async def process_execution(message: discord.Message) -> str:
 
     for index, result in enumerate(results):
         if index in json_result_indices:
-            formatted_results += f"Detected JSON content:```json\n{result}```"
+            formatted_results += f"```json\n{result}```"
         else:
             formatted_results += f"```py\n{str(result) or 'None'}```"
 
