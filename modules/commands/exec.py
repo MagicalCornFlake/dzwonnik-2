@@ -15,7 +15,9 @@ from .. import bot, util
 DESC = None
 MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
 MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
-EXPRESSION_TEMPLATE = "async def _execute():\n    "
+
+# Initialise the code template to execute when the 'exec' command is called.
+EXPRESSION_TEMPLATE = "async def _execute():\n    {}\n\nlocals()['_execute'] = _execute"
 
 
 class ExecResultList(list):
@@ -60,7 +62,7 @@ def inject_code(expression: str) -> str:
             # No syntax error; initialise the 'temp' local variable in code injection
             expression = f"locals()['temp'] = {expression}"
 
-    expression = EXPRESSION_TEMPLATE + expression.replace("\n", "\n    ")
+    expression = EXPRESSION_TEMPLATE.format(expression.replace("\n", "\n    "))
     bot.send_log(f"Executing code:\n{expression}", force=True)
     return expression
 
@@ -76,12 +78,10 @@ async def process_execution(message: discord.Message) -> str:
     msg_content: str = message.content
     expression = msg_content.split(" ", maxsplit=1)[1]
 
-    async def _execute():
-        """This function is initialised so it can be later redefined in the 'exec' statement."""
     try:
         # Inject result-storing code to the user input and execute it
         exec(inject_code(expression))  # pylint: disable=exec-used
-        await _execute()
+        await locals()["_execute"]()
     except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(exec_exc)
