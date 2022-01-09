@@ -460,9 +460,11 @@ async def wait_before_starting_loop() -> None:
             await last_msg.edit(content=RESTARTED_BOT_MSG)
         else:
             await last_msg.reply(RESTARTED_BOT_MSG)
-    finally:
-        # Reset the on exit message so that it is not replied to twice.
-        file_manager.on_exit_msg = {}
+    except KeyError:
+        # The keys do not exist in the on exit message data
+        pass
+    # Reset the on exit message so that it is not replied to twice.
+    file_manager.on_exit_msg = {}
 
 
 async def check_for_steam_market_updates() -> None:
