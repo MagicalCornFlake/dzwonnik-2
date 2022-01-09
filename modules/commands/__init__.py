@@ -182,10 +182,12 @@ def get_lesson_by_roles(query_period: int, weekday: int, roles: list[str, Role])
     Returns a dictionary containing the lesson details including the period, or an empty dictionary
     if no lesson was found.
     """
-    target_roles = ["grupa_0"]
+    # Initialise the roles we would like the lesson to be for
+    target_roles = [] if "grupa_0" in roles else ["grupa_0"]
     for role in roles:
         if role in ROLE_CODES or str(role) in ROLE_CODES.values():
             target_roles.append(str(role))
+    # Loop through each lesson that day
     weekday_name = WEEKDAY_NAMES[weekday]
     looking_msg = f"{query_period} on {weekday_name} with roles: {target_roles})"
     bot.send_log("Looking for lesson of period " + looking_msg)
@@ -193,8 +195,9 @@ def get_lesson_by_roles(query_period: int, weekday: int, roles: list[str, Role])
         if period < query_period:
             continue
         for lesson in lessons:
-            if lesson["group"] in target_roles or ROLE_CODES[lesson["group"]] in target_roles:
-                found_lesson_msg = (f"Found lesson '{lesson['name']}' for '{lesson['group']}'"
+            group = lesson["group"]
+            if group in target_roles or ROLE_CODES[group] in target_roles:
+                found_lesson_msg = (f"Found lesson '{lesson['name']}' for '{group}'"
                                     f" on period {period}.")
                 bot.send_log(found_lesson_msg)
                 lesson["period"] = period

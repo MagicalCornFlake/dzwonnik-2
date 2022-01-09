@@ -82,7 +82,7 @@ client = discord.Client(intents=intents)
 prefix: str = '!'
 
 # Makes the log messages sent by the bot more verbose.
-enable_log_messages: bool = False
+verbose_log_messages: bool = False
 
 # Determines whether or not the bot should save the data file once it terminates.
 restart_on_exit: bool = True
@@ -95,7 +95,7 @@ def send_log(*raw_message, force: bool = False) -> None:
     """Determine if the message should actually be logged.
     If it should, generate the string that should be sent.
     """
-    if not (enable_log_messages or force):
+    if not (verbose_log_messages or force):
         return
 
     msg = file_manager.log(*raw_message)
@@ -220,27 +220,29 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     # Default time to check is current time
     query_time = query_time or datetime.datetime.now()
     send_log("Updating bot status ...", force=True)
+    # Get the period of the end of the current lesson (if any) or the beginning of the next break.
     result = commands.get_next_period(query_time)
-    next_period_is_today, next_period, next_lesson_weekday = result
+    next_period_is_today, current_period, next_lesson_weekday = result
 
     if next_period_is_today:
-        # Get the period of the next lesson
-        roles = list(ROLE_CODES.keys())[1:]
-        params = next_period % 10, next_lesson_weekday, roles
+        util.current_period = current_period % 10
+        send_log(f"The current period is period {util.current_period}.")
+        # Get the details of the next lesson.
+        params = [util.current_period, next_lesson_weekday, ROLE_CODES.keys()]
         lesson = commands.get_lesson_by_roles(*params)
         if lesson:
-            util.current_period = lesson['period']
-            send_log("The next lesson is on period", lesson['period'])
+            util.next_period = lesson['period']
+            send_log(f"The next lesson is on period {lesson['period']}.")
         # Get the period of the first lesson
         first_period = -1  # Initialise period so that PyLint does not complain
         weekday_name = WEEKDAY_NAMES[query_time.weekday()]
         plan_for_given_day: list[list] = util.lesson_plan[weekday_name]
         for first_period, lessons in enumerate(plan_for_given_day):
             if lessons:
-                send_log("The first lesson is on period", first_period)
+                send_log(f"The first lesson is on period {first_period}.")
                 break
 
-        if next_period < 10:
+        if current_period < 10:
             # Currently break time
             formatted_time = util.get_formatted_period_time()
             time = formatted_time.split('-', maxsplit=1)[0]
@@ -255,12 +257,11 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
             # Dictionary with lesson group code and lesson name
             msgs: dict[str, str] = {}
             for role_code in list(ROLE_CODES.keys())[1:]:
-                params = util.current_period, next_lesson_weekday, [role_code]
+                params[-1] = ["grupa_0", role_code]
                 lesson = commands.get_lesson_by_roles(*params)
                 if not lesson or lesson["period"] > util.current_period:
                     # No lesson for that group
-                    skipping_msg = f"Skipping lesson: {lesson} on period {util.current_period}."
-                    send_log(skipping_msg)
+                    send_log("... skipping it.")
                     continue
                 send_log("Validated lesson:", lesson)
                 msgs[lesson['group']] = util.get_lesson_name(lesson['name'])

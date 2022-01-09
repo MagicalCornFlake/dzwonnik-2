@@ -12,6 +12,7 @@ lesson_links: dict[str, str] = {}
 
 # Used to show the current lesson in the lesson plan (e.g. '!plan' command).
 current_period: int = -1
+next_period: int = -1
 
 
 def format_class(class_name: str = None):
