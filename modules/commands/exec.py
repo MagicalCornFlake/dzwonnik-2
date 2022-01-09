@@ -15,8 +15,9 @@ from .. import bot, util
 
 DESC = None
 MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
+MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
 ASYNC_EXPRESSION_TEMPLATE = ("async def _execute_async():\n{}\n\n"
-                             "asyncio.get_event_loop().run_until_complete(_execute_async())")
+                             "asyncio.new_event_loop().run_until_complete(_execute_async())")
 
 
 class ExecResultList(list):
@@ -148,11 +149,21 @@ def execute_async(message: discord.Message) -> tuple[bool, str]:
         raise bot.MissingPermissionsException("a" + MISSING_PERMS_MSG)
     msg_content: str = message.content
     args = msg_content.split(' ', maxsplit=1)
-    try:
-        expression = args[1]
-    except IndexError:
-        return False, "Type an expression or command to execute."
-    else:
-        indented_expression = "    " + expression.replace("\n", "\n    ")
-        expr = ASYNC_EXPRESSION_TEMPLATE.format(indented_expression)
-        return False, execute(expr)
+    if len(args) == 1:
+        return False, MISSING_ARGUMENTS_MSG
+    return False, "Executing..."
+
+
+async def run_async_code(original_msg: discord.Message, reply_msg: discord.Message) -> None:
+    """Callback function for the 'exec_async' command. Executes after the bot replies initially."""
+    if reply_msg.content == MISSING_ARGUMENTS_MSG:
+        return
+    msg_content: str = original_msg.content
+    args = msg_content.split(' ', maxsplit=1)
+    expression = args[1]
+    indented_expression = "    " + expression.replace("\n", "\n    ")
+    expr = ASYNC_EXPRESSION_TEMPLATE.format(indented_expression)
+    async with reply_msg.channel.typing():
+        # Blocking call to "execute"
+        exec_result = execute(expr)
+    await reply_msg.edit(content=exec_result)

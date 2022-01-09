@@ -88,20 +88,21 @@ INFO: dict[help, dict[str, any]] = {
     "exec_async": {
         "description": execute.DESC,
         "function": execute.execute_async,
+        "on_completion": execute.run_async_code
     },
     "restart": {
         "description": terminate.DESC,
         "function": terminate.restart_bot,
-        "on_completion": terminate.terminate_bot,
+        "on_completion": terminate.terminate_bot
     },
     "stop": {
         "description": terminate.DESC,
         "function": terminate.exit_bot,
-        "on_completion": terminate.terminate_bot,
+        "on_completion": terminate.terminate_bot
     },
     "exit": {
         "description": terminate.DESC,
         "function": terminate.exit_bot,
-        "on_completion": terminate.terminate_bot,
+        "on_completion": terminate.terminate_bot
     }
 }
