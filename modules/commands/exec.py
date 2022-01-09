@@ -17,7 +17,7 @@ MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
 MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
 
 # Initialise the code template to execute when the 'exec' command is called.
-EXPRESSION_TEMPLATE = "async def _execute():\n    {}\n\nlocals()['_execute'] = _execute"
+EXPRESSION_TEMPLATE = "async def __execute():\n    {}\n    return locals()"
 
 
 class ExecResultList(list):
@@ -44,23 +44,23 @@ def inject_code(expression: str) -> str:
     Returns a string that may or may not contain injected code, depending on the input structure.
     """
     if "return " in expression:
-        # Inject temp variable storage in place of 'return' statements
-        injection_snippet = "locals()['temp'] += "
+        # Inject temporary variable storage in place of 'return' statements
+        injection_snippet = "__temp += "
         expression = expression.replace("return ", injection_snippet)
-        expression = f"""locals()['temp'] = ExecResultList()\n{expression}"""
+        expression = "__temp = ExecResultList()\n" + expression
     else:
         # No user-specified return value
         # Attempt to inject code so that the evaluation of the first line is returned
         try:
             # Check if such a code injection would be valid Python code
-            ast.parse("locals()['temp'] = " + expression)
+            ast.parse("_ = " + expression)
         except SyntaxError as syntax_error:
             # Code injection raises a syntax error; ignore it and don't inject code
             fmt_exc = util.format_exception_info(syntax_error)
             bot.send_log(f"Caught SyntaxError in code injection:\n\n{fmt_exc}")
         else:
-            # No syntax error; initialise the 'temp' local variable in code injection
-            expression = f"locals()['temp'] = {expression}"
+            # No syntax error; initialise the '__temp' local variable in code injection
+            expression = "__temp = " + expression
 
     expression = EXPRESSION_TEMPLATE.format(expression.replace("\n", "\n    "))
     bot.send_log(f"Executing code:\n{expression}", force=True)
@@ -81,13 +81,14 @@ async def process_execution(message: discord.Message) -> str:
     try:
         # Inject result-storing code to the user input and execute it
         exec(inject_code(expression))  # pylint: disable=exec-used
-        await locals()["_execute"]()
+        # The __execute() injected function returns its locals() dictionary.
+        _locals: dict[str, any] = await locals()["__execute"]()
     except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(exec_exc)
     else:
         # Default the temp variable to an empty ExecResultList if it's not been assigned
-        exec_result = locals().get("temp", ExecResultList())
+        exec_result = _locals.get("__temp", ExecResultList())
 
         # Check if the results list is empty
         if isinstance(exec_result, ExecResultList) and not exec_result:
