@@ -32,7 +32,7 @@ MY_SERVER_ID: int = 766346477874053130
 # The message template to be used when an API call returned an invalid response.
 BAD_RESPONSE = "Error! Received an invalid response from web request. Exception trace:\n"
 # The template for the log message sent when the bot's status is updated
-STATUS_LOG_TEMPLATE = "... new status message is '{}'.\n... current period: {}"
+STATUS_LOG_TEMPLATE = "... new status message: '{}'.\n... current period: {}\n... next period: {}"
 
 RESTARTED_BOT_MSG = "Restarted bot!"
 
@@ -232,7 +232,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
         lesson = commands.get_lesson_by_roles(*params)
         if lesson:
             util.next_period = lesson['period']
-            send_log(f"The next lesson is on period {lesson['period']}.")
+            send_log(f"The next lesson is on period {util.next_period}.")
         # Get the period of the first lesson
         first_period = -1  # Initialise period so that PyLint does not complain
         weekday_name = WEEKDAY_NAMES[query_time.weekday()]
@@ -246,7 +246,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
             # Currently break time
             formatted_time = util.get_formatted_period_time()
             time = formatted_time.split('-', maxsplit=1)[0]
-            if util.current_period == first_period:
+            if util.next_period == first_period:
                 # Currently before school
                 util.current_period = -1
                 new_status_msg = "szkoła o " + time
@@ -259,7 +259,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
             for role_code in list(ROLE_CODES.keys())[1:]:
                 params[-1] = ["grupa_0", role_code]
                 lesson = commands.get_lesson_by_roles(*params)
-                if not lesson or lesson["period"] > util.current_period:
+                if not lesson or lesson["period"] > util.next_period:
                     # No lesson for that group
                     send_log("... skipping it.")
                     continue
@@ -285,7 +285,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     if client.activity and new_status_msg == client.activity.name:
         send_log("... new status message is unchanged.", force=True)
         return False
-    fmt_vars = new_status_msg, util.current_period
+    fmt_vars = new_status_msg, util.current_period, util.next_period
     status_log_msg = STATUS_LOG_TEMPLATE.format(*fmt_vars)
     send_log(status_log_msg, force=True)
     return new_status_msg
