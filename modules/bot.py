@@ -243,7 +243,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
 
         if current_period < 10 or util.next_period != util.current_period:
             # Currently break time
-            formatted_time = util.get_formatted_period_time()
+            formatted_time = util.get_formatted_period_time(util.next_period)
             time = formatted_time.split('-', maxsplit=1)[0]
             if util.next_period == first_period:
                 # Currently before school
