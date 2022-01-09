@@ -134,7 +134,7 @@ def exec_command_handler(message: discord.Message) -> tuple[bool, str]:
     except IndexError:
         return False, MISSING_ARGUMENTS_MSG
     fmt_expr = expression.replace("\n", "\n>>> ")
-    return False, f"Code executing:\n```py\n>>> {fmt_expr}```"
+    return False, f"Code executing...\n```py\n>>> {fmt_expr}```"
 
 
 async def execute_code(original_msg: discord.Message, reply_msg: discord.Message) -> None:
@@ -143,5 +143,7 @@ async def execute_code(original_msg: discord.Message, reply_msg: discord.Message
         return
     chnl: discord.TextChannel = reply_msg.channel
     async with chnl.typing():
-        exec_result = process_execution(original_msg)
-    await reply_msg.edit(content=exec_result)
+        exec_result = await process_execution(original_msg)
+    new_content = reply_msg.content.replace("executing...", "executed!")
+    await reply_msg.edit(content=new_content)
+    await reply_msg.channel.send(content=exec_result)
