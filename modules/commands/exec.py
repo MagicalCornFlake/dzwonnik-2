@@ -111,18 +111,16 @@ async def process_execution(message: discord.Message) -> str:
         else:
             results.append(str(res))
 
-    def fmt_res(index: int) -> str:
-        """Util function for formatting the returned result.
+    # Format the results using Discord formatting
+    formatted_results = ExecResultList()
 
-        If the result has been marked as JSON content, prepends 'detected JSON content' to it.
-        """
-        result = results[index]
+    for index, result in enumerate(results):
         if index in json_result_indices:
-            result = "```\nDetected JSON content:```json\n" + result
-        return result
+            formatted_results += f"Detected JSON content:```json\n{result}```"
+        else:
+            formatted_results += f"```py\n{str(result) or 'None'}```"
 
-    results = "\n".join([fmt_res(i) for i in range(len(results))])
-    return f"```py\n{results}```"
+    return "\n".join(formatted_results)
 
 
 def exec_command_handler(message: discord.Message) -> tuple[bool, str]:
