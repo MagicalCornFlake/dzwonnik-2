@@ -16,7 +16,7 @@ from .. import bot, util
 DESC = None
 MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
 ASYNC_EXPRESSION_TEMPLATE = ("async def _execute_async():\n{}\n\n"
-                             "asyncio.get_event_loop().create_task(_execute_async())")
+                             "asyncio.get_event_loop().run_until_complete(_execute_async())")
 
 
 class ExecResultList(list):
