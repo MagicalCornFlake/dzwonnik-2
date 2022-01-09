@@ -226,7 +226,6 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
 
     if next_period_is_today:
         util.current_period = current_period % 10
-        send_log(f"The current period is period {util.current_period}.")
         # Get the details of the next lesson.
         params = [util.current_period, next_lesson_weekday, ROLE_CODES.keys()]
         lesson = commands.get_lesson_by_roles(*params)
@@ -246,11 +245,13 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
             # Currently break time
             formatted_time = util.get_formatted_period_time()
             time = formatted_time.split('-', maxsplit=1)[0]
-            if util.next_period == first_period:
+            if util.next_period in (first_period, util.current_period + 1):
                 # Currently before school
                 util.current_period = -1
+                send_log(f"The current period is before school starts (-1).")
                 new_status_msg = "szkoła o " + time
             else:
+                send_log(f"The current period is period {util.current_period}.")
                 new_status_msg = "przerwa do " + time
         else:
             # Currently lesson
@@ -261,9 +262,8 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
                 lesson = commands.get_lesson_by_roles(*params)
                 if not lesson or lesson["period"] > util.next_period:
                     # No lesson for that group
-                    send_log("... skipping it.")
                     continue
-                send_log("Validated lesson:", lesson)
+                send_log("... validated!", lesson)
                 msgs[lesson['group']] = util.get_lesson_name(lesson['name'])
                 # Found lesson for 'grupa_0' (whole class)
                 if lesson['group'] == "grupa_0":
