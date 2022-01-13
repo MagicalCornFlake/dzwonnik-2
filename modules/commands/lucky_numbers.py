@@ -16,6 +16,7 @@ DESC = """Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wyk
 
 
 def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
+    """Event handler for the 'num' command."""
     try:
         data = numbers_api.get_lucky_numbers()
     except web.WebException as web_exc:
