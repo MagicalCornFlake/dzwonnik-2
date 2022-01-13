@@ -34,7 +34,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
 
     # Initialise the embed
     date = datetime.strptime(data["date"], "%Y-%m-%d")
-    url = substitutions_api.SOURCE_URL
+    url = f"{substitutions_api.SOURCE_URL}#{data['post'].get('id', 'content')}"
     embed = Embed(title=f"Zastępstwa na {date:%d.%m.%Y}", url=url)
     footer = f"Użyj komendy {bot.prefix}zast, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
@@ -57,7 +57,7 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
             standard_msg = f"**{class_name}**: {' | '.join(sub_msgs)}"
             if class_name == util.format_class():
                 our_substitutions += 1
-                hyperlinked_msg = f"[{standard_msg}]({substitutions_api.SOURCE_URL})"
+                hyperlinked_msg = f"[{standard_msg}]({url})"
                 class_msgs.append(hyperlinked_msg)
                 continue
             class_msgs.append(standard_msg)

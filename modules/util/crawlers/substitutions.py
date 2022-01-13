@@ -139,7 +139,7 @@ def parse_html(html: str) -> dict:
     except IndexError as no_matches_exc:
         return {"error": util.format_exception_info(no_matches_exc)}
     subs_data = {
-        # "post": dict(post_elem.attrib),
+        "post": dict(post_elem.attrib),
         "events": [],
         "lessons": {},
         "tables": [],
