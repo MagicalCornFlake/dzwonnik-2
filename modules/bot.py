@@ -190,23 +190,23 @@ async def on_message(message: discord.Message) -> None:
     send_log(received_command_msg, force=True)
     command_info = get_help.INFO[msg_first_word]
     callback_function = command_info["function"]
-    try:
-        reply_is_embed, reply = callback_function(message)
-    except MissingPermissionsException as invalid_perms_exc:
-        error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
-        message.reply(error_message)
-    except Exception as invalid_perms_exc:  # pylint: disable=broad-except
-        await ping_konrad()
-        send_log(util.format_exception_info(invalid_perms_exc), force=True)
-        await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
-                            "Administrator bota (Konrad) został o tym powiadomiony.")
-    else:
-        args = {"embed" if reply_is_embed else "content": reply}
-        reply_msg = await try_send_message(message, True, args, reply)
-        on_success_coroutine = command_info.get("on_completion")
-        if not on_success_coroutine:
-            return
-        await on_success_coroutine(message, reply_msg)
+    async with message.channel.typing:
+        try:
+            reply_is_embed, reply = callback_function(message)
+        except MissingPermissionsException as invalid_perms_exc:
+            error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
+            message.reply(error_message)
+        except Exception as invalid_perms_exc:  # pylint: disable=broad-except
+            await ping_konrad()
+            send_log(util.format_exception_info(invalid_perms_exc), force=True)
+            await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
+                                "Administrator bota (Konrad) został o tym powiadomiony.")
+        else:
+            args = {"embed" if reply_is_embed else "content": reply}
+            reply_msg = await try_send_message(message, True, args, reply)
+            on_success_coroutine = command_info.get("on_completion")
+            if on_success_coroutine:
+                await on_success_coroutine(message, reply_msg)
 
 
 def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
