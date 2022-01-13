@@ -224,10 +224,10 @@ def get_datetime_from_input(message: Message, calling_command: str) -> datetime 
             if 0 <= int(args[1]) < 24:
                 if not 0 <= int(args[2]) < 60:
                     raise RuntimeError(
-                        f"Godzina ('{args[2]}') nie znajduje się w przedziale `0, 59`.")
+                        f"Minuta *'{args[2]}'* nie mieści się w przedziale `0, 59`.")
             else:
                 raise RuntimeError(
-                    f"Minuta ('{args[1]}') nie znajduje się w przedziale `0, 23`.")
+                    f"Godzina *'{args[1]}'* nie mieści się w przedziale `0, 23`.")
         except IndexError:
             # Minute not specified by user; use default of :00.
             args.append("00")
