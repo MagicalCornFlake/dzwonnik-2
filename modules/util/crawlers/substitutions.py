@@ -62,24 +62,37 @@ def extract_from_table(elem, table: dict[str, any]) -> None:
             column_data[j].append(cell_text)
 
 
-def extract_actual_substitution(subs_text: str, lesson_dict: dict) -> None:
+def extract_actual_substitution(elem_text: str, subs_data: dict, is_table_header) -> None:
     """Parses the substitution text elements."""
-    separator = " - " if " - " in subs_text else " – "
-    lessons, info = subs_text.split(separator, maxsplit=1)
+    if is_table_header:
+        subs_data["tables"].append({
+            "title": elem_text,
+            "headings": [],
+            "columns": []
+        })
+        return
+    separator = " - " if " - " in elem_text else " – "
+    try:
+        lessons, info = elem_text.split(separator, maxsplit=1)
+    except ValueError:
+        # This is not substitutions data
+        subs_data["misc"].append(elem_text)
+        return
     lesson_ints = get_int_ranges_from_string(lessons)
     for lesson in lesson_ints:
-        lesson_dict.setdefault(lesson, {})
-        class_year, classes, class_info, details = re.match(SUB_INFO_PATTERN, info).groups()
+        subs_data["lessons"].setdefault(lesson, {})
+        class_year, classes, class_info, details = re.match(
+            SUB_INFO_PATTERN, info).groups()
         for class_letter in classes:
             class_name = f"{class_year}{class_letter}{class_info or ''}"
-            lesson_dict[lesson].setdefault(class_name, [])
+            subs_data["lessons"][lesson].setdefault(class_name, [])
             class_subs = {
                 "details": details,
                 "groups": re.findall(SUB_GROUPS_PATTERN, info)
             }
             if not class_subs["groups"]:
                 class_subs.pop("groups")
-            lesson_dict[lesson][class_name].append(class_subs)
+            subs_data["lessons"][lesson][class_name].append(class_subs)
 
 
 def extract_header_data(elem, elem_index: int, child_elem) -> tuple[str, any]:
@@ -126,14 +139,14 @@ def parse_html(html: str) -> dict:
     except IndexError as no_matches_exc:
         return {"error": util.format_exception_info(no_matches_exc)}
     subs_data = {
-        "post": dict(post_elem.attrib),
+        # "post": dict(post_elem.attrib),
         "events": [],
         "lessons": {},
         "tables": [],
         "misc": []
     }
 
-    def extract_data(elem: lxml.html.Element, elem_index: int) -> None:
+    def extract_data(elem: lxml.html.Element, el_index: int, next_elem: lxml.html.Element) -> None:
         """Extract the relevant information from each element in the post.
 
         Adds result to the subs_data dictionary.
@@ -150,23 +163,20 @@ def parse_html(html: str) -> dict:
             child_elem = elem[0]
         except IndexError:
             # The current element has no children
-            subs_text: str = elem.text
-            if not subs_text or not subs_text.strip():
+            elem_text: str = elem.text
+            if not elem_text or not elem_text.strip():
                 # Skip blank 'p' elements
                 return
-            if "są odwołane" in subs_text:
-                subs_data["cancelled"] = subs_text
+            if "są odwołane" in elem_text:
+                subs_data["cancelled"] = elem_text
                 return
-            try:
-                extract_actual_substitution(subs_text, subs_data["lessons"])
-            except ValueError:
-                # This is not substitutions data
-                subs_data["misc"].append(subs_text)
+            is_table_header = next_elem and next_elem.tag == "table"
+            extract_actual_substitution(elem_text, subs_data, is_table_header)
         else:
             # The current element does have children
             if child_elem.tag != "strong":
                 return
-            key, val = extract_header_data(elem, elem_index, child_elem)
+            key, val = extract_header_data(elem, el_index, child_elem)
             if not key:
                 return
             orig_val = subs_data.get(key)
@@ -179,15 +189,19 @@ def parse_html(html: str) -> dict:
 
     for i, p_elem in enumerate(post_elem):
         try:
+            next_elem = post_elem[i + 1]
+        except IndexError:
+            next_elem = None
+        try:
             # Attempt to extract the relevant data using a hard-coded algorithm
-            extract_data(p_elem, i)
+            extract_data(p_elem, i, next_elem)
         except (LookupError, TypeError, ValueError, AttributeError) as no_matches_exc:
             # Page structure has changed, return the nature of the error.
-            subs_data["error"] = util.format_exception_info(no_matches_exc)
             if __name__ == "__main__":
                 # Makes the error easier to see for debugging
                 print(json.dumps(subs_data, indent=2, ensure_ascii=False))
                 raise no_matches_exc from None
+            subs_data["error"] = util.format_exception_info(no_matches_exc)
             break
 
     # Return dictionary with substitution data
