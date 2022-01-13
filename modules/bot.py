@@ -494,6 +494,7 @@ async def check_for_steam_market_updates() -> None:
 
 async def check_for_lucky_numbers_updates() -> None:
     """Updates the lucky numbers cache.
+
     If it has changed, announces announces the new numbers in the specified channel.
     """
     try:
@@ -515,6 +516,7 @@ async def check_for_lucky_numbers_updates() -> None:
 
 async def check_for_substitutions_updates() -> None:
     """Updates the substitutions cache.
+
     If it has changed, announces the new data in the specified channel.
     """
     try:
