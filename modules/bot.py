@@ -521,8 +521,7 @@ async def check_for_substitutions_updates() -> None:
     """
     try:
         # old_cache = file_manager.cache_exists("subs")
-        result = substitutions_api.get_substitutions(True)
-        new_cache, cache_existed = result
+        new_cache, cache_existed = substitutions_api.get_substitutions(True)
         if "error" in new_cache:
             raise RuntimeError("Substitutions data could not be parsed.")
     except web.InvalidResponseException as web_exc:
@@ -544,8 +543,11 @@ async def check_for_substitutions_updates() -> None:
         # Announce the new substitutions
         target_channel = client.get_channel(
             testing_channel or ChannelID.SUBSTITUTIONS)
-        await target_channel.send(embed=substitutions.get_substitutions_embed()[1])
-        return
+        success, subs_msg = substitutions.get_substitutions_embed()
+        if success:
+            await target_channel.send(embed=subs_msg)
+            return
+        exception_message = subs_msg
     # If the check wasn't completed successfully, ping @Konrad and log the error details.
     await ping_konrad()
     send_log(exception_message, force=True)
