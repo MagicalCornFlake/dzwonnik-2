@@ -3,11 +3,15 @@
 # Standard library imports
 import json
 import os
+import shutil
 from datetime import datetime
 
 # Local application imports
 from . import bot, commands, util
 from .util.api import lucky_numbers
+
+
+CACHE_DIRECTORY = "cache"
 
 
 on_exit_msg = {}
@@ -151,9 +155,9 @@ def save_log_file() -> None:
 
 def cache_exists(cache_name: str) -> dict:
     """Returns the cached data if it exists, otherwise an empty dictionary."""
-    filepath = f"cache/{cache_name}.json"
-    if not os.path.isdir('cache'):
-        os.mkdir('cache')
+    if not os.path.isdir(CACHE_DIRECTORY):
+        os.mkdir(CACHE_DIRECTORY)
+    filepath = f"{CACHE_DIRECTORY}/{cache_name}.json"
     if not os.path.isfile(filepath):
         return {}
     with open(filepath, 'r', encoding="UTF-8") as file:
@@ -161,14 +165,17 @@ def cache_exists(cache_name: str) -> dict:
 
 
 def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[bool, dict]:
-    """Attempts to get the cache if it exists and the 'force_update' argument is set to False. If
-    the above criterion are not met, the callback function is called and its return value is saved
-    as the new cache. Returns the cached data and a boolean indicating if it previously existed.
+    """Attempts to get the cache if it exists and the 'force_update' argument is set to False.
+
+    If the above criteria are not met, the callback function is called and its return value
+    is saved as the new cache.
 
     Arguments:
         cache_name -- the filename of the cache without the .json extension.
         force_update -- a boolean indicating if any existing caches should be updated forcefully.
         callback_function -- a lambda function that generates the new cache.
+
+    Returns a tuple consisting of the cached data and a boolean indicating if it previously existed.
     """
     cache = cache_exists(cache_name)
     cache_existed = bool(cache)
@@ -176,28 +183,29 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
     if force_update or not cache_existed:
         cache = callback_function()
         json_string = json.dumps(cache, indent=2, ensure_ascii=False)
-        with open(f"cache/{cache_name}.json", 'w', encoding="UTF-8") as file:
+        with open(f"{CACHE_DIRECTORY}/{cache_name}.json", 'w', encoding="UTF-8") as file:
             file.write(json_string)
     return cache, cache_existed
 
 
-def clear_cache(cache_path: str = "cache") -> bool:
+def clear_cache(cache_path: str = None) -> int:
     """Removes all files in the given directory, as well as the directory itself.
-    Returns True if the directory previously existed, otherwise False."""
+
+    Returns the number of removed files if the directory previously existed, otherwise False.
+    """
+    cache_path = cache_path or CACHE_DIRECTORY
     if os.path.exists(cache_path):
-        for filename in os.listdir(cache_path):
-            os.remove(cache_path + os.path.sep + filename)
-        os.rmdir(cache_path)
+        files_removed = len(os.listdir(cache_path))
+        shutil.rmtree(cache_path)
         log("Successfully cleared cache at directory: ./" + cache_path)
-        return True
-    else:
-        log(
-            f"Did not clear cache from directory ./{cache_path}: path does not exist.")
-        return False
+        return files_removed
+    log(f"Error: The path './{cache_path}' does not exist.")
+    return False
 
 
 def read_env_file() -> bool:
     """Reads the .env file in the current directory and sets its contents in the program's memory.
+
     Returns a boolean indicating if any system environment variables were set as a result of this.
     """
     if not os.path.isfile(".env"):

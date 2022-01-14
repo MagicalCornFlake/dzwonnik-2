@@ -33,7 +33,8 @@ MY_SERVER_ID: int = 766346477874053130
 BAD_RESPONSE = "Error! Received an invalid response from web request. Exception trace:\n"
 # The template for the log message sent when the bot's status is updated
 STATUS_LOG_TEMPLATE = "... new status message: '{}'.\n... current period: {}\n... next period: {}"
-INVALID_NUMBERS_TEMPLATE = "Invalid lucky numbers message embed. Run `{}exec bot.lucky_numbers_api.cached_data`."
+INVALID_NUMBERS_TEMPLATE = ("Invalid lucky numbers message embed."
+                            "Run `{}exec bot.lucky_numbers_api.cached_data`.")
 RESTARTED_BOT_MSG = "Restarted bot!"
 
 HOMEWORK_EMOJI = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
