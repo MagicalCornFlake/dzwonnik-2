@@ -24,10 +24,10 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
     except web.WebException as web_exc:
         ex: str = util.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
-        return False, web.get_error_message(web_exc)
+        return web.get_error_message(web_exc)
     else:
         if "error" in data:
-            return False, BAD_SUBSTITUTIONS_MSG
+            return BAD_SUBSTITUTIONS_MSG
 
     # Number of substitutions for our class
     our_substitutions: int = 0
@@ -95,4 +95,4 @@ def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
 
     # Set embed description to contain the number of substitutions for our class
     embed.description = f"Liczba zastępstw dla klasy {util.OUR_CLASS}: **{our_substitutions}**"
-    return True, embed
+    return embed

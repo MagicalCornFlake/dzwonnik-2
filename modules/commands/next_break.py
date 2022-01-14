@@ -22,14 +22,15 @@ def get_next_break(message: Message) -> tuple[bool, str]:
     """Event handler for the 'nb' command."""
     time = get_datetime_from_input(message, 'nb')
     if not isinstance(time, datetime):
-        return False, time
+        # The get_datetime_from_input() function returned an error message
+        return time
 
     next_period_is_today, lesson_period = get_next_period(time)[:2]
 
     if next_period_is_today:
         lesson = get_lesson_by_roles(lesson_period % 10, time.weekday(), message.author.roles)
         if not lesson:
-            return False, f"{Emoji.INFO} Dzisiaj już nie ma dla Ciebie żadnych lekcji!"
+            return f"{Emoji.INFO} Dzisiaj już nie ma dla Ciebie żadnych lekcji!"
         break_start_datetime = util.get_time(lesson['period'], time, True)
         break_countdown = break_start_datetime - time
         mins = ceil(break_countdown.seconds / 60)
@@ -48,4 +49,4 @@ def get_next_break(message: Message) -> tuple[bool, str]:
             msg += "__ i jest to ostatnia przerwa."
     else:
         msg = f"{Emoji.INFO} Już jest po lekcjach!"
-    return False, msg
+    return msg

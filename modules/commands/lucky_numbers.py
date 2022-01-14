@@ -22,7 +22,7 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     except web.WebException as web_exc:
         exc: str = util.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{exc}", force=True)
-        return False, web.get_error_message(web_exc)
+        return web.get_error_message(web_exc)
     date_str: str = datetime.strftime(data["date"], "%d.%m.%Y")
     msg = f"Szczęśliwe numerki na {date_str}:"
     embed = Embed(title="Szczęśliwe numerki", description=msg)
@@ -39,4 +39,4 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     # embed.add_field(name="\u200B", value="\u200B", inline=False)
     excluded = ", ".join(data["excludedClasses"]) or "*Brak*"
     embed.add_field(name="Wykluczone klasy", value=excluded, inline=False)
-    return True, embed
+    return embed

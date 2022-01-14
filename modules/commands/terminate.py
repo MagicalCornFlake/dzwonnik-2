@@ -13,14 +13,14 @@ DESC = None
 def restart_bot(message: discord.Message) -> tuple[bool, str]:
     """Event handler for the 'restart' command."""
     ensure_sender_is_admin(message)
-    return False, "Restarting bot..."
+    return "Restarting bot..."
 
 
 def exit_bot(message: discord.Message) -> tuple[bool, str]:
     """Event handler for the 'exit' command."""
     ensure_sender_is_admin(message)
     bot.restart_on_exit = False
-    return False, "Exiting program."
+    return "Exiting program."
 
 
 async def terminate_bot(original_msg: discord.Message, reply_msg: discord.Message) -> None:

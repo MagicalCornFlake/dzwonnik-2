@@ -22,7 +22,7 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
     """Event handler for the 'nl' command."""
     time = get_datetime_from_input(message, 'nl')
     if not isinstance(time, datetime):
-        return False, time
+        return time
 
     def process(time: datetime) -> tuple[bool, str, str]:
         # next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
@@ -30,8 +30,8 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
         lesson = next_lesson[1] % 10, next_lesson[-1], message.author.roles
         lesson = get_lesson_by_roles(*lesson)
         if not lesson:
-            return False, (f"{Emoji.INFO} Nie ma żadnych zajęć dla Twojej grupy"
-                           f" po godzinie {time:%H:%M}.")
+            return (f"{Emoji.INFO} Nie ma żadnych zajęć dla Twojej grupy"
+                    f" po godzinie {time:%H:%M}.")
         bot.send_log("Received lesson:", lesson)
         if next_lesson[0]:
             if lesson['period'] > 10:
@@ -68,7 +68,7 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
     if not temp_var[0]:
         # First element of tuple indicates success of operation
         # Second element represents error message
-        return False, temp_var[1]
+        return temp_var[1]
     msg, raw_link = temp_var[1:]
 
     embed = Embed(title=f"Następna lekcja ({time:%H:%M})", description=msg)
@@ -76,4 +76,4 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
     embed.add_field(name="Link do lekcji", value=link)
     temp_var = f"Użyj komendy {bot.prefix}nl, aby pokazać tą wiadomość."
     embed.set_footer(text=temp_var)
-    return True, embed
+    return embed

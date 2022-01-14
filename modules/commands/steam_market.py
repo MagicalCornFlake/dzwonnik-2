@@ -34,9 +34,9 @@ def get_market_price(message: Message, result_override=None) -> tuple[bool, str]
         params = args[0], 730, currency
         result = result_override or steam_market_api.get_item(*params)
         price = steam_market_api.get_item_price(result)
-        return False, f"{Emoji.INFO} Aktualna cena dla *{args[0]}* to `{price}`."
+        return f"{Emoji.INFO} Aktualna cena dla *{args[0]}* to `{price}`."
     except web.WebException as web_exc:
-        return False, web.get_error_message(web_exc)
+        return web.get_error_message(web_exc)
 
 
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
@@ -51,15 +51,15 @@ def start_market_tracking(message: Message):
         max_price = int(float(max_price) * 100)
     except ValueError:
         # noinspection SpellCheckingInspection
-        return False, (f"{Emoji.WARNING} Należy wpisać po nazwie przedmiotu cenę minimalną oraz "
-                       f"cenę maksymalną. Przykład: `{bot.prefix}sledz Operation Broken Fang Case "
-                       f"min=1 max=3`.")
+        return (f"{Emoji.WARNING} Należy wpisać po nazwie przedmiotu cenę minimalną oraz "
+                f"cenę maksymalną. Przykład: `{bot.prefix}sledz Operation Broken Fang Case "
+                f"min=1 max=3`.")
     else:
         item_name = args[0].rstrip()
         try:
             result = steam_market_api.get_item(item_name)
         except web.WebException as ex:
-            return False, web.get_error_message(ex)
+            return web.get_error_message(ex)
         else:
             author_id = message.author.id
             item = TrackedItem(item_name, min_price, max_price, author_id)
@@ -68,13 +68,13 @@ def start_market_tracking(message: Message):
                     if item.name.lower() == item_name.lower():
                         author = f"użytkownika <@{item.author_id}>"
                         who = author if item.author_id != author_id else "Ciebie"
-                        return False, (f"{Emoji.WARNING} Przedmiot *{item.name}* jest już śledzony"
-                                       f"przez {who}.")
+                        return (f"{Emoji.WARNING} Przedmiot *{item.name}* jest już śledzony"
+                                f"przez {who}.")
             tracked_market_items.append(item)
             file_manager.save_data_file()
             price = get_market_price(item_name, result_override=result)[1]
-            return False, (f"{Emoji.CHECK} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w"
-                           f"przedziale `{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n{price}")
+            return (f"{Emoji.CHECK} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w"
+                    f"przedziale `{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n{price}")
 
 
 def stop_market_tracking(message: Message) -> tuple[bool, str]:
@@ -87,5 +87,5 @@ def stop_market_tracking(message: Message) -> tuple[bool, str]:
                 ensure_sender_is_admin(message, "usuwania tego zlecenia")
             tracked_market_items.remove(item)
             file_manager.save_data_file()
-            return False, f"{Emoji.CHECK} Zaprzestano śledzenie przedmiotu *{item.name}*."
-    return False, f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."
+            return f"{Emoji.CHECK} Zaprzestano śledzenie przedmiotu *{item.name}*."
+    return f":x: Przedmiot *{item_name}* nie jest aktualnie śledziony."

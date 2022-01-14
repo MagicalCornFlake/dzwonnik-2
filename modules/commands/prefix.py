@@ -16,10 +16,10 @@ def change_prefix(message: Message) -> tuple[bool, str]:
     if len(args) < 2:
         invalid_args_msg: str = (f"{Emoji.WARNING} Należy po komendzie `{bot.prefix}prefix wpisać"
                                  " nowy prefiks dla komend.")
-        return False, invalid_args_msg
+        return invalid_args_msg
     old_prefix: str = bot.prefix
     bot.prefix = args[1]
-    return False, f"{Emoji.CHECK} Zmieniono prefiks dla komend z `{old_prefix}` na `{args[1]}`."
+    return f"{Emoji.CHECK} Zmieniono prefiks dla komend z `{old_prefix}` na `{args[1]}`."
 
 
 async def ask_for_confirmation(channel: TextChannel, new_prefix) -> bool:

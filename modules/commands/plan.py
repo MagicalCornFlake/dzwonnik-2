@@ -70,11 +70,11 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
                         result = lesson_plan_api.get_lesson_plan(plan_id)
                     except web.WebException as web_exc:
                         # Invalid web response
-                        return False, web.get_error_message(web_exc)
+                        return web.get_error_message(web_exc)
                     else:
                         class_lesson_plan = result[0]
         except RuntimeError:
-            return False, (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer "
+            return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer "
                            f"dnia (1-5) bądź dzień tygodnia, lub zostawić parametry komendy puste."
                            f" Drugim opcjonalnym argumentem jest nazwa klasy.")
 
@@ -115,4 +115,4 @@ def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
         lesson_description = f"*{txt}    <── TERAZ*" if is_current_lesson else txt
         lessons = '\n'.join(lesson_texts)
         embed.add_field(name=lesson_description, value=lessons, inline=False)
-    return True, embed
+    return embed

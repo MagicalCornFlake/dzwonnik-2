@@ -33,7 +33,7 @@ MY_SERVER_ID: int = 766346477874053130
 BAD_RESPONSE = "Error! Received an invalid response from web request. Exception trace:\n"
 # The template for the log message sent when the bot's status is updated
 STATUS_LOG_TEMPLATE = "... new status message: '{}'.\n... current period: {}\n... next period: {}"
-
+INVALID_NUMBERS_TEMPLATE = "Invalid lucky numbers message embed. Run `{}exec bot.lucky_numbers_api.cached_data`."
 RESTARTED_BOT_MSG = "Restarted bot!"
 
 HOMEWORK_EMOJI = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
@@ -192,7 +192,7 @@ async def on_message(message: discord.Message) -> None:
     callback_function = command_info["function"]
     async with message.channel.typing():
         try:
-            reply_is_embed, reply = callback_function(message)
+            reply = callback_function(message)
         except MissingPermissionsException as invalid_perms_exc:
             error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
             message.reply(error_message)
@@ -202,6 +202,7 @@ async def on_message(message: discord.Message) -> None:
             await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
                                 "Administrator bota (Konrad) został o tym powiadomiony.")
         else:
+            reply_is_embed = isinstance(reply, discord.Embed)
             args = {"embed" if reply_is_embed else "content": reply}
             reply_msg = await try_send_message(message, True, args, reply)
             on_success_coroutine = command_info.get("on_completion")
@@ -510,8 +511,13 @@ async def check_for_lucky_numbers_updates() -> None:
                 f"Lucky numbers data updated! Old data:\n{old_str}", force=True)
             target_channel = client.get_channel(
                 testing_channel or ChannelID.NUMERKI)
-            await target_channel.send(embed=lucky_numbers.get_lucky_numbers_embed()[1])
             file_manager.save_data_file()
+            lucky_numbers_msg = lucky_numbers.get_lucky_numbers_embed()
+            if isinstance(lucky_numbers_msg, discord.Embed):
+                await target_channel.send(embed=lucky_numbers_msg)
+                return
+            await ping_konrad()
+            send_log(INVALID_NUMBERS_TEMPLATE.format(prefix))
 
 
 async def check_for_substitutions_updates() -> None:
@@ -543,8 +549,8 @@ async def check_for_substitutions_updates() -> None:
         # Announce the new substitutions
         target_channel = client.get_channel(
             testing_channel or ChannelID.SUBSTITUTIONS)
-        success, subs_msg = substitutions.get_substitutions_embed()
-        if success:
+        subs_msg = substitutions.get_substitutions_embed()
+        if isinstance(subs_msg, discord.Embed):
             await target_channel.send(embed=subs_msg)
             return
         exception_message = subs_msg

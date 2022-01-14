@@ -29,9 +29,9 @@ def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]
     if len(args) == 1:
         return get_homework_events(message)
     elif len(args) < 4:
-        return False, (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
-                       f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
-                       f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
+        return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
+                f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
+                f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
     return create_homework_event(message)
 
 
@@ -43,8 +43,8 @@ def get_homework_events(message: Message, with_event_ids=False) -> tuple[bool, s
         embed = Embed(
             title="Zadania", description=f"Lista zadań ({amount_of_homeworks}) jest następująca:")
     else:
-        return False, f"{Emoji.INFO} Nie ma jeszcze żadnych zadań. " + \
-            f"Możesz je tworzyć za pomocą komendy `{bot.prefix}zadanie`."
+        return (f"{Emoji.INFO} Nie ma jeszcze żadnych zadań. "
+                f"Możesz je tworzyć za pomocą komendy `{bot.prefix}zadanie`.")
 
     # Adds an embed field for each event
     for homework_event in homework_events:
@@ -78,7 +78,7 @@ def get_homework_events(message: Message, with_event_ids=False) -> tuple[bool, s
         embed.add_field(name=field_name, value=field_value, inline=False)
     embed.set_footer(
         text=f"Użyj komendy {bot.prefix}zadania, aby pokazać tą wiadomość.")
-    return True, embed
+    return embed
 
 
 def create_homework_event(message: Message) -> tuple[bool, str]:
@@ -90,14 +90,13 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
         try:
             deleted_event = delete_homework_event(int(user_inputted_id))
         except ValueError:
-            return False, (f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. Wpisz"
-                           f" `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID.")
-        return False, f"{Emoji.CHECK} Usunięto zadanie z treścią: `{deleted_event}`"
+            return (f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. Wpisz"
+                    f" `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID.")
+        return f"{Emoji.CHECK} Usunięto zadanie z treścią: `{deleted_event}`"
     try:
         datetime.datetime.strptime(args[1], "%d.%m.%Y")
     except ValueError:
-        msg = f"{Emoji.WARNING} Drugim argumentem komendy musi być data o formacie: `DD.MM.YYYY`."
-        return False, msg
+        return f"{Emoji.WARNING} Drugim argumentem komendy musi być data o formacie: `DD.MM.YYYY`."
     title = args[3]
     for word in args[4:]:
         title += " " + word
@@ -111,17 +110,17 @@ def create_homework_event(message: Message) -> tuple[bool, str]:
         try:
             message.guild.get_role(group_id)
         except ValueError:
-            return False, (f"{Emoji.WARNING} Trzecim argumentem komendy musi być oznaczenie grupy,"
-                           f" dla której jest zadanie.")
+            return (f"{Emoji.WARNING} Trzecim argumentem komendy musi być oznaczenie grupy,"
+                    f" dla której jest zadanie.")
         group_text = GROUP_NAMES[group_id] + " "
 
     new_event = HomeworkEvent(title, group_id, author, args[1] + " 17")
     if new_event.serialised in homework_events:
-        return False, f"{Emoji.WARNING} Takie zadanie już istnieje."
+        return f"{Emoji.WARNING} Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)
     file_manager.save_data_file()
-    return False, (f"{Emoji.CHECK} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}`"
-                   f" {group_text}z powiadomieniem na dzień przed o **17:00.**")
+    return (f"{Emoji.CHECK} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}`"
+            f" {group_text}z powiadomieniem na dzień przed o **17:00.**")
 
 
 def delete_homework_event(event_id: int) -> str:
@@ -159,4 +158,4 @@ async def wait_for_zadania_reaction(original_msg: Message, reply_msg: Message) -
     else:
         # Someone has added detective reaction to message
         await reply_msg.clear_reactions()
-        await reply_msg.edit(embed=get_homework_events(original_msg, True)[1])
+        await reply_msg.edit(embed=get_homework_events(original_msg, True))
