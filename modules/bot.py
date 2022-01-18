@@ -528,7 +528,7 @@ async def check_for_substitutions_updates() -> None:
     """
     try:
         # old_cache = file_manager.cache_exists("subs")
-        new_cache, cache_existed = substitutions_api.get_substitutions(True)
+        new_cache, old_cache = substitutions_api.get_substitutions(True)
         if "error" in new_cache:
             raise RuntimeError("Substitutions data could not be parsed.")
     except web.InvalidResponseException as web_exc:
@@ -543,7 +543,7 @@ async def check_for_substitutions_updates() -> None:
         exc: str = new_cache.get("error")
         exception_message = f"Error! {err_desc} Exception trace:\n{exc}"
     else:
-        if cache_existed:
+        if new_cache == old_cache:
             # The cache was not updated. Do nothing.
             return
         send_log("Substitution data updated!", force=True)

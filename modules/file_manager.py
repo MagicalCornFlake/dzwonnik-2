@@ -175,17 +175,17 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
         force_update -- a boolean indicating if any existing caches should be updated forcefully.
         callback_function -- a lambda function that generates the new cache.
 
-    Returns a tuple consisting of the cached data and a boolean indicating if it previously existed.
+    Returns a tuple consisting of the cached data and the old cache (defaults to an empty dict).
     """
     cache = cache_exists(cache_name)
-    cache_existed = bool(cache)
-    log(f"Cache for {cache_name} was {'not ' * (not cache_existed)}found.")
-    if force_update or not cache_existed:
+    old_cache = dict(cache)
+    log(f"Cache for {cache_name} was {'not ' * (not bool(old_cache))}found.")
+    if force_update or not bool(cache):
         cache = callback_function()
         json_string = json.dumps(cache, indent=2, ensure_ascii=False)
         with open(f"{CACHE_DIRECTORY}/{cache_name}.json", 'w', encoding="UTF-8") as file:
             file.write(json_string)
-    return cache, cache_existed
+    return cache, old_cache
 
 
 def clear_cache(cache_path: str = None) -> int:
