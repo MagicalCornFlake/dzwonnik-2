@@ -191,7 +191,8 @@ async def on_message(message: discord.Message) -> None:
     send_log(received_command_msg, force=True)
     command_info = get_help.INFO[msg_first_word]
     callback_function = command_info["function"]
-    async with message.channel.typing():
+
+    async def run_command():
         try:
             reply = callback_function(message)
         except MissingPermissionsException as invalid_perms_exc:
@@ -209,6 +210,11 @@ async def on_message(message: discord.Message) -> None:
             on_success_coroutine = command_info.get("on_completion")
             if on_success_coroutine:
                 await on_success_coroutine(message, reply_msg)
+    if command_info["description"]:
+        async with message.channel.typing():
+            await run_command()
+    else:
+        await run_command()
 
 
 def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
