@@ -76,70 +76,69 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
         # Return an empty list if the current cell is empty
         if raw_line == "<td class=\"l\">&nbsp;</td>":
             return []
-        elif raw_line.startswith("<td class=\"nr\">"):
+        if raw_line.startswith("<td class=\"nr\">"):
             # Row containing the lesson period number
             return int(PERIOD_PATTERN.match(raw_line).groups()[-1])
-        elif raw_line.startswith("<td class=\"g\">"):
+        if raw_line.startswith("<td class=\"g\">"):
             # Row containing the lesson period start hour, start minute, end hour and end minute
             # e.g. [8, 0, 8, 45] corresponds to the lesson during 08:00 - 08:45
-            times = [int(time)
-                     for time in DURATION_PATTERN.match(raw_line).groups()]
+            times = tuple(int(time)
+                          for time in DURATION_PATTERN.match(raw_line).groups())
             # Check if the lesson start hour is less than 12:00 (i.e. old timetable still relevant)
             lesson_start_hour = times[0]
             if lesson_start_hour < 12:
-                return [times[:2], times[2:]]
+                return times[:2], times[2:]
             # The lesson is after or 12:00.
             # We must manually change the returned values since the timetable is not up-to-date.
             # After 12:00, the breaks last 5 minutes instead of 10.
             new_times = {
-                12: [[12, 50], [13, 35]],
-                13: [[13, 40], [14, 25]],
-                14: [[14, 30], [15, 15]],
-                15: [[15, 20], [16, 5]]
+                12: ((12, 50), (13, 35)),
+                13: ((13, 40), (14, 25)),
+                14: ((14, 30), (15, 15)),
+                15: ((15, 20), (16, 5))
             }
             return new_times[lesson_start_hour]
-        else:
-            # Row containing lesson information for a given period
-            tmp: list[dict[str, str]] = []
-            for match in LESSON_PATTERN.findall(raw_line):
-                lesson_name, group, groups, teacher, code, room_id = match
-                if group:
-                    if int(groups) == 5:
-                        group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
+        # Row containing lesson information for a given period
+        tmp: list[dict[str, str]] = []
+        for match in LESSON_PATTERN.findall(raw_line):
+            lesson_name, group, groups, teacher, code, room_id = match
+            if group:
+                if int(groups) == 5:
+                    group = ["RB", "RCH", "RH", "RG", "RF"][int(group) - 1]
+            else:
+                # Group is not specified in timetable
+                if code:
+                    # If the room code is specified, use that instead.
+                    group = code.lstrip('#')
+                elif lesson_name == "religia":
+                    # If the current lesson is Religious Studies, use that code.
+                    group = "rel"
                 else:
-                    # Group is not specified in timetable
-                    if code:
-                        # If the room code is specified, use that instead.
-                        group = code.lstrip('#')
-                    elif lesson_name == "religia":
-                        # If the current lesson is Religious Studies, use that code.
-                        group = "rel"
-                    else:
-                        # Set group to 'grupa_0' (whole class).
-                        group = "0"
-                mappings = (
-                    ("r_j.", "j."),
-                    (" DW", ""),
-                    ("j. ", "j."),
-                    ("r_", "r-"),
-                    (" ", "-")
-                )
-                name: str = lesson_name
-                for mapping in mappings:
-                    name = name.replace(*mapping)
-                if name == "mat":
-                    name = "r-mat"
-                elif name in ["mat.", "matematyka"]:
-                    name = "mat"
-                tmp.append({
-                    "name": name,
-                    "group": "grupa_" + group,
-                    "room_id": room_id
-                })
-                if teacher:
-                    # Add the teacher to the returned lesson info if they are specified
-                    tmp[-1]["teacher"] = teacher
-            return tmp
+                    # Set group to 'grupa_0' (whole class).
+                    group = "0"
+            mappings = (
+                ("r_j.", "j."),
+                (" DW", ""),
+                ("j. ", "j."),
+                ("r_", "r-"),
+                (" ", "-")
+            )
+            name: str = lesson_name
+            for mapping in mappings:
+                name = name.replace(*mapping)
+            if name == "mat":
+                name = "r-mat"
+            elif name in ["mat.", "matematyka"]:
+                name = "mat"
+            tmp.append({
+                "name": name,
+                "group": "grupa_" + group,
+                "room_id": room_id
+            })
+            if teacher:
+                # Add the teacher to the returned lesson info if they are specified
+                tmp[-1]["teacher"] = teacher
+        return tmp
 
     # Go through each line in the inputted HTML
     for row in html.splitlines():

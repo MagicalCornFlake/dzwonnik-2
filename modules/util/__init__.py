@@ -70,7 +70,8 @@ def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tup
     Arguments:
         period: an integer representing the number of the period.
         base_time: the base datetime that will be used to construct the returned value.
-        get_period_end_time: if this is true, the period's end time will be used."""
+        get_period_end_time: if this is true, the period's end time will be used.
+    """
     times = lesson_plan["Godz"][period]
     hour, minute = times[get_period_end_time]
     replace_args = {
@@ -121,7 +122,7 @@ def get_lesson_link(lesson_code: str) -> str:
 
 def get_formatted_period_time(period: int or str = None) -> str:
     """Returns a string representing the start and end times of a given period in the lesson plan.
-    e.g. [[8, 0], [8, 45]] -> "08:00-08:45
+    e.g. ((8, 0), (8, 45)) -> "08:00-08:45
 
     Arguments:
         period -- the period to get the times for. Defaults to the current period.
