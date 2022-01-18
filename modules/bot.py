@@ -564,8 +564,9 @@ async def close() -> None:
     """Sets the bot's Discord status to 'offline' and terminates it."""
     await client.wait_until_ready()
     await client.change_presence(status=discord.Status.offline)
-    # Sleep for 500 ms to ensure that the client.close() coroutine is the last to execute.
-    await asyncio.sleep(0.5)
+    send_log("Bot is offline.")
+    # Sleep for 1000 ms to ensure that the client.close() coroutine is the last to execute.
+    await asyncio.sleep(1)
     await client.close()
 
 
