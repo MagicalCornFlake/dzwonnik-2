@@ -18,7 +18,7 @@ MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
 MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
 
 # Initialise the code template to execute when the 'exec' command is called.
-EXPRESSION_TEMPLATE = "async def __execute():\n    {}\n    return locals()"
+EXPRESSION_TEMPLATE = "async def __execute(message):\n    {}\n    return locals()"
 
 
 class ExecResultList(list):
@@ -71,9 +71,6 @@ def inject_code(expression: str) -> str:
 async def process_execution(message: discord.Message) -> str:
     """Executes the code and returns the message that should be sent to the user.
 
-    Arguments:
-        expression -- the raw expression to be executed.
-
     Returns the message that should be sent back directly to the user.
     """
     msg_content: str = message.content
@@ -83,7 +80,7 @@ async def process_execution(message: discord.Message) -> str:
         # Inject result-storing code to the user input and execute it
         exec(inject_code(expression))  # pylint: disable=exec-used
         # The __execute() injected function returns its locals() dictionary.
-        _locals: dict[str, any] = await locals()["__execute"]()
+        _locals: dict[str, any] = await locals()["__execute"](message)
     except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(exec_exc)
