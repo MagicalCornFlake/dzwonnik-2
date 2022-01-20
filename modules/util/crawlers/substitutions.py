@@ -22,23 +22,25 @@ SUB_GROUPS_PATTERN = re.compile(r"(?:\sgr.\s|,\s|\si\s)(p. [^,]+?[^-,])\s")
 SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
-def get_int_ranges_from_string(lessons_string: str) -> list[int]:
+def get_int_ranges_from_string(lessons_string: str) -> list[str]:
     """Parses a string and returns a list of all integer ranges contained within it.
 
-    For example, the string '1,4-6l' would return the list [1, 4, 5, 6].
+    For example, the string '1,4-6l' would return the list ['1', '4', '5', '6'].
     Strings containing no range (e.g. '6l') return a list with the single integer.
 
     Arguments:
         lessons_string -- the string to parse.
-    Returns a list of all the found periods.
+
+    Returns a list of all the found periods. Note that the integers are presented as strings to
+    facilitate JSON serialisation.
     """
     lesson_ints = []
     for lesson in lessons_string.rstrip('l').split(','):
         if "-" in lesson:
-            start, end = [int(elem_index) for elem_index in lesson.split('-')]
+            start, end = lesson.split('-')
             lesson_ints += list(range(start, end + 1))
         else:
-            lesson_ints.append(int(lesson))
+            lesson_ints.append(lesson)
     return lesson_ints
 
 
@@ -170,7 +172,7 @@ def parse_html(html: str) -> dict:
             if "są odwołane" in elem_text:
                 subs_data["cancelled"] = elem_text
                 return
-            is_table_header = next_elem and next_elem.tag == "table"
+            is_table_header = next_elem is not None and next_elem.tag == "table"
             extract_actual_substitution(elem_text, subs_data, is_table_header)
         else:
             # The current element does have children
