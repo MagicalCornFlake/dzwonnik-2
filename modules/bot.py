@@ -190,11 +190,10 @@ async def on_message(message: discord.Message) -> None:
     received_command_msg = f"Received command '{message.content}' from {message.author}"
     send_log(received_command_msg, force=True)
     command_info = get_help.INFO[msg_first_word]
-    callback_function = command_info["function"]
 
     async def run_command():
         try:
-            reply = callback_function(message)
+            reply = command_info["function"](message)
         except MissingPermissionsException as invalid_perms_exc:
             error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
             message.reply(error_message)
@@ -554,7 +553,6 @@ async def check_for_substitutions_updates(announce_on_update = False) -> None:
             # The cache was not updated. Do nothing.
             return
         send_log("Substitutions data updated!", force=True)
-        print(old_cache, new_cache, sep="\n\n")
         if not announce_on_update:
             return
         # Announce the new substitutions
