@@ -14,7 +14,7 @@ from .. import bot, util
 
 
 DESC = None
-MISSING_PERMS_MSG = "synchronicznego egzekowania kodu"
+MISSING_PERMS_MSG = "zdalnego egzekwowania kodu"
 MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
 
 # Initialise the code template to execute when the 'exec' command is called.
