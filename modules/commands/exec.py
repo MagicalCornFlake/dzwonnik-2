@@ -49,6 +49,8 @@ def inject_code(expression: str) -> str:
         # Inject temporary variable storage in place of 'return' statements
         injection_snippet = "__temp += "
         expression = expression.replace("return ", injection_snippet)
+        # If the user-inputted code contains a return statement, return the locals variable
+        expression = expression.replace("return", "return locals()")
         expression = "__temp = ExecResultList()\n" + expression
     else:
         # No user-specified return value
@@ -81,12 +83,13 @@ async def process_execution(message: discord.Message) -> str:
         # Inject result-storing code to the user input and execute it.
         # Defines the '__execute()' function according to the template on line 22.
         exec(inject_code(expression))  # pylint: disable=exec-used
-        # The __execute() injected function returns its locals() dictionary.
-        execute_locals: dict[str, any] = await locals()["__execute"](message)
     except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(exec_exc)
     else:
+        # The __execute() injected function returns its locals() dictionary.
+        execute_locals: dict[str, any] = await locals()["__execute"](message) or {}
+
         # Default the temp variable to an empty ExecResultList if it's not been assigned
         exec_result = execute_locals.get("__temp", ExecResultList())
 
