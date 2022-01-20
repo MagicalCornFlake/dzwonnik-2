@@ -11,7 +11,7 @@ from discord.ext.tasks import loop
 
 # Local application imports
 from . import file_manager, commands, util
-from . import Emoji, Weekday, ROLE_CODES, MEMBER_IDS, WEEKDAY_NAMES, GROUP_NAMES
+from . import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
 from .commands import get_help, homework, steam_market, lucky_numbers, substitutions
 from .util import web
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
