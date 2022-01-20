@@ -25,7 +25,7 @@ Parametry: __nazwa przedmiotu__
 Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny tego przedmiotu."""
 
 
-def get_market_price(message: Message, result_override=None) -> tuple[bool, str]:
+def get_market_price(message: Message, result_override=None) -> str:
     """Event handler for the 'cena' command."""
     raw_args = message.content[len(f"{bot.prefix}cena "):].split(" waluta=")
     args: list[str] = [message] if result_override else raw_args
@@ -77,7 +77,7 @@ def start_market_tracking(message: Message):
                     f"przedziale `{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n{price}")
 
 
-def stop_market_tracking(message: Message) -> tuple[bool, str]:
+def stop_market_tracking(message: Message) -> str:
     """Event handling for the 'odsledz' command."""
     # noinspection SpellCheckingInspection
     item_name = message.content.lstrip(f"{bot.prefix}odsledz ")

@@ -18,7 +18,7 @@ DESC = """Mówi kiedy jest następna przerwa.
     *Domyślnie pokazana jest najbliższa przerwa od aktualnego czasu*"""
 
 
-def get_next_break(message: Message) -> tuple[bool, str]:
+def get_next_break(message: Message) -> str:
     """Event handler for the 'nb' command."""
     time = get_datetime_from_input(message, 'nb')
     if not isinstance(time, datetime):

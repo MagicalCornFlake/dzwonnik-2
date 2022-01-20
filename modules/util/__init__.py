@@ -87,7 +87,7 @@ def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tup
 def get_lesson_name(lesson_code: str) -> str:
     """Returns a lesson's name from its code."""
     # The boolean indicates if the word should only be mapped if it starts with the given phrase.
-    mappings: dict[str, tuple[bool, str]] = {
+    mappings: dict[str, str] = {
         "zaj.z-wych.": (False, "zajęcia z wychowawcą"),
         "WF": (False, "wychowanie fizyczne"),
         "WOS": (False, "wiedza o społeczeństwie"),

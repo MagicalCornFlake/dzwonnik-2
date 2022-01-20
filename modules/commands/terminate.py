@@ -14,13 +14,13 @@ RESTARTING_BOT_MSG = "Restarting bot..."
 EXITING_BOT_MSG = "Exiting program."
 
 
-def restart_bot(message: discord.Message) -> tuple[bool, str]:
+def restart_bot(message: discord.Message) -> str:
     """Event handler for the 'restart' command."""
     ensure_user_authorised(message, owner_only=True)
     return RESTARTING_BOT_MSG
 
 
-def exit_bot(message: discord.Message) -> tuple[bool, str]:
+def exit_bot(message: discord.Message) -> str:
     """Event handler for the 'exit' command."""
     ensure_user_authorised(message, owner_only=True)
     bot.restart_on_exit = False

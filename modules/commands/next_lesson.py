@@ -18,7 +18,7 @@ DESC = """Mówi jaką mamy następną lekcję.
     *Domyślnie pokazana jest najbliższa lekcja od aktualnego czasu*"""
 
 
-def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
+def get_next_lesson(message: Message) -> str or Embed:
     """Event handler for the 'nl' command."""
     time = get_datetime_from_input(message, 'nl')
     if not isinstance(time, datetime):

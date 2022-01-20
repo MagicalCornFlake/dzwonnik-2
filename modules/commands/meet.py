@@ -24,7 +24,7 @@ class InvalidFormatException(Exception):
         super().__init__(self.message)
 
 
-def update_meet_link(message: Message) -> tuple[bool, str]:
+def update_meet_link(message: Message) -> str:
     """Event handler for the 'meet' command."""
     args = message.content.split(" ")[1:]
     try:

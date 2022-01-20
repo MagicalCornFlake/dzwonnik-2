@@ -23,19 +23,19 @@ DESC_2 = "Pokazuje wszystkie zadania domowe, które zostały stworzone za pomoc�
 DESC_3 = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
 
 
-def process_homework_events_alias(message: Message) -> tuple[bool, str or Embed]:
+def process_homework_events_alias(message: Message) -> str or Embed:
     """Event handler for the 'zad' command."""
     args = message.content.split(" ")
     if len(args) == 1:
         return get_homework_events(message)
-    elif len(args) < 4:
+    if len(args) < 4:
         return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
                 f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
                 f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
     return create_homework_event(message)
 
 
-def get_homework_events(message: Message, with_event_ids=False) -> tuple[bool, str or Embed]:
+def get_homework_events(message: Message, with_event_ids=False) -> str or Embed:
     """Event handler for the 'zadania' command."""
     file_manager.read_data_file()
     amount_of_homeworks = len(homework_events)
@@ -81,7 +81,7 @@ def get_homework_events(message: Message, with_event_ids=False) -> tuple[bool, s
     return embed
 
 
-def create_homework_event(message: Message) -> tuple[bool, str]:
+def create_homework_event(message: Message) -> str:
     """Event handler for the 'zadanie' command."""
     args = message.content.split(" ")
     # Args is asserted to have at least 4 elements

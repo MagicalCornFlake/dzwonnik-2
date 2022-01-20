@@ -10,7 +10,7 @@ from .. import Emoji, bot
 DESC = """Zmienia prefiks dla komend."""
 
 
-def change_prefix(message: Message) -> tuple[bool, str]:
+def change_prefix(message: Message) -> str:
     """Event handler for the 'prefix' command."""
     args: list[str] = message.content.split(" ")
     if len(args) < 2:

@@ -22,7 +22,7 @@ DESC = """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na 
     `{p}plan pon 1a` - wyświetliłby się plan lekcji na poniedziałek dla klasy 1a."""
 
 
-def get_lesson_plan(message: Message) -> tuple[bool, str or Embed]:
+def get_lesson_plan(message: Message) -> str or Embed:
     """Event handler for the 'plan' command."""
     args: list[str] = message.content.split(" ")
     today = datetime.now().weekday()

@@ -314,11 +314,12 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
     for role, name in ROLE_CODES.items():
-        if role == event.group:
-            mention_role = discord.utils.get(my_server.roles, name=name)
-            if role != "grupa_0":
-                mention_text = my_server.get_role(mention_role.id).mention
-            break
+        if role != event.group:
+            continue
+        mention_role = discord.utils.get(my_server.roles, name=name)
+        if role != "grupa_0":
+            mention_text = my_server.get_role(mention_role.id).mention
+        break
     chnl: int = testing_channel or ChannelID.NAUKA
     target_channel: discord.TextChannel = client.get_channel(chnl)
     # Which tense to use in the reminder message

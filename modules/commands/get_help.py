@@ -9,8 +9,11 @@ from . import meet, exec as execute, terminate
 from .. import bot
 
 
-def get_help_message(_: Message) -> tuple[bool, Embed]:
+def get_help_message(message: Message) -> Embed:
     """Event handler for the 'help' command."""
+    msg_content: str = message.content
+    if msg_content.rstrip().lower() != bot.prefix + "help":
+        return None
     desc = f"Prefiks dla komend: `{bot.prefix}`"
     embed = Embed(title="Lista komend", description=desc)
     for command_name, info in INFO.items():

@@ -129,7 +129,7 @@ async def process_execution(message: discord.Message) -> str:
     return "\n".join(formatted_results)
 
 
-def exec_command_handler(message: discord.Message) -> tuple[bool, str]:
+def exec_command_handler(message: discord.Message) -> str:
     """Event handler for the 'exec' command."""
     msg_content: str = message.content
     args = msg_content.split(' ', maxsplit=1)

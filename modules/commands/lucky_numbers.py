@@ -15,7 +15,7 @@ from ..util.api import lucky_numbers as numbers_api
 DESC = """Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone."""
 
 
-def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
+def get_lucky_numbers_embed(_: Message = None) -> Embed or str:
     """Event handler for the 'num' command."""
     try:
         data = numbers_api.get_lucky_numbers()

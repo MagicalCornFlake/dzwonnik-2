@@ -109,9 +109,9 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
         bot.send_log(saved_file_msg, force=True)
 
 
-def clear_log_file(filename: str) -> None:
+def clear_log_file(filename: str = "bot.log") -> None:
     """Truncates the log file and writes to it a log header to identify when it was started."""
-    formatted_time = f"{datetime.now():%Y-%m-%d @ %H.%M.%S}"
+    formatted_time = f"{datetime.now():%Y-%m-%d__%H.%M.%S}"
     log_template = f"START TIMESTAMP {formatted_time} END TIMESTAMP Started bot log.\n"
     with open(filename, 'w', encoding="UTF-8") as file:
         file.write(log_template)
@@ -133,24 +133,26 @@ def log(*raw_message: str) -> str:
     return message
 
 
-def save_log_file() -> None:
+def save_active_log_file(filename: str = "bot.log") -> None:
     """Copies the active log file to a new file in the bot_logs directory and clears it."""
     try:
-        with open("bot.log", 'r', encoding="UTF-8") as file:
+        with open(filename, 'r', encoding="UTF-8") as file:
             contents = file.read()
-            if contents.startswith("START TIMESTAMP "):
-                # Extract log creation date from active log
-                log_start_time, log_contents = contents.lstrip(
-                    "START TIMESTAMP ").split(" END TIMESTAMP ", maxsplit=1)
-                log_start_time = log_start_time.rstrip('\n')
-                # Copy active log contents to new file
-                filename = f"bot_logs{os.path.sep}{log_start_time}.log"
-                with open(filename, 'w', encoding="UTF-8") as file:
-                    file.write(log_contents)
     except FileNotFoundError:
-        # bot.log file does not exist
-        pass
-    clear_log_file("bot.log")
+        return
+    else:
+        if not contents.startswith("START TIMESTAMP "):
+            return
+    # Extract log creation date from active log
+    contents = contents.split(" END TIMESTAMP ", maxsplit=1)
+    if isinstance(contents, str):
+        return
+    log_start_time = contents[0].lstrip("START TIMESTAMP ").rstrip('\n')
+
+    # Copy active log contents to new file
+    new_log_filename = os.path.join("bot_logs", log_start_time + '.log')
+    with open(new_log_filename, 'w', encoding="UTF-8") as file:
+        file.write(contents[1])
 
 
 def read_cache(cache_name: str) -> dict:

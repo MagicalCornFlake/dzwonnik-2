@@ -17,7 +17,7 @@ DESC = """Podaje zastępstwa na dany dzień."""
 BAD_SUBSTITUTIONS_MSG = ":x: Nie udało się odzyskać zastępstw. Proszę spróbowac ponownie w krótce."
 
 
-def get_substitutions_embed(_: Message = None) -> tuple[bool, Embed or str]:
+def get_substitutions_embed(_: Message = None) -> Embed or str:
     """Event handler for the 'zast' command."""
     try:
         data = substitutions_api.get_substitutions()[0]

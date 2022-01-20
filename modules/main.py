@@ -17,7 +17,8 @@ def start_bot() -> bool:
     Returns a boolean that indicates if the bot should be restarted.
     """
     # Save the previous log on startup
-    file_manager.save_log_file()
+    file_manager.save_active_log_file()
+    file_manager.clear_log_file()
     save_on_exit = True
 
     for module in (bot, file_manager, util, commands):
