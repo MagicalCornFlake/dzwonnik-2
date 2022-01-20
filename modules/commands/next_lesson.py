@@ -27,7 +27,12 @@ def get_next_lesson(message: Message) -> tuple[bool, str or Embed]:
     def process(time: datetime) -> tuple[bool, str, str]:
         # next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
         next_lesson = get_next_period(time)
-        lesson = next_lesson[1] % 10, next_lesson[-1], message.author.roles
+        next_period = next_lesson[1]
+        # If the period is 10 or more, subtract 9 from it.
+        # The result of the boolean 'and' is the second expression (in this case 9).
+        # If the condition is satisfied, the boolean expression returns 9, otherwise False (== 0).
+        next_period -= next_lesson[1] > 9 and 9
+        lesson = next_period, next_lesson[-1], message.author.roles
         lesson = get_lesson_by_roles(*lesson)
         if not lesson:
             return (f"{Emoji.INFO} Nie ma żadnych zajęć dla Twojej grupy"
