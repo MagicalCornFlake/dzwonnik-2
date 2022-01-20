@@ -551,11 +551,10 @@ async def check_for_substitutions_updates() -> None:
         if new_cache == old_cache:
             # The cache was not updated. Do nothing.
             return
-        send_log("Substitutions data updated! Old data:", force=True)
-        send_log(json.dumps(old_cache, indent=2, ensure_ascii=False))
+        send_log("Substitutions data updated!", force=True)
         # Announce the new substitutions
-        target_channel = client.get_channel(
-            testing_channel or ChannelID.SUBSTITUTIONS)
+        target_channel = testing_channel or ChannelID.SUBSTITUTIONS
+        target_channel = client.get_channel(target_channel)
         subs_msg = substitutions.get_substitutions_embed()
         if isinstance(subs_msg, discord.Embed):
             await target_channel.send(embed=subs_msg)

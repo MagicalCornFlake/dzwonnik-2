@@ -153,7 +153,7 @@ def save_log_file() -> None:
     clear_log_file("bot.log")
 
 
-def cache_exists(cache_name: str) -> dict:
+def read_cache(cache_name: str) -> dict:
     """Returns the cached data if it exists, otherwise an empty dictionary."""
     if not os.path.isdir(CACHE_DIRECTORY):
         os.mkdir(CACHE_DIRECTORY)
@@ -177,17 +177,23 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[d
 
     Returns a tuple consisting of the cached data and the old cache (defaults to an empty dict).
     """
-    cache = cache_exists(cache_name)
+    cache = read_cache(cache_name)
     log(f"Cache for {cache_name} was {'*not* ' * (not cache)}found.")
     if not force_update and cache:
         # The cache has no need to be updated.
         return cache, cache
     old_cache = dict(cache)
     cache = callback_function()
-    json_string = json.dumps(cache, indent=2, ensure_ascii=False)
+    write_cache(cache_name, cache)
+    write_cache(cache_name + "_old", old_cache)
+    return cache, old_cache
+
+
+def write_cache(cache_name: str, data: dict) -> None:
+    """Serialises the given data and writes it in json format to the cache directory."""
+    json_string = json.dumps(data, indent=2, ensure_ascii=False)
     with open(f"{CACHE_DIRECTORY}/{cache_name}.json", 'w', encoding="UTF-8") as file:
         file.write(json_string)
-    return cache, old_cache
 
 
 def clear_cache(cache_path: str = None) -> int:
