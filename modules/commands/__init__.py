@@ -132,10 +132,10 @@ def ensure_user_authorised(message: Message, error_message: str = "", owner_only
     message_content: str = message.content
     msg_first_word = message_content.split(' ', maxsplit=1)[0]
     default_msg = f"korzystania z komendy `{bot.prefix}{msg_first_word}`"
-    chnl: TextChannel = message.channel
     if owner_only:
         authorised = message.author is message.guild.owner
     else:
+        chnl: TextChannel = message.channel
         authorised = chnl.permissions_for(message.author).administrator
     if not authorised:
         raise bot.MissingPermissionsException(error_message or default_msg)

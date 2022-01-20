@@ -208,12 +208,14 @@ def parse_html(html: str) -> dict:
     return subs_data
 
 
-def get_substitutions(force_update: bool = False) -> tuple[dict, bool]:
-    """Gets the current lesson substitutions. Returns the data itself and a tuple containing a
-    boolean indicating if the cache already existed.
+def get_substitutions(force_update: bool = False) -> tuple[dict, dict]:
+    """Gets the current lesson substitutions.
 
     Arguments:
         force_update -- a boolean indicating if the cache should be forcefully updated.
+
+    Returns the data itself and a tuple containing the new and the old data (can be compared to
+    check if the cache has changed).
     """
     def update_cache_callback() -> dict:
         html: str = web.get_html(SOURCE_URL, force_update)

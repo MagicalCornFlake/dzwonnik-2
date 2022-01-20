@@ -515,10 +515,10 @@ async def check_for_lucky_numbers_updates() -> None:
     else:
         if old_cache != lucky_numbers_api.cached_data:
             old_str: str = lucky_numbers_api.serialise(old_cache, pretty=True)
-            send_log(
-                f"Lucky numbers data updated! Old data:\n{old_str}", force=True)
-            target_channel = client.get_channel(
-                testing_channel or ChannelID.NUMERKI)
+            send_log(f"Lucky numbers data updated! Old data:\n{old_str}",
+                     force=True)
+            target_channel = testing_channel or ChannelID.NUMERKI
+            target_channel = client.get_channel(target_channel)
             file_manager.save_data_file()
             lucky_numbers_msg = lucky_numbers.get_lucky_numbers_embed()
             if isinstance(lucky_numbers_msg, discord.Embed):
@@ -534,7 +534,6 @@ async def check_for_substitutions_updates() -> None:
     If it has changed, announces the new data in the specified channel.
     """
     try:
-        # old_cache = file_manager.cache_exists("subs")
         new_cache, old_cache = substitutions_api.get_substitutions(True)
         if "error" in new_cache:
             raise RuntimeError("Substitutions data could not be parsed.")
@@ -553,7 +552,9 @@ async def check_for_substitutions_updates() -> None:
         if new_cache == old_cache:
             # The cache was not updated. Do nothing.
             return
-        send_log("Substitution data updated!", force=True)
+        old_str = json.dumps(old_cache, indent=2, ensure_ascii=False)
+        send_log(f"Substitutions data updated! Old data:\n{old_str}",
+                 force=True)
         # Announce the new substitutions
         target_channel = client.get_channel(
             testing_channel or ChannelID.SUBSTITUTIONS)

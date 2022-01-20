@@ -164,7 +164,7 @@ def cache_exists(cache_name: str) -> dict:
         return json.load(file)
 
 
-def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[bool, dict]:
+def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[dict, dict]:
     """Attempts to get the cache if it exists and the 'force_update' argument is set to False.
 
     If the above criteria are not met, the callback function is called and its return value
@@ -178,13 +178,15 @@ def get_cache(cache_name: str, force_update: bool, callback_function) -> tuple[b
     Returns a tuple consisting of the cached data and the old cache (defaults to an empty dict).
     """
     cache = cache_exists(cache_name)
+    log(f"Cache for {cache_name} was {'*not* ' * (not cache)}found.")
+    if not force_update and cache:
+        # The cache has no need to be updated.
+        return cache, cache
     old_cache = dict(cache)
-    log(f"Cache for {cache_name} was {'not ' * (not bool(old_cache))}found.")
-    if force_update or not bool(cache):
-        cache = callback_function()
-        json_string = json.dumps(cache, indent=2, ensure_ascii=False)
-        with open(f"{CACHE_DIRECTORY}/{cache_name}.json", 'w', encoding="UTF-8") as file:
-            file.write(json_string)
+    cache = callback_function()
+    json_string = json.dumps(cache, indent=2, ensure_ascii=False)
+    with open(f"{CACHE_DIRECTORY}/{cache_name}.json", 'w', encoding="UTF-8") as file:
+        file.write(json_string)
     return cache, old_cache
 
 
