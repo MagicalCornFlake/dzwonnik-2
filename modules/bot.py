@@ -197,12 +197,14 @@ async def on_message(message: discord.Message) -> None:
         except MissingPermissionsException as invalid_perms_exc:
             error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
             message.reply(error_message)
-        except Exception as invalid_perms_exc:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-except
             await ping_owner()
-            send_log(util.format_exception_info(invalid_perms_exc), force=True)
+            send_log(util.format_exception_info(exc), force=True)
             await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
                                 "Administrator bota (Konrad) został o tym powiadomiony.")
         else:
+            if reply is None:
+                return
             reply_is_embed = isinstance(reply, discord.Embed)
             args = {"embed" if reply_is_embed else "content": reply}
             reply_msg = await try_send_message(message, True, args, reply)

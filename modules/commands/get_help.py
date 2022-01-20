@@ -9,18 +9,19 @@ from . import meet, exec as execute, terminate
 from .. import bot
 
 
-def get_help_message(message: Message) -> Embed:
+def get_help_message(message: Message) -> Embed or None:
     """Event handler for the 'help' command."""
     msg_content: str = message.content
-    if msg_content.rstrip().lower() != bot.prefix + "help":
+    if not msg_content.rstrip().lower().endswith("help"):
         return None
     desc = f"Prefiks dla komend: `{bot.prefix}`"
     embed = Embed(title="Lista komend", description=desc)
     for command_name, info in INFO.items():
         command_description = info["description"]
-        if command_description:
-            cmd_desc = command_description.format(p=bot.prefix)
-            embed.add_field(name=command_name, value=cmd_desc, inline=False)
+        if not command_description:
+            continue
+        cmd_desc = command_description.format(p=bot.prefix)
+        embed.add_field(name=command_name, value=cmd_desc, inline=False)
     footer = f"Użyj komendy {bot.prefix}help lub mnie @oznacz, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
     return embed
