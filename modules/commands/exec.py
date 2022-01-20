@@ -79,17 +79,20 @@ async def process_execution(message: discord.Message) -> str:
     msg_content: str = message.content
     expression = msg_content.split(" ", maxsplit=1)[1]
 
+    # Inject result-storing code to the user input and execute it.
     try:
-        # Inject result-storing code to the user input and execute it.
+
         # Defines the '__execute()' function according to the template on line 22.
+        # This raises any compile-time exceptions (such as SyntaxError).
         exec(inject_code(expression))  # pylint: disable=exec-used
+
+        # The __execute() injected function returns its locals() dictionary.
+        # This raises any run-time exceptions (such as ValueError).
+        execute_locals: dict[str, any] = await locals()["__execute"](message) or {}
     except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
         exec_result = util.format_exception_info(exec_exc)
     else:
-        # The __execute() injected function returns its locals() dictionary.
-        execute_locals: dict[str, any] = await locals()["__execute"](message) or {}
-
         # Default the temp variable to an empty ExecResultList if it's not been assigned
         exec_result = execute_locals.get("__temp", ExecResultList())
 
