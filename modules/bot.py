@@ -199,7 +199,7 @@ async def on_message(message: discord.Message) -> None:
             error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
             message.reply(error_message)
         except Exception as invalid_perms_exc:  # pylint: disable=broad-except
-            await ping_konrad()
+            await ping_owner()
             send_log(util.format_exception_info(invalid_perms_exc), force=True)
             await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
                                 "Administrator bota (Konrad) został o tym powiadomiony.")
@@ -397,7 +397,7 @@ async def main_update_loop() -> None:
         cached_date: datetime.datetime = lucky_numbers_api.cached_data["date"]
     except (TypeError, KeyError) as exception:
         # Lucky numbers data does not contain a date
-        await ping_konrad()
+        await ping_owner()
         fmt_exc = util.format_exception_info(exception)
         send_log(fmt_exc, force=True)
     else:
@@ -484,7 +484,7 @@ async def check_for_steam_market_updates() -> None:
             result = steam_api.get_item(item.name)
             price = steam_api.get_item_price(result)
         except web.WebException as web_exc:
-            await ping_konrad()
+            await ping_owner()
             send_log(web.get_error_message(web_exc), force=True)
             return
         # Strips the price string of any non-digit characters and returns it as an integer
@@ -508,7 +508,7 @@ async def check_for_lucky_numbers_updates() -> None:
     try:
         old_cache = lucky_numbers_api.update_cache()
     except web.InvalidResponseException as web_exc:
-        await ping_konrad()
+        await ping_owner()
         exc: str = util.format_exception_info(web_exc)
         send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
     else:
@@ -523,7 +523,7 @@ async def check_for_lucky_numbers_updates() -> None:
             if isinstance(lucky_numbers_msg, discord.Embed):
                 await target_channel.send(embed=lucky_numbers_msg)
                 return
-            await ping_konrad()
+            await ping_owner()
             send_log(INVALID_NUMBERS_TEMPLATE.format(prefix))
 
 
@@ -562,7 +562,7 @@ async def check_for_substitutions_updates() -> None:
             return
         exception_message = subs_msg
     # If the check wasn't completed successfully, ping @Konrad and log the error details.
-    await ping_konrad()
+    await ping_owner()
     send_log(exception_message, force=True)
 
 
@@ -576,14 +576,16 @@ async def close() -> None:
     await client.close()
 
 
-async def ping_konrad(channel_id: int = ChannelID.BOT_LOGS) -> None:
-    """Sends a message to the specified channel mentioning MagicalCornFlake#0520.
+async def ping_owner(channel_id: int = ChannelID.BOT_LOGS) -> None:
+    """Sends a message to the specified channel mentioning the server owner.
 
     Arguments:
         channel_id -- the ID of the channel to send the message to. By default,
         this is the ID of the `bot_logs` channel.
     """
-    await client.get_channel(channel_id).send(f"<@{MEMBER_IDS[8 - 1]}>")
+    chnl: discord.TextChannel = client.get_channel(channel_id)
+    owner: discord.Member = chnl.guild.owner
+    await chnl.send(owner.mention)
 
 
 async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict,
