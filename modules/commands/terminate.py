@@ -1,4 +1,4 @@
-"""Module containing the code pertaining to the 'restart', 'stop' and 'exit' commands."""
+"""Module containing the code pertaining to the 'restart' and 'exit' commands."""
 
 # Third-party imports
 import discord

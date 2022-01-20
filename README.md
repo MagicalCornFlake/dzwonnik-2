@@ -13,7 +13,7 @@
       - [meet](#meet)
     - [Developer commands](#developer-commands)
       - [restart](#restart)
-      - [quit/exit](#quitexit)
+      - [exit](#exit)
       - [exec](#exec)
 - [Todo](#todo)
 
@@ -68,8 +68,8 @@ These commands are hard-coded to only be available to Konrad Guzek, but the user
 #### restart
 One of the most useful commands in development, the `restart` command completely restarts the bot. This works as the bot is run from a `run.pyw` file that contains an infinite loop that reloads the `main` module and runs it until it finishes executing. The `restart` command terminates the module, which means the loop is progressed and any changes are reloaded using `importlib`. 
 
-#### quit/exit
-The `quit` command (alias: `exit`) is similar to the `restart` command in that it terminates the `main` module, however it indicates that the run loop should not continue to run.
+#### exit
+The `exit` is similar to the `restart` command in that it terminates the `main` module, however it indicates that the run loop should not continue to run.
 The main `start_bot` funciton returns a boolean, and if that boolean is false, the loop in `run.pyw` breaks. In essence, this command completely terminates the bot program.
 
 #### exec

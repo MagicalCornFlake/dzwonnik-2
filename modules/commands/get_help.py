@@ -91,11 +91,6 @@ INFO: dict[help, dict[str, any]] = {
         "function": terminate.restart_bot,
         "on_completion": terminate.terminate_bot
     },
-    "stop": {
-        "description": terminate.DESC,
-        "function": terminate.exit_bot,
-        "on_completion": terminate.terminate_bot
-    },
     "exit": {
         "description": terminate.DESC,
         "function": terminate.exit_bot,
