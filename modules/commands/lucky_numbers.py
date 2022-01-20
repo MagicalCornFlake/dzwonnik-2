@@ -30,11 +30,13 @@ def get_lucky_numbers_embed(_: Message = None) -> tuple[bool, Embed or str]:
     embed.set_footer(text=footer_text)
     for num in data["luckyNumbers"]:
         try:
-            is_id = isinstance(MEMBER_IDS[num - 1], int)
+            member_text = MEMBER_IDS[num - 1]
         except IndexError:
             member_text = f"*W naszej klasie nie ma osoby z numerkiem __{num}__.*"
         else:
-            member_text = f"<@!{MEMBER_IDS[num - 1]}>" if is_id else MEMBER_IDS[num - 1]
+            if isinstance(member_text, int):
+                # Wrap the ID in a Discord ping
+                member_text = f"<@!{member_text}>"
         embed.add_field(name=num, value=member_text, inline=False)
     # embed.add_field(name="\u200B", value="\u200B", inline=False)
     excluded = ", ".join(data["excludedClasses"]) or "*Brak*"
