@@ -131,7 +131,7 @@ def ensure_user_authorised(message: Message, error_message: str = "", owner_only
     """
     message_content: str = message.content
     msg_first_word = message_content.split(' ', maxsplit=1)[0]
-    default_msg = f"korzystania z komendy `{bot.prefix}{msg_first_word}`"
+    default_msg = f"korzystania z komendy `{msg_first_word}`"
     if owner_only:
         authorised = message.author is message.guild.owner
     else:
