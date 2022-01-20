@@ -24,7 +24,7 @@ def get_next_lesson(message: Message) -> str or Embed:
     if not isinstance(time, datetime):
         return time
 
-    def process(time: datetime) -> tuple[bool, str, str]:
+    def process(time: datetime) -> tuple[str, str]:
         # next_lesson_is_today, lesson_period, weekday_index = get_next_period(time)
         next_lesson = get_next_period(time)
         next_period = next_lesson[1]
@@ -66,15 +66,15 @@ def get_next_lesson(message: Message) -> str or Embed:
         # Append a space if the group is not the entire class
         group = temp_str + " " * (lesson['group'] != "grupa_0")
         temp_str = util.get_lesson_name(lesson['name'])
-        return True, (f"{Emoji.INFO} Następna lekcja {group}to **{temp_str}**{when} o godzinie "
+        return (f"{Emoji.INFO} Następna lekcja {group}to **{temp_str}**{when} o godzinie "
                       f"__{next_period_time}__{countdown}."), util.get_lesson_link(lesson['name'])
 
     temp_var = process(time)
-    if not temp_var[0]:
-        # First element of tuple indicates success of operation
-        # Second element represents error message
-        return temp_var[1]
-    msg, raw_link = temp_var[1:]
+    try:
+        msg, raw_link = temp_var
+    except ValueError:
+        # Return the error message if there's only one element in the result.
+        return temp_var
 
     embed = Embed(title=f"Następna lekcja ({time:%H:%M})", description=msg)
     link = f"[meet.google.com](https://meet.google.com/{raw_link})" if raw_link else LINK_404_URL
