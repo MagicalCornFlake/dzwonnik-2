@@ -197,22 +197,23 @@ def get_lesson_by_roles(query_period: int, weekday: int, roles: list[str, Role])
             target_roles.append(str(role))
     # Loop through each lesson that day
     weekday_name = WEEKDAY_NAMES[weekday]
-    looking_msg = f"{query_period} on {weekday_name} with roles: {target_roles})"
-    bot.send_log("Looking for lesson of period " + looking_msg)
+    looking_msg = f"{weekday_name}, period {query_period} on  with roles: {target_roles})"
+    bot.send_log("Looking for lesson on " + looking_msg)
     for period, lessons in enumerate(util.lesson_plan[weekday_name]):
         if period < query_period:
             continue
         for lesson in lessons:
             group = lesson["group"]
-            if group in target_roles or ROLE_CODES[group] in target_roles:
-                found_lesson_msg = (f"Found lesson '{lesson['name']}' for '{group}'"
-                                    f" on period {period}.")
-                bot.send_log(found_lesson_msg)
-                lsn = dict(lesson)
-                lsn["period"] = period
-                return lsn
-    bot.send_log(
-        f"Did not find a lesson matching those roles for period {query_period} on {weekday_name}.")
+            if not (group in target_roles or ROLE_CODES[group] in target_roles):
+                continue
+            found_lesson_msg = (f"Found lesson '{lesson['name']}' for '{group}'"
+                                f" on period {period}.")
+            bot.send_log(found_lesson_msg)
+            lesson_info = dict(lesson)
+            lesson_info["period"] = period
+            return lesson_info
+    fail_msg = f" for period {query_period} on {weekday_name}."
+    bot.send_log("Did not find a lesson matching those roles" + fail_msg)
     return {}
 
 

@@ -308,9 +308,8 @@ def validate_reaction(test_reaction: discord.Reaction, reaction_user: discord.Me
 async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str) -> None:
     """Send a message reminding about the homework event."""
 
-    # Initialise server reference
-    my_server: discord.Guild = client.get_guild(
-        MY_SERVER_ID)  # Konrad's Discord Server
+    # Initialise server reference, Konrad's Discord Server
+    my_server: discord.Guild = client.get_guild(MY_SERVER_ID)
 
     mention_text = "@everyone"  # To be used at the beginning of the reminder message
     event_name = event.title
@@ -552,9 +551,8 @@ async def check_for_substitutions_updates() -> None:
         if new_cache == old_cache:
             # The cache was not updated. Do nothing.
             return
-        old_str = json.dumps(old_cache, indent=2, ensure_ascii=False)
-        send_log(f"Substitutions data updated! Old data:\n{old_str}",
-                 force=True)
+        send_log("Substitutions data updated! Old data:", force=True)
+        send_log(json.dumps(old_cache, indent=2, ensure_ascii=False))
         # Announce the new substitutions
         target_channel = client.get_channel(
             testing_channel or ChannelID.SUBSTITUTIONS)
