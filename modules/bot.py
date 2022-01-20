@@ -388,7 +388,7 @@ async def main_update_loop() -> None:
 
             if current_time.minute == 0:
                 # Update the substitutions cache every hour
-                await check_for_substitutions_updates()
+                await check_for_substitutions_updates(True)
 
     # Check if the lucky numbers data is outdated
     try:
@@ -527,7 +527,7 @@ async def check_for_lucky_numbers_updates() -> None:
             send_log(INVALID_NUMBERS_TEMPLATE.format(prefix))
 
 
-async def check_for_substitutions_updates() -> None:
+async def check_for_substitutions_updates(announce_on_update = False) -> None:
     """Updates the substitutions cache.
 
     If it has changed, announces the new data in the specified channel.
@@ -548,11 +548,14 @@ async def check_for_substitutions_updates() -> None:
         exc: str = new_cache.get("error")
         exception_message = f"Error! {err_desc} Exception trace:\n{exc}"
     else:
-        send_log("Substitutions cache equality: ", new_cache == old_cache)
+        send_log("Substitutions cache equality:", new_cache == old_cache)
         if new_cache == old_cache:
             # The cache was not updated. Do nothing.
             return
         send_log("Substitutions data updated!", force=True)
+        print(old_cache, new_cache, sep="\n\n")
+        if not announce_on_update:
+            return
         # Announce the new substitutions
         target_channel = testing_channel or ChannelID.SUBSTITUTIONS
         target_channel = client.get_channel(target_channel)
