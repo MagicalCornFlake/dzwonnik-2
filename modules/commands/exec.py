@@ -9,6 +9,7 @@ import json
 import discord
 
 # Local application imports
+from . import ensure_user_authorised
 from .. import bot, util
 
 
@@ -127,8 +128,7 @@ def exec_command_handler(message: discord.Message) -> tuple[bool, str]:
     """Event handler for the 'exec' command."""
     msg_content: str = message.content
     args = msg_content.split(' ', maxsplit=1)
-    if message.author != bot.client.get_user(bot.MEMBER_IDS[8 - 1]):
-        raise bot.MissingPermissionsException(MISSING_PERMS_MSG)
+    ensure_user_authorised(message, MISSING_PERMS_MSG, owner_only=True)
     try:
         expression = args[1]
     except IndexError:

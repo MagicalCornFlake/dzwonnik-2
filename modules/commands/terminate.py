@@ -5,7 +5,7 @@ import discord
 
 
 # Local application imports
-from modules.commands import ensure_sender_is_admin
+from modules.commands import ensure_user_authorised
 from .. import bot, file_manager
 DESC = None
 
@@ -16,13 +16,13 @@ EXITING_BOT_MSG = "Exiting program."
 
 def restart_bot(message: discord.Message) -> tuple[bool, str]:
     """Event handler for the 'restart' command."""
-    ensure_sender_is_admin(message)
+    ensure_user_authorised(message, owner_only=True)
     return RESTARTING_BOT_MSG
 
 
 def exit_bot(message: discord.Message) -> tuple[bool, str]:
     """Event handler for the 'exit' command."""
-    ensure_sender_is_admin(message)
+    ensure_user_authorised(message, owner_only=True)
     bot.restart_on_exit = False
     return EXITING_BOT_MSG
 

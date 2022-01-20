@@ -7,7 +7,7 @@ import re
 from discord import Message
 
 # Local application imports
-from . import ensure_sender_is_admin
+from . import ensure_user_authorised
 from .. import bot, util, file_manager, Emoji
 
 
@@ -40,7 +40,7 @@ def update_meet_link(message: Message) -> tuple[bool, str]:
             link_desc = f"to <https://meet.google.com/{link}>" if link else "nie jest ustawiony"
             return f"{Emoji.INFO} Link do Meeta dla lekcji '__{lesson_name}__' {link_desc}."
         else:
-            ensure_sender_is_admin(message, "zmieniania linków Google Meet")
+            ensure_user_authorised(message, "zmieniania linków Google Meet")
             if not re.match(LINK_PATTERN, args[1]):
                 # Display codes list if the specified link is of invalid format
                 raise InvalidFormatException(args[1])

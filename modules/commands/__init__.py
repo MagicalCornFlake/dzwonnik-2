@@ -123,13 +123,21 @@ homework_events = HomeworkEventContainer()
 tracked_market_items: list[TrackedItem] = []
 
 
-def ensure_sender_is_admin(message: Message, error_message: str = None) -> None:
-    """Raises an exception if the message author is not an administrator."""
+def ensure_user_authorised(message: Message, error_message: str = "", owner_only = False) -> None:
+    """Raises an exception if the message author does not have the appropriate permissions.
+
+    By default it checks if the sender has the 'administrator' discord permission, but if
+    `owner_only` is True it checks if the sender is the server owner.
+    """
     message_content: str = message.content
     msg_first_word = message_content.split(' ', maxsplit=1)[0]
     default_msg = f"korzystania z komendy `{bot.prefix}{msg_first_word}`"
     chnl: TextChannel = message.channel
-    if not chnl.permissions_for(message.author).administrator:
+    if owner_only:
+        authorised = message.author is message.guild.owner
+    else:
+        authorised = chnl.permissions_for(message.author).administrator
+    if not authorised:
         raise bot.MissingPermissionsException(error_message or default_msg)
 
 

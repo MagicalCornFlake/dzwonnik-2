@@ -4,7 +4,7 @@
 from discord import Message
 
 # Local application imports
-from . import TrackedItem, ensure_sender_is_admin, tracked_market_items
+from . import TrackedItem, ensure_user_authorised, tracked_market_items
 from .. import bot, file_manager, Emoji
 from ..util import web
 from ..util.api import steam_market as steam_market_api
@@ -84,7 +84,7 @@ def stop_market_tracking(message: Message) -> tuple[bool, str]:
     for item in tracked_market_items:
         if item.name.lower() == item_name.lower():
             if item.author_id != message.author.id:
-                ensure_sender_is_admin(message, "usuwania tego zlecenia")
+                ensure_user_authorised(message, "usuwania tego zlecenia")
             tracked_market_items.remove(item)
             file_manager.save_data_file()
             return f"{Emoji.CHECK} Zaprzestano śledzenie przedmiotu *{item.name}*."
