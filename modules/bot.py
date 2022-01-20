@@ -196,7 +196,7 @@ async def on_message(message: discord.Message) -> None:
             reply = command_info["function"](message)
         except MissingPermissionsException as invalid_perms_exc:
             error_message = f"{Emoji.WARNING} Nie posiadasz uprawnień do {invalid_perms_exc}."
-            message.reply(error_message)
+            await message.reply(error_message)
         except Exception as exc:  # pylint: disable=broad-except
             await ping_owner()
             send_log(util.format_exception_info(exc), force=True)
