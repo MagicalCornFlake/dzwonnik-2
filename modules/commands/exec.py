@@ -14,7 +14,6 @@ from .. import bot, util
 
 
 DESC = None
-MISSING_PERMS_MSG = "zdalnego egzekwowania kodu"
 MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
 
 # Initialise the code template to execute when the 'exec' command is called.
@@ -133,7 +132,7 @@ def exec_command_handler(message: discord.Message) -> str:
     """Event handler for the 'exec' command."""
     msg_content: str = message.content
     args = msg_content.split(' ', maxsplit=1)
-    ensure_user_authorised(message, MISSING_PERMS_MSG, owner_only=True)
+    ensure_user_authorised(message, owner_only=True)
     try:
         expression = args[1]
     except IndexError:
