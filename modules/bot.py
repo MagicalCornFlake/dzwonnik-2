@@ -473,9 +473,12 @@ async def wait_before_starting_loop() -> None:
     except KeyError:
         # The keys do not exist in the on exit message data
         pass
-    # Reset the on exit message so that it is not replied to twice.
-    file_manager.on_exit_msg = {}
-    file_manager.save_data_file()
+    finally:
+        # Reset the on exit message so that it is not replied to twice.
+        file_manager.on_exit_msg = {}
+
+    if file_manager.on_exit_msg != msg_info:
+        file_manager.save_data_file()
 
 
 async def check_for_steam_market_updates() -> None:
