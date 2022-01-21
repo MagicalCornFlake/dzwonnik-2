@@ -12,6 +12,7 @@ from .util.api import lucky_numbers
 
 
 CACHE_DIRECTORY = "cache"
+DATA_IDENTICAL_MSG = "... data is identical; no changes have been made."
 
 
 on_exit_msg = {}
@@ -100,7 +101,8 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
     with open(filename, 'r', encoding="UTF-8") as file:
         existing_data = json.load(file)
     if existing_data == data_to_be_saved:
-        bot.send_log("... data is identical; no changes have been made.")
+        if allow_logs:
+            bot.send_log(DATA_IDENTICAL_MSG, force=True)
         return
 
     # Format the data to be JSON-serialisable
