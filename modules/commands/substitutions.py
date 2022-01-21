@@ -4,7 +4,7 @@
 from datetime import datetime
 
 # Third-party imports
-from discord import Message, Embed
+import discord
 
 # Local application imports
 from .. import bot, util
@@ -15,9 +15,39 @@ from ..util.crawlers import substitutions as substitutions_api
 DESC = """Podaje zastępstwa na dany dzień."""
 
 BAD_SUBSTITUTIONS_MSG = ":x: Nie udało się odzyskać zastępstw. Proszę spróbowac ponownie w krótce."
+FOOTER_TEMPLATE = "Użyj komendy {}zast, aby pokazać tą wiadomość."
+DESC_TEMPLATE = "Liczba zastępstw dla klasy {}: **{}**"
 
 
-def get_substitutions_embed(_: Message = None) -> Embed or str:
+def add_substitution_text_fields(embed: discord.Embed, data: dict, url: str) -> int:
+    """Adds the text fields to the substitutions embed.
+
+    Returns the number of substitutions for our class.
+    """
+    our_substitutions: int = 0
+    for period in data["lessons"]:
+        class_msgs = []
+        for class_name, substitutions in data["lessons"][period].items():
+            sub_msgs = []
+            for sub_info in substitutions:
+                groups = sub_info.get("groups")
+                groups = f"(gr. {', '.join(groups)}) — " if groups else ""
+                sub_msgs.append(f"{groups}*{sub_info['details']}*")
+            substitution_text = f"**{class_name}**: {' | '.join(sub_msgs)}"
+            if class_name != util.format_class():
+                class_msgs.append(substitution_text)
+                continue
+            our_substitutions += 1
+            class_msgs.append(f"[{substitution_text}]({url})")
+        embed.add_field(
+            name=f"Lekcja {period} ({util.get_formatted_period_time(period)})",
+            value='\n'.join(class_msgs),
+            inline=False
+        )
+    return our_substitutions
+
+
+def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     """Event handler for the 'zast' command."""
     try:
         data = substitutions_api.get_substitutions()[0]
@@ -26,50 +56,37 @@ def get_substitutions_embed(_: Message = None) -> Embed or str:
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
         return web.get_error_message(web_exc)
     else:
-        if "error" in data:
+        # Ensure the data is valid
+        if "error" in data or not {"teachers", "events"}.issubset(data):
             return BAD_SUBSTITUTIONS_MSG
 
-    # Number of substitutions for our class
-    our_substitutions: int = 0
-
     # Initialise the embed
-    date = datetime.strptime(data["date"], "%Y-%m-%d")
     url = f"{substitutions_api.SOURCE_URL}#{data['post'].get('id', 'content')}"
-    embed = Embed(title=f"Zastępstwa na {date:%d.%m.%Y}", url=url)
-    footer = f"Użyj komendy {bot.prefix}zast, aby pokazać tą wiadomość."
-    embed.set_footer(text=footer)
+    embed = discord.Embed(
+        title=f"Zastępstwa na {datetime.strptime(data['date'], '%Y-%m-%d'):%d.%m.%Y}",
+        url=url
+    ).set_footer(text=FOOTER_TEMPLATE.format(bot.prefix))
 
     # Add fields
-    teachers = ', '.join(data["teachers"])
-    embed.add_field(name="Nauczyciele", value=teachers, inline=False)
-    events = '\n'.join(data["events"])
-    embed.add_field(name="Wydarzenia szkolne", value=events, inline=False)
+    embed.add_field(
+        name="Nauczyciele",
+        value=', '.join(data["teachers"]),
+        inline=False
+    ).add_field(
+        name="Wydarzenia szkolne",
+        value='\n'.join(data["events"]),
+        inline=False
+    )
 
-    # Substitution fields
-    for period in data["lessons"]:
-        class_msgs = []
-        for class_name, substitutions in data["lessons"][period].items():
-            sub_msgs = []
-            for sub_info in substitutions:
-                groups = sub_info.get("groups")
-                group_text = f"(gr. {', '.join(groups)}) — " if groups else ""
-                sub_msgs.append(f"{group_text}*{sub_info['details']}*")
-            standard_msg = f"**{class_name}**: {' | '.join(sub_msgs)}"
-            if class_name == util.format_class():
-                our_substitutions += 1
-                hyperlinked_msg = f"[{standard_msg}]({url})"
-                class_msgs.append(hyperlinked_msg)
-                continue
-            class_msgs.append(standard_msg)
-        time = util.get_formatted_period_time(period)
-        field_args = {
-            "name": f"Lekcja {period} ({time})",
-            "value": '\n'.join(class_msgs)
-        }
-        embed.add_field(**field_args, inline=False)
+    # Set embed description to contain the number of substitutions for our class
+    embed.description = DESC_TEMPLATE.format(
+        util.OUR_CLASS,
+        add_substitution_text_fields(embed, data, url)
+    )
 
     # Cancelled lessons field
-    embed.add_field(name="Lekcje odwołane", value=data["cancelled"])
+    if "cancelled" in data.keys():
+        embed.add_field(name="Lekcje odwołane", value=data["cancelled"])
 
     # School events fields
     for table in data["tables"]:
@@ -88,11 +105,10 @@ def get_substitutions_embed(_: Message = None) -> Embed or str:
             embed.add_field(**field_args, inline=True)
 
     # Miscellaneous information field
-    misc_info = data.get("misc")
-    if misc_info:
-        tmp = "\n".join(misc_info)
-        embed.add_field(name="Informacje dodatkowe", value=tmp, inline=False)
-
-    # Set embed description to contain the number of substitutions for our class
-    embed.description = f"Liczba zastępstw dla klasy {util.OUR_CLASS}: **{our_substitutions}**"
+    if "misc" in data.keys():
+        embed.add_field(
+            name="Informacje dodatkowe",
+            value="\n".join(data["misc"]),
+            inline=False
+        )
     return embed
