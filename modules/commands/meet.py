@@ -13,7 +13,7 @@ from .. import bot, util, file_manager, Emoji
 
 DESC = None
 
-LINK_PATTERN = re.compile(r"[a-z]{3}-[a-z]{4}-[a-z]{3}$|lookup/[a-z]{10}$")
+LINK_PATTERN = re.compile(r"[a-z]{3}-[a-z]{4}-[a-z]{3}$|lookup/\w{10}$")
 
 
 class InvalidFormatException(Exception):
