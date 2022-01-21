@@ -198,15 +198,24 @@ def write_cache(cache_name: str, data: dict) -> None:
         file.write(json_string)
 
 
-def clear_cache(cache_path: str = None) -> int:
+def clear_cache(cache_name: str = None, cache_path: str = None) -> int:
     """Removes all files in the given directory, as well as the directory itself.
 
     Returns the number of removed files if the directory previously existed, otherwise False.
     """
     cache_path = cache_path or CACHE_DIRECTORY
     if os.path.exists(cache_path):
-        files_removed = len(os.listdir(cache_path))
-        shutil.rmtree(cache_path)
+        if (cache_name):
+            try:
+                os.remove(os.path.join(cache_path, cache_name))
+            except FileNotFoundError:
+                log(f"Error: The file './{cache_path}/{cache_name}' does not exist.")
+                return False
+            else:
+                files_removed = 1
+        else:
+            files_removed = len(os.listdir(cache_path))
+            shutil.rmtree(cache_path)
         log("Successfully cleared cache at directory: ./" + cache_path)
         return files_removed
     log(f"Error: The path './{cache_path}' does not exist.")
