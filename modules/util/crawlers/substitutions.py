@@ -64,7 +64,7 @@ def extract_from_table(elem, table: dict[str, any]) -> None:
             column_data[j].append(cell_text)
 
 
-def extract_actual_substitution(elem_text: str, subs_data: dict, is_table_header) -> None:
+def extract_substitutions_text(elem_text: str, subs_data: dict, is_table_header) -> None:
     """Parses the substitution text elements."""
     if is_table_header:
         subs_data["tables"].append({
@@ -97,31 +97,36 @@ def extract_actual_substitution(elem_text: str, subs_data: dict, is_table_header
             subs_data["lessons"][lesson][class_name].append(class_subs)
 
 
-def extract_header_data(elem, elem_index: int, child_elem) -> tuple[str, any]:
+def extract_header_data(elem, child_elem, subs_data) -> tuple[str, any]:
     """Parses the main information header elements."""
-
-    if elem.attrib.get("style") == "text-align: center;":
-        text = child_elem.xpath("./text()")
-        child_elem_text = child_elem.text
-        if text:
-            child_elem_text = ''.join(text)
-        if elem_index == 0:
-            date_string = child_elem[0].text.split(' ', maxsplit=1)[1]
-            date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
-            return "date", str(date.date())
-        if elem_index == 1:
-            teachers = child_elem_text.split(', ')
-            return "teachers", teachers
-        return "events", child_elem_text
-    if not (child_elem.text and child_elem.text.strip()):
-        # Skip blank child elements
-        return None, None
-    # This is the header for a table
-    return "tables", {
-        "title": child_elem.text,
-        "headings": [],
-        "columns": []
-    }
+    if not ("text-align: center;" in elem.attrib.get("style", "")):
+        # This is not an informational header
+        if not (child_elem.text and child_elem.text.strip()):
+            # Skip blank child elements
+            return
+        # This is the header for a table
+        subs_data["tables"].append({
+            "title": child_elem.text,
+            "headings": [],
+            "columns": []
+        })
+        return
+    text = child_elem.xpath("./text()")
+    child_elem_text = child_elem.text
+    if text:
+        child_elem_text = ''.join(text)
+    try:
+        # Check if the child element has an 'underline' child element with the date text
+        date_string = child_elem[0].text.lstrip("Zastępstwa ")
+        date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
+    except (IndexError, ValueError):
+        if "teachers" in subs_data:
+            subs_data["events"].append(child_elem_text)
+            return
+        subs_data["teachers"] = child_elem_text.split(', ')
+    else:
+        # This is the element header containing the substitutions date
+        subs_data["date"] = str(date.date())
 
 
 def parse_html(html: str) -> dict:
@@ -173,21 +178,12 @@ def parse_html(html: str) -> dict:
                 subs_data["cancelled"] = elem_text
                 return
             is_table_header = next_elem is not None and next_elem.tag == "table"
-            extract_actual_substitution(elem_text, subs_data, is_table_header)
+            extract_substitutions_text(elem_text, subs_data, is_table_header)
         else:
             # The current element does have children
             if child_elem.tag != "strong":
                 return
-            key, val = extract_header_data(elem, el_index, child_elem)
-            if not key:
-                return
-            orig_val = subs_data.get(key)
-            if isinstance(orig_val, list):
-                orig_val.append(val)
-            elif isinstance(orig_val, dict):
-                orig_val.update(val)
-            else:
-                subs_data[key] = val
+            extract_header_data(elem, child_elem, subs_data)
 
     for i, p_elem in enumerate(post_elem):
         try:
