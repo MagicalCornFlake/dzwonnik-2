@@ -74,7 +74,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
         inline=False
     ).add_field(
         name="Wydarzenia szkolne",
-        value='\n'.join(data["events"]),
+        value='\n'.join(data["events"]) or "*Brak*",
         inline=False
     )
 
