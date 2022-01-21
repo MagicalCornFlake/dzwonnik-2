@@ -212,20 +212,24 @@ def clear_cache(cache_name: str = None, cache_path: str = None) -> int:
 
     Returns the number of removed files if the directory previously existed, otherwise False.
     """
+    files_removed = 0
     cache_path = cache_path or CACHE_DIRECTORY
     if os.path.exists(cache_path):
         if cache_name:
-            try:
-                os.remove(os.path.join(cache_path, cache_name))
-            except FileNotFoundError:
-                log(f"Error: The file './{cache_path}/{cache_name}' does not exist.")
-                return False
-            else:
-                files_removed = 1
+            for is_old in range(2):
+                try:
+                    filename = cache_name + "_old" * is_old + ".json"
+                    os.remove(os.path.join(cache_path, filename))
+                    files_removed += 1
+                except FileNotFoundError:
+                    if not is_old:
+                        log(f"Error: The file './{cache_path}/{filename}' does not exist.")
+                        return False
+            log(f"Successfully removed cache for '{cache_name}'.")
         else:
             files_removed = len(os.listdir(cache_path))
             shutil.rmtree(cache_path)
-        log("Successfully cleared cache at directory: ./" + cache_path)
+            log("Successfully cleared cache at directory: ./" + cache_path)
         return files_removed
     log(f"Error: The path './{cache_path}' does not exist.")
     return False
