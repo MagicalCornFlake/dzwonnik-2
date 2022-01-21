@@ -36,6 +36,8 @@ STATUS_LOG_TEMPLATE = "... new status message: '{}'.\n... current period: {}\n..
 INVALID_NUMBERS_TEMPLATE = ("Invalid lucky numbers message embed. "
                             "Run `{}exec bot.lucky_numbers_api.cached_data`.")
 RESTARTED_BOT_MSG = "Restarted bot!"
+MESSAGE_SEND_FAIL_MSG = ("Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa."
+                         " Załączam ją jako plik tekstowy.")
 
 HOMEWORK_EMOJI = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
 
@@ -532,7 +534,7 @@ async def check_for_lucky_numbers_updates() -> None:
             send_log(INVALID_NUMBERS_TEMPLATE.format(prefix))
 
 
-async def check_for_substitutions_updates(announce_on_update = False) -> None:
+async def check_for_substitutions_updates(announce_on_update=False) -> None:
     """Updates the substitutions cache.
 
     If it has changed, announces the new data in the specified channel.
@@ -605,14 +607,13 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
         send_args -- a dictionary containing either the key 'content' or 'embed'.
         on_fail_data -- the data to send in the text file if sending fails.
     """
-    default_fail_msg = ("Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa."
-                        " Załączam ją jako plik tekstowy.")
     send_method = user_message.reply if should_reply else user_message.channel.send
     try:
         reply_msg = await send_method(**send_args)
-    except discord.errors.HTTPException:
+    except discord.errors.HTTPException as http_exc:
         send_log("Message too long. Length of data:", len(str(on_fail_data)))
-        reply_msg = await send_method(on_fail_msg or default_fail_msg)
+        send_log(util.format_exception_info(http_exc))
+        reply_msg = await send_method(on_fail_msg or MESSAGE_SEND_FAIL_MSG)
         should_iterate = on_fail_msg and isinstance(on_fail_data, list)
         if isinstance(on_fail_data, discord.Embed):
             on_fail_data = {"embed": on_fail_data.to_dict()}
