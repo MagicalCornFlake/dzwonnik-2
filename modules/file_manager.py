@@ -96,6 +96,13 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
         "on_exit_msg": on_exit_msg
     }
 
+    # Checks if the data actually needs to be saved
+    with open(filename, 'r', encoding="UTF-8") as file:
+        existing_data = json.load(file)
+    if existing_data == data_to_be_saved:
+        bot.send_log("... data is identical; no changes have been made.")
+        return
+
     # Format the data to be JSON-serialisable
     formatted_data: str = json.dumps(data_to_be_saved, indent=2)
 
