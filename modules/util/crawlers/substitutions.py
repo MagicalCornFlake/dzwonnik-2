@@ -99,7 +99,7 @@ def extract_substitutions_text(elem_text: str, subs_data: dict, is_table_header)
 
 def extract_header_data(elem, child_elem, subs_data) -> tuple[str, any]:
     """Parses the main information header elements."""
-    if not ("text-align: center;" in elem.attrib.get("style", "")):
+    if "text-align: center;" not in elem.attrib.get("style", ""):
         # This is not an informational header
         if not (child_elem.text and child_elem.text.strip()):
             # Skip blank child elements
@@ -120,6 +120,10 @@ def extract_header_data(elem, child_elem, subs_data) -> tuple[str, any]:
         date_string = child_elem[0].text.lstrip("Zastępstwa ")
         date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
     except (IndexError, ValueError):
+        if child_elem_text.upper() == child_elem_text:
+            # The text is all uppercase.
+            subs_data["misc"].append(child_elem_text)
+            return
         if "teachers" in subs_data:
             subs_data["events"].append(child_elem_text)
             return
@@ -153,7 +157,7 @@ def parse_html(html: str) -> dict:
         "misc": []
     }
 
-    def extract_data(elem: lxml.html.Element, el_index: int, next_elem: lxml.html.Element) -> None:
+    def extract_data(elem: lxml.html.Element, next_elem: lxml.html.Element) -> None:
         """Extract the relevant information from each element in the post.
 
         Adds result to the subs_data dictionary.
@@ -192,7 +196,7 @@ def parse_html(html: str) -> dict:
             next_elem = None
         try:
             # Attempt to extract the relevant data using a hard-coded algorithm
-            extract_data(p_elem, i, next_elem)
+            extract_data(p_elem, next_elem)
         except (LookupError, TypeError, ValueError, AttributeError) as no_matches_exc:
             # Page structure has changed, return the nature of the error.
             if __name__ == "__main__":

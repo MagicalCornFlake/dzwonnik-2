@@ -214,7 +214,7 @@ def clear_cache(cache_name: str = None, cache_path: str = None) -> int:
     """
     cache_path = cache_path or CACHE_DIRECTORY
     if os.path.exists(cache_path):
-        if (cache_name):
+        if cache_name:
             try:
                 os.remove(os.path.join(cache_path, cache_name))
             except FileNotFoundError:
