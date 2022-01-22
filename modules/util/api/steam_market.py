@@ -3,8 +3,8 @@
 # Standard library imports
 from urllib import parse
 
-# Local application imports
-from .. import web
+# Third-party
+from corny_commons.util import web
 
 
 CURRENCY_IDS = [

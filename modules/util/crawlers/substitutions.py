@@ -9,9 +9,9 @@ import datetime
 
 # Third-party imports
 import lxml.html
+from corny_commons.util import web
 
 # Local application imports
-from .. import web
 from ... import Colour, file_manager, util
 
 

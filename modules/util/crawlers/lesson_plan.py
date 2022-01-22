@@ -4,8 +4,10 @@
 import json
 import re
 
+# Third-party imports
+from corny_commons.util import web
+
 # Local application imports
-from .. import web
 from ... import Colour, file_manager
 
 PERIOD_PATTERN = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")

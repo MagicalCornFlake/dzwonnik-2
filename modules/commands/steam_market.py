@@ -2,11 +2,11 @@
 
 # Third-party imports
 from discord import Message
+from corny_commons.util import web
 
 # Local application imports
 from . import TrackedItem, ensure_user_authorised, tracked_market_items
-from .. import bot, file_manager, Emoji
-from ..util import web
+from .. import bot, util, file_manager, Emoji
 from ..util.api import steam_market as steam_market_api
 
 
@@ -36,7 +36,7 @@ def get_market_price(message: Message, result_override=None) -> str:
         price = steam_market_api.get_item_price(result)
         return f"{Emoji.INFO} Aktualna cena dla *{args[0]}* to `{price}`."
     except web.WebException as web_exc:
-        return web.get_error_message(web_exc)
+        return util.get_error_message(web_exc)
 
 
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
@@ -59,7 +59,7 @@ def start_market_tracking(message: Message):
         try:
             result = steam_market_api.get_item(item_name)
         except web.WebException as ex:
-            return web.get_error_message(ex)
+            return util.get_error_message(ex)
         else:
             author_id = message.author.id
             item = TrackedItem(item_name, min_price, max_price, author_id)

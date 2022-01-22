@@ -5,10 +5,10 @@ from datetime import datetime
 
 # Third-party imports
 import discord
+from corny_commons.util import web
 
 # Local application imports
 from .. import bot, util
-from ..util import web
 from ..util.crawlers import substitutions as substitutions_api
 
 
@@ -54,7 +54,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     except web.WebException as web_exc:
         ex: str = util.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
-        return web.get_error_message(web_exc)
+        return util.get_error_message(web_exc)
     else:
         # Ensure the data is valid
         if "error" in data or not {"teachers", "events"}.issubset(data):

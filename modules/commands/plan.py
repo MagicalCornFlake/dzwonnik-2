@@ -5,11 +5,11 @@ from datetime import datetime
 
 # Third-party imports
 from discord import Message, Embed
+from corny_commons.util import web
 
 # Local application imports
 from . import LINK_404_URL
 from .. import util, bot, Weekday, Emoji, WEEKDAY_NAMES, GROUP_NAMES
-from ..util import web
 from ..util.crawlers import lesson_plan as lesson_plan_api
 
 
@@ -70,7 +70,7 @@ def get_lesson_plan(message: Message) -> str or Embed:
                         result = lesson_plan_api.get_lesson_plan(plan_id)
                     except web.WebException as web_exc:
                         # Invalid web response
-                        return web.get_error_message(web_exc)
+                        return util.get_error_message(web_exc)
                     else:
                         class_lesson_plan = result[0]
         except RuntimeError:

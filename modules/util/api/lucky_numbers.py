@@ -4,8 +4,8 @@
 from datetime import date, datetime
 import json
 
-# Local application imports
-from .. import web
+# Third-party
+from corny_commons.util import web
 
 # Data JSON structure:
 # {

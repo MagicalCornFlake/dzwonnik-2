@@ -4,6 +4,8 @@
 import traceback
 from datetime import datetime
 
+# Third-party imports
+from corny_commons.util import web
 
 OUR_CLASS = "2d"
 
@@ -129,3 +131,16 @@ def get_formatted_period_time(period: int or str = None) -> str:
     """
     times: list[list[int]] = lesson_plan["Godz"][int(period or current_period)]
     return "-".join([':'.join([f"{t:02}" for t in time]) for time in times])
+
+
+def get_error_message(web_exc: web.WebException) -> str:
+    """Returns the error message to be displayed to the user if a web exception occurs."""
+    if not isinstance(web_exc, web.WebException):
+        raise web_exc from TypeError
+    if isinstance(web_exc, web.InvalidResponseException):
+        return f"Nastąpił błąd w połączeniu: {web_exc.status_code}"
+    if isinstance(web_exc, web.TooManyRequestsException):
+        return f"Musisz poczekać jeszcze {web.MAX_REQUEST_COOLDOWN - web_exc.time_passed:.2f}s."
+    # The exception must be steam_api.NoSuchItemException
+    return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
+            f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")

@@ -8,12 +8,12 @@ import json
 # Third-party imports
 import discord
 from discord.ext.tasks import loop
+from corny_commons.util import web
 
 # Local application imports
 from . import file_manager, commands, util
 from . import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
 from .commands import get_help, homework, steam_market, lucky_numbers, substitutions
-from .util import web
 from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
 from .util.crawlers import lesson_plan as lesson_plan_api, substitutions as substitutions_api
 
@@ -492,7 +492,7 @@ async def check_for_steam_market_updates() -> None:
             price = steam_api.get_item_price(result)
         except web.WebException as web_exc:
             await ping_owner()
-            send_log(web.get_error_message(web_exc), force=True)
+            send_log(util.get_error_message(web_exc), force=True)
             return
         # Strips the price string of any non-digit characters and returns it as an integer
         char_list = [char if char in "0123456789" else '' for char in price]
