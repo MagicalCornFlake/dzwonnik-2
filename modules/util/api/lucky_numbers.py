@@ -4,7 +4,7 @@
 from datetime import date, datetime
 import json
 
-# Third-party
+# Third-party imports
 from corny_commons.util import web
 
 # Data JSON structure:
