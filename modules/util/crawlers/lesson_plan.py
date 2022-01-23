@@ -222,7 +222,7 @@ def _log(*args):
     if __name__ == "__main__":
         print(*args)
         return
-    file_manager.log(*args)
+    file_manager.log(*args, filename="bot.log")
 
 
 if __name__ == "__main__":
