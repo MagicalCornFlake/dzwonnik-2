@@ -102,8 +102,8 @@ def send_log(*raw_message, force: bool = False) -> None:
     if not (verbose_log_messages or force):
         return
 
-    msg = file_manager.log(*raw_message, filename="bot.log")
-    too_long_msg = f"Log message too long ({len(msg)} characters). Check 'bot.log' file."
+    msg = file_manager.log(*raw_message, filename="bot")
+    too_long_msg = f"Log message too long ({len(msg)} characters). Check 'bot' file."
     msg_to_log = msg if len(msg) <= MAX_MESSAGE_LENGTH else too_long_msg
 
     log_loop = asyncio.get_event_loop()
@@ -118,7 +118,7 @@ async def send_log_message(message) -> None:
         await log_chnl.send(f"```py\n{message}\n```")
     except (RuntimeError, OSError) as exception:
         could_not_log_msg = f"Could not log message: '{message}'. Exception: {exception}"
-        file_manager.log(could_not_log_msg, filename="bot.log")
+        file_manager.log(could_not_log_msg, filename="bot")
 
 
 @client.event

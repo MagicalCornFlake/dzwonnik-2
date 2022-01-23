@@ -20,8 +20,8 @@ def start_bot() -> bool:
     Returns a boolean that indicates if the bot should be restarted.
     """
     # Save the previous log on startup
-    file_manager.save_active_log_file(filename="bot.log", logs_dir="bot_logs")
-    file_manager.clear_log_file(filename="bot.log")
+    file_manager.save_active_log_file(filename="bot", logs_dir="bot_logs")
+    file_manager.clear_log_file(filename="bot")
     save_on_exit = True
 
     for module in (bot, file_manager, util, commands):
@@ -38,8 +38,8 @@ def start_bot() -> bool:
         try:
             token = os.environ["BOT_TOKEN"]
         except KeyError:
-            file_manager.log(filename="bot.log")
-            file_manager.log("    --- CRITICAL ERROR! ---", filename="bot.log")
+            file_manager.log(filename="bot")
+            file_manager.log("    --- CRITICAL ERROR! ---", filename="bot")
             exit_msg = "'BOT_TOKEN' OS environment variable not found. Program exiting."
             save_on_exit = False
             # Do not restart bot
@@ -70,16 +70,16 @@ def start_bot() -> bool:
         }
         result = subprocess.run(["pyclean", "."], check=False, **run_settings)
         file_manager.log(f"Pyclean: {result.stderr or result.stdout}",
-                         filename="bot.log")
+                         filename="bot")
         # Execute this in most cases; ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() function returns.
             # Do not send a debug message since the bot is already offline.
             data_manager.save_data_file(allow_logs=False)
             saved_msg = "Successfully saved data file 'data.json'. Program exiting."
-            file_manager.log(saved_msg, filename="bot.log")
-        file_manager.log(exit_msg, filename="bot.log")
-        file_manager.log(filename="bot.log")
+            file_manager.log(saved_msg, filename="bot")
+        file_manager.log(exit_msg, filename="bot")
+        file_manager.log(filename="bot")
     # By default, when the program is exited gracefully, it is later restarted in 'run.pyw'.
     # If the user issues a command like !exit, the return_on_exit global variable is set to False,
     # and the bot is not restarted.
