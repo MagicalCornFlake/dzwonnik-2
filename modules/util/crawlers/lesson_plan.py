@@ -31,21 +31,43 @@ def get_plan_id(class_id: str or int = None) -> int:
         or an integer representing the lesson plan ID.
     """
 
-    if isinstance(class_id, int) and 1 <= class_id <= 16:
+    # LESSON PLANS:
+    # o1 -- 3ag
+    # o2 -- 3bg
+    # o3 -- 3cg
+
+    # o4 -- 3ap
+    # o5 -- 3bp
+    # o6 -- 3cp
+
+    # o7 -- NONE
+
+    #  o8 -- 2a
+    #  o9 -- 2b
+    # o10 -- 2c
+    # o11 -- 2d
+    # o12 -- 2e
+
+    # o13 -- 1a
+    # o14 -- 1b
+    # o15 -- 1c
+    # o16 -- 1d
+    # o17 -- 1e
+
+    if isinstance(class_id, int) and 1 <= class_id <= 17:
         return class_id
     class_id = "2d" if class_id is None else class_id
     try:
         class_year = int(class_id[0])
-        class_letter = class_id[1]
         if not 1 <= class_year <= 3:
             raise ValueError
+        base_id = "abcde".index(class_id[1].lower()) + 1
         # 3 is the number of classes in year 3 that are type "g" (gimnazjum)
-        # 6 and 5 are the numbers of classes in year 3 and 2, respectively
-        # noinspection SpellCheckingInspection
-        base_id = "abcde".index(class_letter.lower()) + 1
+        # 7 and 5 are the numbers of plans before year 2 and 1, respectively
+        # (for classes 1 and 2 we add 7 not 6 since the lesson plans for year 3 skip number 7)
         if class_year == 3:
             return base_id + 3 * (class_id[2].lower() == "p")
-        return base_id + 6 + 5 * (class_year == 1)
+        return base_id + 7 + 5 * (class_year == 1)
     except (ValueError, IndexError):
         raise ValueError(f"Invalid class name: {class_id}.") from None
 
