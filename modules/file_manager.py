@@ -7,8 +7,8 @@ import shutil
 from datetime import datetime
 
 # Local application imports
-from . import bot, commands, util
-from .util.api import lucky_numbers
+from modules import bot, commands, util
+from modules.util.api import lucky_numbers
 
 
 CACHE_DIRECTORY = "cache"

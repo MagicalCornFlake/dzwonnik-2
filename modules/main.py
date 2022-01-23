@@ -7,7 +7,7 @@ import os
 import subprocess
 
 # Local application imports
-from . import bot, file_manager, util, commands
+from modules import bot, file_manager, util, commands
 
 
 def start_bot() -> bool:

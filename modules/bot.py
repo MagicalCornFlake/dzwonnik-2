@@ -11,11 +11,11 @@ from discord.ext.tasks import loop
 from corny_commons.util import web
 
 # Local application imports
-from . import file_manager, commands, util
-from . import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
-from .commands import get_help, homework, steam_market, lucky_numbers, substitutions
-from .util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
-from .util.crawlers import lesson_plan as lesson_plan_api, substitutions as substitutions_api
+from modules import file_manager, commands, util
+from modules import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
+from modules.commands import get_help, homework, steam_market, lucky_numbers, substitutions
+from modules.util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
+from modules.util.crawlers import lesson_plan as lesson_plan_api, substitutions as substitutions_api
 
 
 # These settings ensure that data from the SU ILO API is only fetched a maximum of 45 times a day.
