@@ -37,8 +37,7 @@ def start_bot() -> bool:
         except KeyError:
             file_manager.log()
             file_manager.log("    --- CRITICAL ERROR! ---")
-            env_404_msg = "'BOT_TOKEN' OS environment variable not found. Program exiting."
-            file_manager.log(env_404_msg)
+            exit_msg = "'BOT_TOKEN' OS environment variable not found. Program exiting."
             save_on_exit = False
             # Do not restart bot
             return False
