@@ -5,6 +5,7 @@ from datetime import datetime
 
 # Third-party imports
 import discord
+from corny_commons import util as ccutil
 from corny_commons.util import web
 
 # Local application imports
@@ -52,7 +53,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     try:
         data = substitutions_api.get_substitutions()[0]
     except web.WebException as web_exc:
-        ex: str = util.format_exception_info(web_exc)
+        ex: str = ccutil.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
         return util.get_error_message(web_exc)
     else:

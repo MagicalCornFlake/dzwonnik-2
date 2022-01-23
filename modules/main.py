@@ -6,8 +6,11 @@ import importlib
 import os
 import subprocess
 
+# Third-party imports
+from corny_commons import file_manager
+
 # Local application imports
-from modules import bot, file_manager, util, commands
+from modules import bot, data_manager, util, commands
 
 
 def start_bot() -> bool:
@@ -29,7 +32,7 @@ def start_bot() -> bool:
         starting_msg = "Program starting..."
     bot.send_log(f"    --- {starting_msg} ---", force=True)
     file_manager.read_env_file()
-    file_manager.read_data_file('data.json')
+    data_manager.read_data_file('data.json')
     event_loop = asyncio.get_event_loop()
     try:
         try:
@@ -71,7 +74,7 @@ def start_bot() -> bool:
         if save_on_exit:
             # The file is saved before the start_bot() function returns.
             # Do not send a debug message since the bot is already offline.
-            file_manager.save_data_file(allow_logs=False)
+            data_manager.save_data_file(allow_logs=False)
             saved_msg = "Successfully saved data file 'data.json'. Program exiting."
             file_manager.log(saved_msg)
         file_manager.log(exit_msg)

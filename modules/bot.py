@@ -8,10 +8,11 @@ import json
 # Third-party imports
 import discord
 from discord.ext.tasks import loop
+from corny_commons import file_manager, util as ccutil
 from corny_commons.util import web
 
 # Local application imports
-from modules import file_manager, commands, util
+from modules import data_manager, commands, util
 from modules import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
 from modules.commands import get_help, homework, steam_market, lucky_numbers, substitutions
 from modules.util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
@@ -136,7 +137,7 @@ async def on_ready() -> None:
     try:
         result = lesson_plan_api.get_lesson_plan(force_update=True)
     except web.InvalidResponseException as web_exc:
-        exc = util.format_exception_info(web_exc)
+        exc = ccutil.format_exception_info(web_exc)
         send_log(f"{BAD_RESPONSE}{exc}", force=True)
     else:
         plan: dict = result[0]
@@ -201,7 +202,7 @@ async def on_message(message: discord.Message) -> None:
             await message.reply(error_message)
         except Exception as exc:  # pylint: disable=broad-except
             await ping_owner()
-            send_log(util.format_exception_info(exc), force=True)
+            send_log(ccutil.format_exception_info(exc), force=True)
             await message.reply(":x: Nastąpił błąd przy wykonaniu tej komendy. "
                                 "Administrator bota (Konrad) został o tym powiadomiony.")
         else:
@@ -360,7 +361,7 @@ async def remind_about_homework_event(event: homework.HomeworkEvent, tense: str)
             await snooze_event()
     await message.clear_reactions()
     # Updates data.json so that if the bot is restarted the event's parameters are saved
-    file_manager.save_data_file()
+    data_manager.save_data_file()
 
 
 @loop(seconds=1)
@@ -401,7 +402,7 @@ async def main_update_loop() -> None:
     except (TypeError, KeyError) as exception:
         # Lucky numbers data does not contain a date
         await ping_owner()
-        fmt_exc = util.format_exception_info(exception)
+        fmt_exc = ccutil.format_exception_info(exception)
         send_log(fmt_exc, force=True)
     else:
         if cached_date == current_time.date() or current_time.hour != UPDATE_NUMBERS_AT:
@@ -480,7 +481,7 @@ async def wait_before_starting_loop() -> None:
         file_manager.on_exit_msg = {}
 
     if file_manager.on_exit_msg != msg_info:
-        file_manager.save_data_file()
+        data_manager.save_data_file()
 
 
 async def check_for_steam_market_updates() -> None:
@@ -504,7 +505,7 @@ async def check_for_steam_market_updates() -> None:
         await target_channel.send(f"{Emoji.CASH} Uwaga, <@{item.author_id}>! "
                                   f"Przedmiot *{item.name}* kosztuje teraz **{price/100:.2f}zł**.")
         steam_market.tracked_market_items.remove(item)
-        file_manager.save_data_file()
+        data_manager.save_data_file()
 
 
 async def check_for_lucky_numbers_updates() -> None:
@@ -516,7 +517,7 @@ async def check_for_lucky_numbers_updates() -> None:
         old_cache = lucky_numbers_api.update_cache()
     except web.InvalidResponseException as web_exc:
         await ping_owner()
-        exc: str = util.format_exception_info(web_exc)
+        exc: str = ccutil.format_exception_info(web_exc)
         send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
     else:
         if old_cache != lucky_numbers_api.cached_data:
@@ -525,7 +526,7 @@ async def check_for_lucky_numbers_updates() -> None:
                      force=True)
             target_channel = testing_channel or ChannelID.NUMERKI
             target_channel = client.get_channel(target_channel)
-            file_manager.save_data_file()
+            data_manager.save_data_file()
             lucky_numbers_msg = lucky_numbers.get_lucky_numbers_embed()
             if isinstance(lucky_numbers_msg, discord.Embed):
                 await target_channel.send(embed=lucky_numbers_msg)
@@ -548,7 +549,7 @@ async def check_for_substitutions_updates(announce_on_update=False) -> None:
         if web_exc.status_code == 403:
             send_log("Suppressing 403 Forbidden on substitutions page.", force=True)
             return
-        exc: str = util.format_exception_info(web_exc)
+        exc: str = ccutil.format_exception_info(web_exc)
         exception_message = f"Substitutions update: {BAD_RESPONSE}{exc}"
     except RuntimeError as err_desc:
         # The HTML parser returned an error; log the error details
@@ -612,7 +613,7 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException as http_exc:
         send_log("Message too long. Length of data:", len(str(on_fail_data)))
-        send_log(util.format_exception_info(http_exc))
+        send_log(ccutil.format_exception_info(http_exc))
         reply_msg = await send_method(on_fail_msg or MESSAGE_SEND_FAIL_MSG)
         should_iterate = on_fail_msg and isinstance(on_fail_data, list)
         if isinstance(on_fail_data, discord.Embed):

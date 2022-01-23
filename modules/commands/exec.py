@@ -7,10 +7,11 @@ import json
 
 # Third-party imports
 import discord
+from corny_commons import util as ccutil
 
 # Local application imports
 from . import ensure_user_authorised
-from .. import bot, util
+from .. import bot
 
 
 DESC = None
@@ -59,7 +60,7 @@ def inject_code(expression: str) -> str:
             ast.parse("_ = " + expression)
         except SyntaxError as syntax_error:
             # Code injection raises a syntax error; ignore it and don't inject code
-            fmt_exc = util.format_exception_info(syntax_error)
+            fmt_exc = ccutil.format_exception_info(syntax_error)
             bot.send_log(f"Caught SyntaxError in code injection:\n\n{fmt_exc}")
         else:
             # No syntax error; initialise the '__temp' local variable in code injection
@@ -90,7 +91,7 @@ async def process_execution(message: discord.Message) -> str:
         execute_locals: dict[str, any] = await locals()["__execute"](message) or {}
     except Exception as exec_exc:  # pylint: disable=broad-except
         # If the code logic is malformed or otherwise raises an exception, return the error info.
-        exec_result = util.format_exception_info(exec_exc)
+        exec_result = ccutil.format_exception_info(exec_exc)
     else:
         # Default the temp variable to an empty ExecResultList if it's not been assigned
         exec_result = execute_locals.get("__temp", ExecResultList())

@@ -5,6 +5,7 @@ from datetime import datetime
 
 # Third-party imports
 from discord import Message, Embed
+from corny_commons import util as ccutil
 from corny_commons.util import web
 
 # Local application imports
@@ -20,7 +21,7 @@ def get_lucky_numbers_embed(_: Message = None) -> Embed or str:
     try:
         data = numbers_api.get_lucky_numbers()
     except web.WebException as web_exc:
-        exc: str = util.format_exception_info(web_exc)
+        exc: str = ccutil.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{exc}", force=True)
         return util.get_error_message(web_exc)
     date_str: str = datetime.strftime(data["date"], "%d.%m.%Y")

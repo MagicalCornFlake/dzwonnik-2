@@ -6,6 +6,7 @@ from math import ceil
 
 # Third-party imports
 from discord import Message, Embed
+from corny_commons.util import polish
 
 # Local application imports
 from . import LINK_404_URL, get_datetime_from_input, get_next_period, get_lesson_by_roles
@@ -52,9 +53,9 @@ def get_next_lesson(message: Message) -> str or Embed:
             lesson_start_datetime = util.get_time(*lesson_start_datetime)
             bot.send_log("Lesson starting at:", lesson_start_datetime)
             mins = ceil((lesson_start_datetime - time).seconds / 60)
-            hours = util.conjugate_numeric(mins // 60, 'godzin')
+            hours = polish.conjugate_numeric(mins // 60, 'godzin')
             hours = (hours + " ") * (mins >= 60)
-            countdown = f" (za {hours}{util.conjugate_numeric(mins % 60, 'minut')})"
+            countdown = f" (za {hours}{polish.conjugate_numeric(mins % 60, 'minut')})"
         else:
             when = Weekday.FRIDAY <= time.weekday() <= Weekday.SATURDAY
             when = " w poniedziałek" if when else " jutro"

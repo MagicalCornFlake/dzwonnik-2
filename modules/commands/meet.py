@@ -8,7 +8,7 @@ from discord import Message
 
 # Local application imports
 from . import ensure_user_authorised
-from .. import bot, util, file_manager, Emoji
+from .. import bot, util, data_manager, Emoji
 
 
 DESC = None
@@ -46,7 +46,7 @@ def update_meet_link(message: Message) -> str:
                 raise InvalidFormatException(args[1])
             # User-given link is valid
             util.lesson_links[args[0]] = args[1]
-            file_manager.save_data_file()
+            data_manager.save_data_file()
             return (f"{Emoji.CHECK} Zmieniono link dla lekcji '__{lesson_name}__'"
                     f" z `{link}` na **{args[1]}**.")
     except InvalidFormatException:

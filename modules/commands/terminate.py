@@ -2,11 +2,11 @@
 
 # Third-party imports
 import discord
-
+from corny_commons import file_manager
 
 # Local application imports
 from modules.commands import ensure_user_authorised
-from .. import bot, file_manager
+from .. import bot
 DESC = None
 
 

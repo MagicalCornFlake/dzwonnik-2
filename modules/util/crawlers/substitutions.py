@@ -9,10 +9,11 @@ import datetime
 
 # Third-party imports
 import lxml.html
+from corny_commons import file_manager, util as ccutil
 from corny_commons.util import web
 
 # Local application imports
-from ... import Colour, file_manager, util
+from ... import Colour
 
 
 SUB_INFO_PATTERN = r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,]+?[^-])*\s(.*)"
@@ -148,7 +149,7 @@ def parse_html(html: str) -> dict:
     try:
         post_elem: lxml.html.Element = root.xpath(post_xpath)[0]
     except IndexError as no_matches_exc:
-        return {"error": util.format_exception_info(no_matches_exc)}
+        return {"error": ccutil.format_exception_info(no_matches_exc)}
     subs_data = {
         "post": dict(post_elem.attrib),
         "events": [],
@@ -203,7 +204,7 @@ def parse_html(html: str) -> dict:
                 # Makes the error easier to see for debugging
                 print(json.dumps(subs_data, indent=2, ensure_ascii=False))
                 raise no_matches_exc from None
-            subs_data["error"] = util.format_exception_info(no_matches_exc)
+            subs_data["error"] = ccutil.format_exception_info(no_matches_exc)
             break
 
     # Return dictionary with substitution data

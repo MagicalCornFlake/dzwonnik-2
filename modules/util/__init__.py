@@ -1,7 +1,6 @@
 """__init__.py file for the web utility-related modules."""
 
 # Standard library imports
-import traceback
 from datetime import datetime
 
 # Third-party imports
@@ -37,32 +36,6 @@ def format_class(class_name: str = None):
         raise ValueError(err_msg) from None
     else:
         return formatted + class_name[1:].upper()
-
-
-def format_exception_info(exception: Exception):
-    """Returns the exception stack trace in the form of a string as it is displayed in the shell.
-
-    Arguments:
-        exception -- the exception to format.
-    """
-    info = type(exception), exception, exception.__traceback__
-    fmt_info = traceback.format_exception(*info)
-    return ''.join(fmt_info)
-
-
-def conjugate_numeric(num: int, word: str) -> str:
-    """Inputs a number and base noun and returns the correctly conjugated string in Polish.
-
-    Arguments:
-        num -- the quantity, integer
-        word -- the base noun, e.g. 'godzin' or 'minut'
-    """
-    if num == 1:
-        suffix = "ę"
-    else:
-        last_digit: int = int(str(num)[-1])
-        suffix = "y" if 1 < last_digit < 5 and num not in [12, 13, 14] else ""
-    return f"{num} {word}{suffix}"
 
 
 def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tuple[str, datetime]:

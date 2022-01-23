@@ -9,7 +9,7 @@ from discord import Member, Message, Embed, Reaction
 
 # Local application imports
 from . import HomeworkEvent, homework_events
-from .. import bot, Emoji, file_manager, ROLE_CODES, GROUP_NAMES
+from .. import bot, Emoji, data_manager, ROLE_CODES, GROUP_NAMES
 
 
 DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
@@ -37,7 +37,7 @@ def process_homework_events_alias(message: Message) -> str or Embed:
 
 def get_homework_events(message: Message, with_event_ids=False) -> str or Embed:
     """Event handler for the 'zadania' command."""
-    file_manager.read_data_file()
+    data_manager.read_data_file()
     amount_of_homeworks = len(homework_events)
     if amount_of_homeworks > 0:
         embed = Embed(
@@ -118,7 +118,7 @@ def create_homework_event(message: Message) -> str:
     if new_event.serialised in homework_events:
         return f"{Emoji.WARNING} Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)
-    file_manager.save_data_file()
+    data_manager.save_data_file()
     return (f"{Emoji.CHECK} Stworzono zadanie na __{args[1]}__ z tytułem: `{title}`"
             f" {group_text}z powiadomieniem na dzień przed o **17:00.**")
 
@@ -132,7 +132,7 @@ def delete_homework_event(event_id: int) -> str:
     for event in homework_events:
         if event.event_id == event_id:
             homework_events.remove(event)
-            file_manager.save_data_file()
+            data_manager.save_data_file()
             return event.title
     raise ValueError
 
