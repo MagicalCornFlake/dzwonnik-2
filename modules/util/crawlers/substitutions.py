@@ -39,9 +39,11 @@ def get_int_ranges_from_string(lessons_string: str) -> list[str]:
     for lesson in lessons_string.rstrip('l').split(','):
         if "-" in lesson:
             start, end = lesson.split('-')
-            lesson_ints += list(range(start, end + 1))
+            for num in range(int(start), int(end) + 1):
+                lesson_ints.append(str(num))
         else:
             lesson_ints.append(lesson)
+    print(lesson_ints)
     return lesson_ints
 
 
