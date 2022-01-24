@@ -96,7 +96,7 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bo
     currency_id = get_currency_id(currency)
     query_encoded = parse.quote(raw_query)
     url = SOURCE_URL.format(steam_url, app_id, currency_id, query_encoded)
-    result = web.make_request(url, force).json()
+    result = web.make_request(url, ignore_request_limit=force).json()
     if not result["success"]:
         raise NoSuchItemException(raw_query)
     return result

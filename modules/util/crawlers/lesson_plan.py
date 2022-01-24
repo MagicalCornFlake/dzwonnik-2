@@ -210,7 +210,7 @@ def get_lesson_plan(class_id="2d", force_update=False) -> tuple[dict, bool]:
     plan_id = get_plan_id(class_id)
 
     def update_cache_callback() -> dict:
-        html: str = web.get_html(get_plan_link(plan_id), force_update)
+        html: str = web.get_html(get_plan_link(plan_id), ignore_request_limit=force_update)
         return parse_html(html)
 
     log_msg = f"Getting lesson plan with ID {plan_id} for class '{class_id}' ({force_update=}) ..."

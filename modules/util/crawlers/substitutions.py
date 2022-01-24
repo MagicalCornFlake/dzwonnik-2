@@ -223,7 +223,7 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, dict]:
     check if the cache has changed).
     """
     def update_cache_callback() -> dict:
-        html: str = web.get_html(SOURCE_URL, force_update)
+        html: str = web.get_html(SOURCE_URL, ignore_request_limit=force_update)
         return parse_html(html)
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
