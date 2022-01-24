@@ -297,8 +297,11 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     if client.activity and new_status_msg == client.activity.name:
         send_log("... new status message is unchanged.", force=True)
         return False
-    fmt_vars = new_status_msg, util.current_period, util.next_period
-    status_log_msg = STATUS_LOG_TEMPLATE.format(*fmt_vars)
+    status_log_msg = STATUS_LOG_TEMPLATE.format(
+        new_status_msg,
+        util.current_period,
+        util.next_period
+    )
     send_log(status_log_msg, force=True)
     return new_status_msg
 
@@ -385,7 +388,8 @@ async def main_update_loop() -> None:
     # Tasks that only update on the first second of a given minute
     if current_time.second == 0:
         # Update the bot status once a minute
-        send_log(await check_for_status_updates(current_time))
+        update_msg = await check_for_status_updates(current_time)
+        send_log(update_msg)
 
         if current_time.minute % 30 == 0:
             # Update the Steam Market prices every half hour
