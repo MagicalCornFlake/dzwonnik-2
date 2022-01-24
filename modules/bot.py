@@ -385,7 +385,7 @@ async def main_update_loop() -> None:
     # Tasks that only update on the first second of a given minute
     if current_time.second == 0:
         # Update the bot status once a minute
-        await check_for_status_updates(current_time)
+        send_log(await check_for_status_updates(current_time))
 
         if current_time.minute % 30 == 0:
             # Update the Steam Market prices every half hour
@@ -416,7 +416,7 @@ async def main_update_loop() -> None:
     await check_for_lucky_numbers_updates()
 
 
-async def check_for_status_updates(current_time: datetime.datetime, force: bool = False) -> None:
+async def check_for_status_updates(current_time: datetime.datetime, force: bool = False) -> str:
     """Checks if the current hour and minute is in any time slot for the lesson plan timetable."""
     now = current_time.hour, current_time.minute
     # Loop throught each period to see if the current time is the same as either start or end time
@@ -427,14 +427,15 @@ async def check_for_status_updates(current_time: datetime.datetime, force: bool 
                 break
         else:
             # We have reached the end of the loop without finding a match
-            return
+            return "Current time isn't the start or end of a lesson"
     # Check is successful; update bot's Discord status
     msg: str = get_new_status_msg()
     if not msg:
         # Do not update the status if it evaluates to False (i.e. status does not need updating)
-        return
+        return "The status message is the same as before"
     status = discord.Activity(type=discord.ActivityType.watching, name=msg)
     await client.change_presence(activity=status)
+    return f"Changed status to: '{status}'"
 
 
 async def check_for_due_homework(current_time: datetime.datetime) -> None:
