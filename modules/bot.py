@@ -381,15 +381,13 @@ async def main_update_loop() -> None:
         - The bot status -- every 1 min
         - Homework event deadlines-- every 1 min
     """
-
     current_time = datetime.datetime.now()  # Today's time
     await check_for_due_homework(current_time)
 
     # Tasks that only update on the first second of a given minute
     if current_time.second == 0:
         # Update the bot status once a minute
-        update_msg = await check_for_status_updates(current_time)
-        send_log(update_msg)
+        send_log(await check_for_status_updates(current_time))
 
         if current_time.minute % 30 == 0:
             # Update the Steam Market prices every half hour
@@ -470,7 +468,7 @@ async def wait_before_starting_loop() -> None:
     await check_for_status_updates(datetime.datetime.now(), force=True)
 
     # If there was a message sent the last time the bot closed, edit or reply to it.
-    msg_info = file_manager.on_exit_msg
+    msg_info = data_manager.on_exit_msg
     try:
         last_msg_chnl: discord.TextChannel = await client.fetch_channel(msg_info["channel_id"])
         last_msg: discord.Message = await last_msg_chnl.fetch_message(msg_info["message_id"])
@@ -483,9 +481,9 @@ async def wait_before_starting_loop() -> None:
         pass
     finally:
         # Reset the on exit message so that it is not replied to twice.
-        file_manager.on_exit_msg = {}
+        data_manager.on_exit_msg = {}
 
-    if file_manager.on_exit_msg != msg_info:
+    if data_manager.on_exit_msg != msg_info:
         data_manager.save_data_file()
 
 
