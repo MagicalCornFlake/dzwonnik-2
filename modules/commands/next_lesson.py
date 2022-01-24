@@ -68,7 +68,7 @@ def get_next_lesson(message: Message) -> str or Embed:
         group = temp_str + " " * (lesson['group'] != "grupa_0")
         temp_str = util.get_lesson_name(lesson['name'])
         return (f"{Emoji.INFO} Następna lekcja {group}to **{temp_str}**{when} o godzinie "
-                      f"__{next_period_time}__{countdown}."), util.get_lesson_link(lesson['name'])
+                f"__{next_period_time}__{countdown}."), util.get_lesson_link(lesson['name'])
 
     temp_var = process(time)
     try:
@@ -78,7 +78,10 @@ def get_next_lesson(message: Message) -> str or Embed:
         return temp_var
 
     embed = Embed(title=f"Następna lekcja ({time:%H:%M})", description=msg)
-    link = f"[meet.google.com](https://meet.google.com/{raw_link})" if raw_link else LINK_404_URL
+    if raw_link:
+        link = f"[meet.google.com](https://meet.google.com/{raw_link})"
+    else:
+        link = f"[brak]({LINK_404_URL})"
     embed.add_field(name="Link do lekcji", value=link)
     temp_var = f"Użyj komendy {bot.prefix}nl, aby pokazać tą wiadomość."
     embed.set_footer(text=temp_var)

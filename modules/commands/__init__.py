@@ -10,7 +10,7 @@ from discord import Role, Message, TextChannel
 from .. import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, util, bot
 
 
-LINK_404_URL = "https://guzek.uk/error/404/?lang=pl-PL&source=discord"
+LINK_404_URL = "https://www.guzek.uk/error/404/?lang=PL&utm_source=discord"
 
 
 class HomeworkEvent:
