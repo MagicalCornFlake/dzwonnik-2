@@ -31,7 +31,7 @@ def start_bot() -> bool:
     else:
         starting_msg = "Program starting..."
     bot.send_log(f"    --- {starting_msg} ---", force=True)
-    file_manager.read_env_file()
+    file_manager.read_env()
     data_manager.read_data_file('data.json')
     event_loop = asyncio.get_event_loop()
     try:
