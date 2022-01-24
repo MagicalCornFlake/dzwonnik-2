@@ -427,15 +427,15 @@ async def check_for_status_updates(current_time: datetime.datetime, force: bool 
                 break
         else:
             # We have reached the end of the loop without finding a match
-            return "Current time isn't the start or end of a lesson"
+            return "The status message does not need updating."
     # Check is successful; update bot's Discord status
     msg: str = get_new_status_msg()
     if not msg:
         # Do not update the status if it evaluates to False (i.e. status does not need updating)
-        return "The status message is the same as before"
+        return "The status message is the same as before (no changes made)."
     status = discord.Activity(type=discord.ActivityType.watching, name=msg)
     await client.change_presence(activity=status)
-    return f"Changed status to: '{status}'"
+    return f"Changed status message to: '{msg}'."
 
 
 async def check_for_due_homework(current_time: datetime.datetime) -> None:
