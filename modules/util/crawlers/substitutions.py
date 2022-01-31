@@ -16,9 +16,9 @@ from corny_commons.util import web
 from ... import Colour
 
 
-SUB_INFO_PATTERN = r"(I+)([A-Z]+)([pg]?)(?:(?:\sgr.\s|,\s|\si\s)p. [^,]+?[^-])*\s(.*)"
+SUB_INFO_PATTERN = r"(I*)([A-Z]*)([pg]?)\s?(?:(?:gr.\s|,\s|\si\s)p. [^,]+?[^-])*\s(.*)"
 SUB_INFO_PATTERN = re.compile(SUB_INFO_PATTERN)
-SUB_GROUPS_PATTERN = re.compile(r"(?:\sgr.\s|,\s|\si\s)(p. [^,]+?[^-,])\s")
+SUB_GROUPS_PATTERN = re.compile(r"\s?(?:gr.\s|,\s|\si\s)(p. [^,]+?[^-,])\s")
 
 SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
@@ -43,7 +43,6 @@ def get_int_ranges_from_string(lessons_string: str) -> list[str]:
                 lesson_ints.append(str(num))
         else:
             lesson_ints.append(lesson)
-    print(lesson_ints)
     return lesson_ints
 
 
@@ -86,14 +85,13 @@ def extract_substitutions_text(elem_text: str, subs_data: dict, is_table_header)
     lesson_ints = get_int_ranges_from_string(lessons)
     for lesson in lesson_ints:
         subs_data["lessons"].setdefault(lesson, {})
-        class_year, classes, class_info, details = re.match(
-            SUB_INFO_PATTERN, info).groups()
-        for class_letter in classes:
-            class_name = f"{class_year}{class_letter}{class_info or ''}"
+        class_year, classes, class_info, details = SUB_INFO_PATTERN.match(info).groups()
+        for class_letter in classes or "?":
+            class_name = f"{class_year or ''}{class_letter}{class_info or ''}"
             subs_data["lessons"][lesson].setdefault(class_name, [])
             class_subs = {
                 "details": details,
-                "groups": re.findall(SUB_GROUPS_PATTERN, info)
+                "groups": SUB_GROUPS_PATTERN.findall(info)
             }
             if not class_subs["groups"]:
                 class_subs.pop("groups")
@@ -204,7 +202,8 @@ def parse_html(html: str) -> dict:
             # Page structure has changed, return the nature of the error.
             if __name__ == "__main__":
                 # Makes the error easier to see for debugging
-                print(json.dumps(subs_data, indent=2, ensure_ascii=False))
+                print("Error encountered! Data so far:",
+                      json.dumps(subs_data, indent=2, ensure_ascii=False))
                 raise no_matches_exc from None
             subs_data["error"] = ccutil.format_exception_info(no_matches_exc)
             break
