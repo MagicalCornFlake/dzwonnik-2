@@ -108,15 +108,18 @@ def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
             info).groups()
         for class_letter in classes or "?":
             class_name = f"{class_year or ''}{class_letter}{class_info or ''}"
-            subs_data["lessons"][lesson].setdefault(class_name, [])
+            subs_data["lessons"][lesson].setdefault(class_name, {
+                "substituted_lessons": get_substituted_lessons(class_name, weekday_int, lesson),
+                "substitutions": []
+            })
             class_subs = {
                 "details": details,
-                "groups": SUB_GROUPS_PATTERN.findall(info),
-                "substituted_lessons": get_substituted_lessons(class_name, weekday_int, lesson)
+                "groups": SUB_GROUPS_PATTERN.findall(info)
             }
             if not class_subs["groups"]:
                 class_subs.pop("groups")
-            subs_data["lessons"][lesson][class_name].append(class_subs)
+            subs_data["lessons"][lesson][class_name]["substitutions"].append(
+                class_subs)
 
 
 def extract_header_data(elem, child_elem, subs_data) -> tuple[str, any]:

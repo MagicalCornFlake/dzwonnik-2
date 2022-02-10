@@ -26,16 +26,16 @@ def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: s
     Returns the number of substitutions for our class.
     """
     our_substitutions: int = 0
-    for period in data["lessons"]:
+    for period, classes in data["lessons"].items():
         class_msgs = []
-        for class_name, substitutions in sorted(data["lessons"][period].items()):
+        for class_name, class_data in sorted(classes.items()):
             sub_msgs = []
-            for sub_info in substitutions:
+            for sub_info in class_data["substitutions"]:
                 groups = sub_info.get("groups")
                 groups = f"gr. {', '.join(groups)} — " if groups else ""
                 sub_msgs.append(f"{groups}*{sub_info['details']}*")
             substitution_text = f"**{class_name}**: {' | '.join(sub_msgs)}"
-            lessons = data["substituted_lessons"]
+            lessons = class_data["substituted_lessons"]
             lessons = [util.format_lesson_info(lesson) for lesson in lessons]
             if lessons:
                 # Stylise the cancelled lessons as crossed out
