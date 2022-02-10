@@ -85,7 +85,8 @@ def extract_substitutions_text(elem_text: str, subs_data: dict, is_table_header)
     lesson_ints = get_int_ranges_from_string(lessons)
     for lesson in lesson_ints:
         subs_data["lessons"].setdefault(lesson, {})
-        class_year, classes, class_info, details = SUB_INFO_PATTERN.match(info).groups()
+        class_year, classes, class_info, details = SUB_INFO_PATTERN.match(
+            info).groups()
         for class_letter in classes or "?":
             class_name = f"{class_year or ''}{class_letter}{class_info or ''}"
             subs_data["lessons"][lesson].setdefault(class_name, [])
@@ -153,9 +154,10 @@ def parse_html(html: str) -> dict:
     subs_data = {
         "post": dict(post_elem.attrib),
         "events": [],
-        "lessons": {},
         "tables": [],
-        "misc": []
+        "misc": [],
+        "cancelled": [],
+        "lessons": {}
     }
 
     def extract_data(elem: lxml.html.Element, next_elem: lxml.html.Element) -> None:
@@ -165,6 +167,14 @@ def parse_html(html: str) -> dict:
         """
 
         if elem.tag == "table":
+            # Check if any table headers have been found prior to the table element
+            if len(subs_data["tables"]) == 0:
+                # There hasn't; append a blank table object
+                subs_data["tables"].append({
+                    "title": "[Brak nagłówku tabeli]",
+                    "headings": [],
+                    "columns": []
+                })
             extract_from_table(elem, subs_data["tables"][-1])
             return
         if elem.tag != "p":
@@ -180,7 +190,10 @@ def parse_html(html: str) -> dict:
                 # Skip blank 'p' elements
                 return
             if "są odwołane" in elem_text:
-                subs_data["cancelled"] = elem_text
+                # Ensure there is a trailing period
+                if not elem_text.endswith("."):
+                    elem_text += "."
+                subs_data["cancelled"].append(elem_text)
                 return
             is_table_header = next_elem is not None and next_elem.tag == "table"
             extract_substitutions_text(elem_text, subs_data, is_table_header)
@@ -202,8 +215,8 @@ def parse_html(html: str) -> dict:
             # Page structure has changed, return the nature of the error.
             if __name__ == "__main__":
                 # Makes the error easier to see for debugging
-                print("Error encountered! Data so far:",
-                      json.dumps(subs_data, indent=2, ensure_ascii=False))
+                print(json.dumps(subs_data, indent=2, ensure_ascii=False),
+                      f"\n{Colour.FAIL}Error encountered while processing child element {Colour.WARNING}{i + 1}{Colour.FAIL}!{Colour.ENDC}")
                 raise no_matches_exc from None
             subs_data["error"] = ccutil.format_exception_info(no_matches_exc)
             break
