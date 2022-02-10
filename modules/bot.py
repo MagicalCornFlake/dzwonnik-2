@@ -156,7 +156,7 @@ async def on_ready() -> None:
 
     # Initialise dictionary of lesson links
     for lesson_name in sorted(lesson_names):
-        util.lesson_links.setdefault(lesson_name, None)
+        util.get_lesson_link(lesson_name)
 
     # Starts loops that run continuously
     main_update_loop.start()
