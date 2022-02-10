@@ -6,6 +6,10 @@ from datetime import datetime
 # Third-party imports
 from corny_commons.util import web
 
+# Local application imports
+from modules import GROUP_NAMES
+from modules.commands import LINK_404_URL
+
 OUR_CLASS = "2d"
 
 lesson_plan: dict[str, any] = {}
@@ -101,6 +105,20 @@ def get_lesson_link(lesson_code: str) -> str:
     if lesson_code not in lesson_links:
         lesson_links[lesson_code] = None
     return lesson_links[lesson_code]
+
+
+def format_lesson_info(lesson: dict[str, str]) -> str:
+    """Formats the lesson object into a string representation of it."""
+    raw_link = get_lesson_link(lesson['name'])
+    link = f"https://meet.google.com/{raw_link}" if raw_link else LINK_404_URL
+    lesson_name = get_lesson_name(lesson['name'])
+    room = lesson['room_id']
+
+    lesson_info: str = f"[{lesson_name} - sala {room}]({link})"
+    if lesson['group'] != "grupa_0":
+        group_name = GROUP_NAMES.get(lesson['group'], lesson['group'])
+        lesson_info += f" ({group_name})"
+    return lesson_info
 
 
 def get_formatted_period_time(period: int or str = None) -> str:

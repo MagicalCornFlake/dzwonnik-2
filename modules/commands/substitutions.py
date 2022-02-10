@@ -20,7 +20,7 @@ FOOTER_TEMPLATE = "Użyj komendy {}zast, aby pokazać tą wiadomość."
 DESC_TEMPLATE = "Liczba zastępstw dla klasy {}: **{}**"
 
 
-def add_substitution_text_fields(embed: discord.Embed, data: dict, url: str) -> int:
+def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: str) -> int:
     """Adds the text fields to the substitutions embed.
 
     Returns the number of substitutions for our class.
@@ -28,21 +28,27 @@ def add_substitution_text_fields(embed: discord.Embed, data: dict, url: str) -> 
     our_substitutions: int = 0
     for period in data["lessons"]:
         class_msgs = []
-        for class_name, substitutions in data["lessons"][period].items():
+        for class_name, substitutions in sorted(data["lessons"][period].items()):
             sub_msgs = []
             for sub_info in substitutions:
                 groups = sub_info.get("groups")
-                groups = f"(gr. {', '.join(groups)}) — " if groups else ""
+                groups = f"gr. {', '.join(groups)} — " if groups else ""
                 sub_msgs.append(f"{groups}*{sub_info['details']}*")
             substitution_text = f"**{class_name}**: {' | '.join(sub_msgs)}"
+            lessons = data["substituted_lessons"]
+            lessons = [util.format_lesson_info(lesson) for lesson in lessons]
+            if lessons:
+                # Stylise the cancelled lessons as crossed out
+                lessons = "\n".join(lessons)
+                substitution_text += f"~~{lessons}~~"
             if class_name != util.format_class():
                 class_msgs.append(substitution_text)
                 continue
             our_substitutions += 1
-            class_msgs.append(f"[{substitution_text}]({url})")
+            class_msgs.append(f"[{substitution_text}]({source_url})")
         embed.add_field(
             name=f"Lekcja {period} ({util.get_formatted_period_time(period)})",
-            value='\n'.join(class_msgs),
+            value="\n".join(class_msgs),
             inline=False
         )
     return our_substitutions
@@ -75,7 +81,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
         inline=False
     ).add_field(
         name="Wydarzenia szkolne",
-        value='\n'.join(data["events"]) or "*Brak*",
+        value="\n".join(data["events"]) or "*Brak*",
         inline=False
     )
 

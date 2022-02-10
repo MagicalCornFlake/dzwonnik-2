@@ -8,8 +8,7 @@ from discord import Message, Embed
 from corny_commons.util import web
 
 # Local application imports
-from . import LINK_404_URL
-from .. import util, bot, Weekday, Emoji, WEEKDAY_NAMES, GROUP_NAMES
+from .. import util, bot, Weekday, Emoji, WEEKDAY_NAMES
 from ..util.crawlers import lesson_plan as lesson_plan_api
 
 
@@ -63,7 +62,8 @@ def get_lesson_plan(message: Message) -> str or Embed:
                 try:
                     plan_id = lesson_plan_api.get_plan_id(args[2])
                 except ValueError:
-                    raise RuntimeError(f"invalid class name: {args[2]}") from None
+                    raise RuntimeError(
+                        f"invalid class name: {args[2]}") from None
                 else:
                     class_code = args[2]
                     try:
@@ -75,16 +75,17 @@ def get_lesson_plan(message: Message) -> str or Embed:
                         class_lesson_plan = result[0]
         except RuntimeError:
             return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer "
-                           f"dnia (1-5) bądź dzień tygodnia, lub zostawić parametry komendy puste."
-                           f" Drugim opcjonalnym argumentem jest nazwa klasy.")
+                    f"dnia (1-5) bądź dzień tygodnia, lub zostawić parametry komendy puste."
+                    f" Drugim opcjonalnym argumentem jest nazwa klasy.")
 
-    plan: list[list[dict[str, any]]] = class_lesson_plan[WEEKDAY_NAMES[query_day]]
+    plan: list[list[dict[str, any]]
+               ] = class_lesson_plan[WEEKDAY_NAMES[query_day]]
 
     # The generator expression creates a list that maps each element from 'plan' to the boolean it
     # evaluates to. Empty lists are evaluated as False, non-empty lists are evaluated as True.
     # The sum function adds the contents of the list, keeping in mind that True = 1 and False = 0.
     # In essence, 'periods' evaluates to the number of non-empty lists in 'plan'.
-    periods: int = sum([bool(lesson) for lesson in plan])  #  number of lessons on the given day
+    periods: int = sum([bool(lesson) for lesson in plan])
     first_period: int = 0
 
     title = f"Plan lekcji {class_code}"
@@ -100,19 +101,15 @@ def get_lesson_plan(message: Message) -> str or Embed:
             # No lesson for the current period
             first_period += 1
             continue
-        lesson_texts = []
-        for lesson in plan[period]:
-            raw_link = util.get_lesson_link(lesson['name'])
-            link = f"https://meet.google.com/{raw_link}" if raw_link else LINK_404_URL
-            lesson_name = util.get_lesson_name(lesson['name'])
-            room = lesson['room_id']
-            lesson_texts.append(f"[{lesson_name} - sala {room}]({link})")
-            if lesson['group'] != "grupa_0":
-                group_name = GROUP_NAMES.get(lesson['group'], lesson['group'])
-                lesson_texts[-1] += f" ({group_name})"
+
+        # Get all lessons this period
+        lessons = plan[period]
+        # Format each lesson object into a string
+        lessons = [util.format_lesson_info(lesson) for lesson in lessons]
+        lessons = "\n".join(lessons)
+
         txt = f"Lekcja {period} ({util.get_formatted_period_time(period)})"
         is_current_lesson = query_day == today and period == util.current_period
         lesson_description = f"*{txt}    <── TERAZ*" if is_current_lesson else txt
-        lessons = '\n'.join(lesson_texts)
         embed.add_field(name=lesson_description, value=lessons, inline=False)
     return embed
