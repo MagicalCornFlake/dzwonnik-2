@@ -123,7 +123,7 @@ homework_events = HomeworkEventContainer()
 tracked_market_items: list[TrackedItem] = []
 
 
-def ensure_user_authorised(message: Message, error_message: str = "", owner_only = False) -> None:
+def ensure_user_authorised(message: Message, err_msg: str = "", owner_only: bool = False) -> None:
     """Raises an exception if the message author does not have the appropriate permissions.
 
     By default it checks if the sender has the 'administrator' discord permission, but if
@@ -138,7 +138,7 @@ def ensure_user_authorised(message: Message, error_message: str = "", owner_only
         chnl: TextChannel = message.channel
         authorised = chnl.permissions_for(message.author).administrator
     if not authorised:
-        raise bot.MissingPermissionsException(error_message or default_msg)
+        raise bot.MissingPermissionsException(err_msg or default_msg)
 
 
 def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
@@ -183,9 +183,11 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
 def get_lesson_by_roles(query_period: int, weekday: int, roles: list[str, Role]) -> dict[str, str]:
     """Get the lesson details for a given period, day and user roles list.
     Arguments:
-        query_period -- the period number to look for.
-        weekday -- the index of the weekday to look at.
-        roles -- the roles of the user that the lesson is defined to be intended for.
+        `query_period` -- the period number to look for.
+
+        `weekday` -- the index of the weekday to look at.
+
+        `roles` -- the roles of the user that the lesson is defined to be intended for.
 
     Returns a dictionary containing the lesson details including the period, or an empty dictionary
     if no lesson was found.

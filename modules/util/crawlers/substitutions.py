@@ -13,7 +13,8 @@ from corny_commons import file_manager, util as ccutil
 from corny_commons.util import web
 
 # Local application imports
-from ... import Colour
+from modules import WEEKDAY_NAMES, Colour, util
+from modules.util.crawlers.lesson_plan import get_lesson_plan
 
 
 SUB_INFO_PATTERN = r"(I*)([A-Z]*)([pg]?)\s?(?:(?:gr.\s|,\s|\si\s)p. [^,]+?[^-])*\s(.*)"
@@ -66,15 +67,20 @@ def extract_from_table(elem, table: dict[str, any]) -> None:
             column_data[j].append(cell_text)
 
 
-def extract_substitutions_text(elem_text: str, subs_data: dict, is_table_header) -> None:
+def get_substituted_lessons(class_name: str, weekday: int, period_str: str):
+    """Checks the lesson plan for the lessons that would normally have taken place."""
+    class_id: str = util.format_class(class_name, reverse=True)
+    lesson_plan = get_lesson_plan(class_id, force_update=None)[0]
+    weekday_name = WEEKDAY_NAMES[weekday]
+    lessons_on_period = lesson_plan[weekday_name][int(period_str)]
+    return lessons_on_period
+
+
+def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
     """Parses the substitution text elements."""
-    if is_table_header:
-        subs_data["tables"].append({
-            "title": elem_text,
-            "headings": [],
-            "columns": []
-        })
-        return
+    # Check which dash symbol is used in the substitutions text
+    # Usually it's the EN dash, although it's possible it's the minus symbol
+    # Yes, this is supposed to be U+2013
     separator = " - " if " - " in elem_text else " – "
     try:
         lessons, info = elem_text.split(separator, maxsplit=1)
@@ -83,6 +89,19 @@ def extract_substitutions_text(elem_text: str, subs_data: dict, is_table_header)
         subs_data["misc"].append(elem_text)
         return
     lesson_ints = get_int_ranges_from_string(lessons)
+    if "date" in subs_data:
+        # Parse the date from the substitutions page
+        weekday_int: int = datetime.datetime.strptime(
+            subs_data["date"], "%Y-%m-%d").weekday()
+    else:
+        # Default to Monday; this shouldn't be possible
+        # The date is usually the first element in the page contents
+        # This would mean that for some reason it's not included on the substitutions page
+        # (which hasn't happened yet)
+        file_manager.log(
+            "No date provided in substitutions data. Defaulting to Monday.")
+        weekday_int: int = 0
+
     for lesson in lesson_ints:
         subs_data["lessons"].setdefault(lesson, {})
         class_year, classes, class_info, details = SUB_INFO_PATTERN.match(
@@ -92,7 +111,8 @@ def extract_substitutions_text(elem_text: str, subs_data: dict, is_table_header)
             subs_data["lessons"][lesson].setdefault(class_name, [])
             class_subs = {
                 "details": details,
-                "groups": SUB_GROUPS_PATTERN.findall(info)
+                "groups": SUB_GROUPS_PATTERN.findall(info),
+                "substituted_lessons": get_substituted_lessons(class_name, weekday_int, lesson)
             }
             if not class_subs["groups"]:
                 class_subs.pop("groups")
@@ -195,8 +215,17 @@ def parse_html(html: str) -> dict:
                     elem_text += "."
                 subs_data["cancelled"].append(elem_text)
                 return
-            is_table_header = next_elem is not None and next_elem.tag == "table"
-            extract_substitutions_text(elem_text, subs_data, is_table_header)
+            # Check if this is the childless element right before a table tag
+            if next_elem is not None and next_elem.tag == "table":
+                # It is; assuming it's the element containing the table's title text
+                subs_data["tables"].append({
+                    "title": elem_text,
+                    "headings": [],
+                    "columns": []
+                })
+            else:
+                # This is probably the actual substitutions text
+                extract_substitutions_text(elem_text, subs_data)
         else:
             # The current element does have children
             if child_elem.tag != "strong":
@@ -216,7 +245,8 @@ def parse_html(html: str) -> dict:
             if __name__ == "__main__":
                 # Makes the error easier to see for debugging
                 print(json.dumps(subs_data, indent=2, ensure_ascii=False),
-                      f"\n{Colour.FAIL}Error encountered while processing child element {Colour.WARNING}{i + 1}{Colour.FAIL}!{Colour.ENDC}")
+                      f"\n{Colour.FAIL}Error encountered while processing child element "
+                      f"{Colour.WARNING}{i + 1}{Colour.FAIL}!{Colour.ENDC}")
                 raise no_matches_exc from None
             subs_data["error"] = ccutil.format_exception_info(no_matches_exc)
             break
