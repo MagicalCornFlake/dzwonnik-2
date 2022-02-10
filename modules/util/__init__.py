@@ -16,15 +16,23 @@ current_period: int = -1
 next_period: int = -1
 
 
-def format_class(class_name: str = None):
+def format_class(class_name: str = None, reverse: bool = False):
     """Change the format of the class name string using roman numerals instead of arabic numerals.
     Also capitalises the class letter.
+    The behaviour can be reversed using the `reverse` argument.
 
     E.g. '2d' -> 'IID'
 
     Arguments:
-        class_name -- the name of the class. Defaults to the value of the `our_class` variable.
+        `class_name` -- the name of the class. Defaults to the value of the `our_class` variable.
+
+        `reverse` -- if True, the class name will be converted from roman numerals into arabic
+        numerals. E.g. 'IID' -> '2d'.
     """
+    if reverse:
+        class_name = (class_name or format_class()).upper()
+        class_num = class_name.count("I")
+        return f"{class_num}{class_name[class_num:].lower()}"
     class_name = class_name or OUR_CLASS
     if len(class_name) < 2:
         err_msg = f"Invalid class name: '{class_name}' is too short (min. 2 characters)."
