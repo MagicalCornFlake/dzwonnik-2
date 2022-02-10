@@ -76,7 +76,7 @@ def get_lesson_name(lesson_code: str) -> str:
     # The boolean indicates if the word should only be mapped if it starts with the given phrase.
     mappings: dict[str, str] = {
         "zaj.z-wych.": (False, "zajęcia z wychowawcą"),
-        "WF": (False, "wychowanie fizyczne"),
+        "wf": (False, "wychowanie fizyczne"),
         "wos": (False, "wiedza o społeczeństwie"),
         "tok": (False, "theory of knowledge"),
         "j.": (False, "język "),
