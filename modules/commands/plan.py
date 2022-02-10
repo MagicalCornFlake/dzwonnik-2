@@ -105,7 +105,7 @@ def get_lesson_plan(message: Message) -> str or Embed:
         # Get all lessons this period
         lessons = plan[period]
         # Format each lesson object into a string
-        lessons = [util.format_lesson_info(lesson) for lesson in lessons]
+        lessons = [util.format_lesson_info(lesson, True) for lesson in lessons]
         lessons = "\n".join(lessons)
 
         txt = f"Lekcja {period} ({util.get_formatted_period_time(period)})"

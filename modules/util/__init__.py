@@ -77,8 +77,8 @@ def get_lesson_name(lesson_code: str) -> str:
     mappings: dict[str, str] = {
         "zaj.z-wych.": (False, "zajęcia z wychowawcą"),
         "WF": (False, "wychowanie fizyczne"),
-        "WOS": (False, "wiedza o społeczeństwie"),
-        "TOK": (False, "theory of knowledge"),
+        "wos": (False, "wiedza o społeczeństwie"),
+        "tok": (False, "theory of knowledge"),
         "j.": (False, "język "),
         "hiszp.": (True, "hiszpański"),
         "ang.": (True, "angielski"),
@@ -93,7 +93,16 @@ def get_lesson_name(lesson_code: str) -> str:
     # Handle edge cases
     if lesson_code in ["mat", "r-mat"]:
         lesson_name += "ematyka"
-    return lesson_name + " rozszerzona" * lesson_code.startswith('r-')
+    if lesson_code.startswith("r-"):
+        # Determine the grammatical gender of the subject name
+        if lesson_name.endswith("a"):
+            # Feminine (most subjects)
+            suffix = "a"
+        else:
+            # Masculine (in this case probably only the acronyms, e.g. WF, WOS, EDB, TOK)
+            suffix = "y"
+        lesson_name += " rozszerzon" + suffix
+    return lesson_name
 
 
 def get_lesson_link(lesson_code: str) -> str:
@@ -102,19 +111,24 @@ def get_lesson_link(lesson_code: str) -> str:
 
     Arguments:
         lesson_code -- a string containing the code of the lesson."""
+    lesson_code = lesson_code.lower()
     if lesson_code not in lesson_links:
         lesson_links[lesson_code] = None
     return lesson_links[lesson_code]
 
 
-def format_lesson_info(lesson: dict[str, str]) -> str:
+def format_lesson_info(lesson: dict[str, str], add_links: bool = False) -> str:
     """Formats the lesson object into a string representation of it."""
-    raw_link = get_lesson_link(lesson['name'])
-    link = f"https://meet.google.com/{raw_link}" if raw_link else LINK_404_URL
     lesson_name = get_lesson_name(lesson['name'])
     room = lesson['room_id']
 
-    lesson_info: str = f"[{lesson_name} - sala {room}]({link})"
+    lesson_info: str = f"{lesson_name} - sala {room}"
+    if add_links:
+        # Stylise the lesson info as a hyperlink to the Google Meet lesson
+        raw_link = get_lesson_link(lesson['name'])
+        link = f"https://meet.google.com/{raw_link}" if raw_link else LINK_404_URL
+        lesson_info = f"[{lesson_info}]({link})"
+
     if lesson['group'] != "grupa_0":
         group_name = GROUP_NAMES.get(lesson['group'], lesson['group'])
         lesson_info += f" ({group_name})"

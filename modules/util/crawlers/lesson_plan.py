@@ -142,21 +142,22 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
                     # Set group to 'grupa_0' (whole class).
                     group = "0"
             mappings = (
-                ("r_j.", "j."),
-                (" DW", ""),
-                ("j. ", "j."),
-                ("r_", "r-"),
-                (" ", "-")
+                ("r_j.", "j."),  # Remove the "r_" prefix for extended language classes
+                (" DW", ""),  # Remove "DW" (stands for "dwujęzyczne"; taught in two languages)
+                ("j. ", "j."),  # Remove trailing spaces
+                ("r_", "r-"),  # Replace '_' with '-' to improve Discord markdown formatting
+                (" ", "-")  # Replace whitespaces with hyphens so the code is one word
             )
             name: str = lesson_name
             for mapping in mappings:
                 name = name.replace(*mapping)
+            # Edge case mappings for mathematics
             if name == "mat":
                 name = "r-mat"
             elif name in ["mat.", "matematyka"]:
                 name = "mat"
             tmp.append({
-                "name": name,
+                "name": name.lower(),
                 "group": "grupa_" + group,
                 "room_id": room_id
             })
