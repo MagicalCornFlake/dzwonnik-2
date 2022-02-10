@@ -34,13 +34,12 @@ def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: s
                 groups = sub_info.get("groups")
                 groups = f"gr. {', '.join(groups)} — " if groups else ""
                 sub_msgs.append(f"{groups}*{sub_info['details']}*")
-            substitution_text = f"**{class_name}**: {' | '.join(sub_msgs)}"
             lessons = class_data["substituted_lessons"]
             lessons = [util.format_lesson_info(lesson) for lesson in lessons]
-            if lessons:
-                # Stylise the cancelled lessons as crossed out
-                lessons = "\n".join(lessons)
-                substitution_text += f"~~{lessons}~~"
+            # Stylise the cancelled lessons as crossed out
+            lessons = "; ".join(lessons)
+            substitution_text = f"**{class_name}**: ~~{lessons}~~ {' | '.join(sub_msgs)}"
+
             if class_name != util.format_class():
                 class_msgs.append(substitution_text)
                 continue
