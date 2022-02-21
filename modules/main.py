@@ -66,11 +66,11 @@ def start_bot() -> bool:
         # Remove the python cache files so that the program does not cache the modules on restart.
         run_settings = {
             "capture_output": True,
-            "text": True
+            "text": True,
         }
-        result = subprocess.run(["pyclean", "."], check=False, **run_settings)
-        file_manager.log(f"Pyclean: {result.stderr or result.stdout}",
-                         filename="bot")
+        # check=False -- do not raise an exception if the process finishes with non-zero exit code
+        result = subprocess.run(["py3clean", "."], check=False **run_settings)
+        file_manager.log("Pyclean:", result.stderr or result.stdout, filename="bot")
         # Execute this in most cases; ensures data file is always up-to-date.
         if save_on_exit:
             # The file is saved before the start_bot() function returns.
