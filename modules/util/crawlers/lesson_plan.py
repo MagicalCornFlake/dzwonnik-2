@@ -22,6 +22,8 @@ LESSON_PATTERN = re.compile(LESSON_PATTERN)
 IGNORED_TAGS = ["hr", "br"]
 SOURCE_URL = "http://www.lo1.gliwice.pl/wp-content/uploads/static/plan/plany/o{id}.html"
 
+MAX_CLASS_YEAR = 3
+
 
 def get_plan_id(class_id: str or int = None) -> int:
     """Gets the plan ID that is used on the school website of a given class.
@@ -54,24 +56,43 @@ def get_plan_id(class_id: str or int = None) -> int:
     # o16 -- 1d
     # o17 -- 1e
 
+    # If the input is already an integer, validate it
     if isinstance(class_id, int):
-        if 1 <= class_id <= 17 and class_id != 7:
-            return class_id
-        raise ValueError(f"Invalid integer plan ID: {class_id}")
+        if class_id < 1 or class_id == 7 or class_id > 17:
+            raise ValueError(f"Invalid integer plan ID: {class_id}.") from None
+        return class_id
+
     class_id = "2d" if class_id is None else class_id
     try:
         class_year = int(class_id[0])
-        if not 1 <= class_year <= 3:
-            raise ValueError
-        base_id = "abcde".index(class_id[1].lower()) + 1
-        # 3 is the number of classes in year 3 that are type "g" (gimnazjum)
-        # 7 and 5 are the numbers of plans before year 2 and 1, respectively
-        # (for classes 1 and 2 we add 7 not 6 since the lesson plans for year 3 skip number 7)
-        if class_year == 3:
-            return base_id + 3 * (class_id[2].lower() == "p")
-        return base_id + 7 + 5 * (class_year == 1)
-    except (ValueError, IndexError):
-        raise ValueError(f"Invalid class name: {class_id}.") from None
+    except (ValueError, IndexError) as raw_exc:
+        raise ValueError(f"'{class_id}' does not start with a number.") from raw_exc
+    if class_year < 1 or class_year > MAX_CLASS_YEAR:
+        raise ValueError(f"There is no class in year {class_year}.")
+    try:
+        class_letter = class_id[1].lower()
+    except IndexError as raw_exc:
+        raise ValueError(f"Missing class letter in class name '{class_id}'.") from raw_exc
+    try:
+        base_id = "abcde".index(class_letter) + 1
+    except ValueError as raw_exc:
+        raise ValueError(f"Invalid class year: there is no class '{class_letter}'.") from raw_exc
+    # 3 is the number of classes in year 3 that are type "g" (gimnazjum)
+    # 7 and 5 are the numbers of plans before year 2 and 1, respectively
+    # (for classes 1 and 2 we add 7 not 6 since the lesson plans for year 3 skip number 7)
+    if class_year == MAX_CLASS_YEAR :
+        if base_id >= 4:
+            # 3dg/3dp / 3eg/3ep
+            raise ValueError(f"Lesson plans of year {MAX_CLASS_YEAR} IB classes are unsupported.")
+        try:
+            raw_id = base_id + 3 * (class_id[2].lower() == "p")
+        except IndexError as raw_exc:
+            raise ValueError(f"Invalid class name '{class_id}': classes in "
+                             f"year {MAX_CLASS_YEAR} must end in 'p' or 'g'.") from raw_exc
+    else:
+        raw_id = base_id + 7 + 5 * (class_year == 1)
+    # Recursive call to validate the plan ID integer
+    return get_plan_id(raw_id)
 
 
 def get_plan_link(class_id: str or int) -> str:
