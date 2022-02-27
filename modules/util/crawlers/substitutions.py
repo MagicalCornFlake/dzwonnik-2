@@ -70,9 +70,14 @@ def extract_from_table(elem, table: dict[str, any]) -> None:
 def get_substituted_lessons(class_name: str, weekday: int, period_str: str):
     """Checks the lesson plan for the lessons that would normally have taken place."""
     class_id: str = util.format_class(class_name, reverse=True)
-    lesson_plan = get_lesson_plan(class_id, force_update=None)[0]
-    weekday_name = WEEKDAY_NAMES[weekday]
-    lessons_on_period = lesson_plan[weekday_name][int(period_str)]
+    try:
+        lesson_plan: dict[str, list[list[dict]]] = get_lesson_plan(class_id, force_update=None)[0]
+    except ValueError:
+        # The class has no lesson plan
+        lessons_on_period: list[dict] = []
+    else:
+        weekday_name = WEEKDAY_NAMES[weekday]
+        lessons_on_period: list[dict] = lesson_plan[weekday_name][int(period_str)]
     return lessons_on_period
 
 

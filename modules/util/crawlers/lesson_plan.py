@@ -54,8 +54,10 @@ def get_plan_id(class_id: str or int = None) -> int:
     # o16 -- 1d
     # o17 -- 1e
 
-    if isinstance(class_id, int) and 1 <= class_id <= 17:
-        return class_id
+    if isinstance(class_id, int):
+        if 1 <= class_id <= 17 and class_id != 7:
+            return class_id
+        raise ValueError(f"Invalid integer plan ID: {class_id}")
     class_id = "2d" if class_id is None else class_id
     try:
         class_year = int(class_id[0])
@@ -244,6 +246,6 @@ if __name__ == "__main__":
             raw_data = get_lesson_plan(input(input_msg), force_update=True)[0]
             plan = json.dumps(raw_data, indent=2, ensure_ascii=False)
             print(Colour.ENDC)
-            _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{plan}")
+            _log(f"{Colour.OKGREEN}Lesson plan:\n{Colour.ENDC}{list(raw_data.keys())}")
     except KeyboardInterrupt:
         _log(f"...{Colour.FAIL}\nGoodbye!\n{Colour.ENDC}")
