@@ -51,7 +51,7 @@ class HomeworkEvent:
     def sort_into_container(self, event_container: list) -> None:
         """Places the the event into homework_events in chronological order."""
         try:
-            self.event_id = event_container[-1].id + 1
+            self.event_id = event_container[-1].event_id + 1
         except (IndexError, TypeError):
             self.event_id = 1
         for comparison_event in event_container:
