@@ -537,13 +537,23 @@ async def check_for_lucky_numbers_updates() -> None:
             send_log(INVALID_NUMBERS_TEMPLATE.format(prefix))
 
 
-async def check_for_substitutions_updates(announce_on_update=False) -> None:
-    """Updates the substitutions cache.
+async def announce_substitutions(subs: discord.Embed, debug_mode: bool = False) -> str or None:
+    """Announces the new substitutions data in the appropriate channel."""
 
-    If it has changed, announces the new data in the specified channel.
-    """
+    send_log("Substitutions data updated!", force=True)
+    # Determine the channel to which the substitutions embed shall be sent
+    target_channel = ChannelID.BOT_TESTING if debug_mode else ChannelID.SUBSTITUTIONS
+    target_channel = client.get_channel(testing_channel or target_channel)
+    # Announce the new substitutions
+    if not isinstance(subs, discord.Embed):
+        return subs
+    await target_channel.send(embed=subs)
+
+
+async def check_for_substitutions_updates(use_debug_channel: bool = True) -> None:
+    """Updates the substitutions cache and checks if it's changed."""
     try:
-        new_cache, old_cache = api.substitutions.get_substitutions(True)
+        new_cache, old_cache = api.substitutions.get_substitutions(force_update=True)
         if "error" in new_cache:
             raise RuntimeError("Substitutions data could not be parsed.")
     except web.InvalidResponseException as web_exc:
@@ -562,16 +572,11 @@ async def check_for_substitutions_updates(announce_on_update=False) -> None:
         if new_cache == old_cache:
             # The cache was not updated. Do nothing.
             return
-        send_log("Substitutions data updated!", force=True)
-        # Determine the channel to which the substitutions embed shall be sent
-        target_channel = ChannelID.SUBSTITUTIONS if announce_on_update else ChannelID.BOT_TESTING
-        target_channel = client.get_channel(testing_channel or target_channel)
-        # Announce the new substitutions
-        subs_msg = substitutions.get_substitutions_embed()
-        if isinstance(subs_msg, discord.Embed):
-            await target_channel.send(embed=subs_msg)
+        subs_embed: discord.Embed or str = substitutions.get_substitutions_embed()
+        exception_message = await announce_substitutions(subs_embed, use_debug_channel)
+        if exception_message is None:
+            # No error occured
             return
-        exception_message = subs_msg
     # If the check wasn't completed successfully, ping @Konrad and log the error details.
     await ping_owner()
     send_log(exception_message, force=True)

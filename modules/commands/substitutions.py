@@ -20,6 +20,10 @@ FOOTER_TEMPLATE = "Użyj komendy {}zast, aby pokazać tą wiadomość."
 DESC_TEMPLATE = "Liczba zastępstw dla klasy {}: **{}**"
 
 
+# Data to be stored between functions while the command is executing
+temp_data: dict[str, any] = {}
+
+
 def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: str) -> int:
     """Adds the text fields to the substitutions embed.
 
@@ -56,14 +60,14 @@ def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: s
 def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     """Event handler for the 'zast' command."""
     try:
-        data = substitutions.get_substitutions()[0]
+        data, old_data = substitutions.get_substitutions()[0]
     except web.WebException as web_exc:
         ex: str = ccutil.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
         return util.get_error_message(web_exc)
     else:
         # Ensure the data is valid
-        if "error" in data or not {"teachers", "events"}.issubset(data):
+        if "error" in data or not {"teachers", "date", "events"}.issubset(data):
             return BAD_SUBSTITUTIONS_MSG
 
     # Initialise the embed
@@ -120,4 +124,18 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
             value="\n".join(misc_info),
             inline=False
         )
+    # Check if the data was updated
+    if data != old_data:
+        temp_data["embed"] = embed
     return embed
+
+
+async def announce_new_substitutions() -> None:
+    """Callback to be run after the command is executed. Announces the substitutions if new."""
+    try:
+        await bot.announce_substitutions(temp_data["embed"])
+    except KeyError:
+        # The substitutions were not changed. Don't announce them.
+        pass
+    finally:
+        temp_data.clear()

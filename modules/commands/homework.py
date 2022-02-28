@@ -19,8 +19,8 @@ DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień pr
     `{p}zad 31.12.2024 @Grupa 1 Zrób ćwiczenie 5` - stworzyłoby się zadanie na __31.12.2024__\
     dla grupy **pierwszej** z treścią: *Zrób ćwiczenie 5*.
     `{p}zad del 4` - usunęłoby się zadanie z ID: *event-id-4*."""
-DESC_2 = "Pokazuje wszystkie zadania domowe, które zostały stworzone za pomocą komendy `{p}zad`."
-DESC_3 = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
+DESC_CREATE = "Wyświetla listę wszystkich zadań domowych utworzonych za pomocą komendy `{p}zad`."
+DESC_LIST = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
 
 
 def process_homework_events_alias(message: Message) -> str or Embed:
@@ -28,10 +28,6 @@ def process_homework_events_alias(message: Message) -> str or Embed:
     args = message.content.split(" ")
     if len(args) == 1:
         return get_homework_events(message)
-    if len(args) < 4:
-        return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
-                f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
-                f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
     return create_homework_event(message)
 
 
@@ -83,38 +79,41 @@ def get_homework_events(message: Message, with_event_ids=False) -> str or Embed:
 
 def create_homework_event(message: Message) -> str:
     """Event handler for the 'zadanie' command."""
-    args = message.content.split(" ")
-    # Args is asserted to have at least 4 elements
+    args = message.content.split()
+    if len(args) < 4:
+        return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
+                f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
+                f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
     if args[1] == "del":
         user_inputted_id = args[2].replace("event-id-", '')
         try:
             deleted_event = delete_homework_event(int(user_inputted_id))
         except ValueError:
-            return (f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. Wpisz"
-                    f" `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID.")
-        return f"{Emoji.CHECK} Usunięto zadanie z treścią: `{deleted_event}`"
+            msg = (f":x: Nie znaleziono zadania z ID: `event-id-{user_inputted_id}`. Wpisz"
+                   f" `{bot.prefix}zadania`, aby otrzymać listę zadań oraz ich numery ID.")
+        else:
+            msg = f"{Emoji.CHECK} Usunięto zadanie z treścią: `{deleted_event}`"
+        return msg
     try:
         datetime.datetime.strptime(args[1], "%d.%m.%Y")
     except ValueError:
-        return f"{Emoji.WARNING} Drugim argumentem komendy musi być data o formacie: `DD.MM.YYYY`."
-    title = args[3]
-    for word in args[4:]:
-        title += " " + word
-    author = message.author.id
+        return f"{Emoji.WARNING} Pierwszym argumentem musi być data o formacie: `DD.MM.YYYY`."
+
     if args[2] == "@everyone":
         group_id = "grupa_0"
         group_text = ""
     else:
-        # Removes redundant characters from the third argument in order to have just the role id
-        group_id = int(args[2].lstrip("<&").rstrip(">"))
+        # Removes redundant characters from the second argument in order to have just the role id
+        group_id = int(''.join(filter(str.isdigit, args[2])))
         try:
-            message.guild.get_role(group_id)
-        except ValueError:
-            return (f"{Emoji.WARNING} Trzecim argumentem komendy musi być oznaczenie grupy,"
-                    f" dla której jest zadanie.")
-        group_text = GROUP_NAMES[group_id] + " "
+            message.guild.get_role(group_id)  # Can raise ValueError
+            group_text = GROUP_NAMES[group_id] + " "  # Can raise KeyError
+        except (ValueError, KeyError):
+            return (f"{Emoji.WARNING} Drugim argumentem musi być oznaczenie grupy,"
+                    f" dla której jest zadanie. Podana grupa jest niedozwolona.")
 
-    new_event = HomeworkEvent(title, group_id, author, args[1] + " 17")
+    title = " ".join(args[3:])
+    new_event = HomeworkEvent(title, group_id, message.author.id, args[1] + " 17")
     if new_event.serialised in homework_events:
         return f"{Emoji.WARNING} Takie zadanie już istnieje."
     new_event.sort_into_container(homework_events)

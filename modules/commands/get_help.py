@@ -49,11 +49,11 @@ INFO: dict[help, dict[str, any]] = {
         "function": homework.process_homework_events_alias
     },
     "zadanie": {
-        "description": homework.DESC_2,
+        "description": homework.DESC_CREATE,
         "function": homework.create_homework_event
     },
     "zadania": {
-        "description": homework.DESC_3,
+        "description": homework.DESC_LIST,
         "function": homework.get_homework_events,
         "on_completion": homework.wait_for_zadania_reaction
     },
@@ -62,11 +62,11 @@ INFO: dict[help, dict[str, any]] = {
         "function": steam_market.get_market_price
     },
     "sledz": {
-        "description": steam_market.DESC_2,
+        "description": steam_market.DESC_TRACK,
         "function": steam_market.start_market_tracking
     },
     "odsledz": {
-        "description": steam_market.DESC_3,
+        "description": steam_market.DESC_UNTRACK,
         "function": steam_market.stop_market_tracking
     },
     "numerki": {
@@ -79,7 +79,8 @@ INFO: dict[help, dict[str, any]] = {
     },
     "zast": {
         "description": substitutions.DESC,
-        "function": substitutions.get_substitutions_embed
+        "function": substitutions.get_substitutions_embed,
+        "on_completion": substitutions.announce_new_substitutions
     },
     "meet": {
         "description": meet.DESC,
