@@ -106,8 +106,14 @@ def create_homework_event(message: Message) -> str:
         # Removes redundant characters from the second argument in order to have just the role id
         group_id: str = ''.join(filter(str.isdigit, args[2]))
         try:
-            message.guild.get_role(int(group_id))  # Can raise ValueError
-            group_text = GROUP_NAMES[group_id] + " "  # Can raise KeyError
+            role = message.guild.get_role(int(group_id))  # Can raise ValueError
+            group_code: str = None
+            for group_code, role_name in ROLE_CODES.items():
+                if role_name == str(role):
+                    break
+            else:
+                raise KeyError
+            group_text = group_code + " "
         except (ValueError, KeyError):
             bot.send_log("Invalid homework event group ID", group_id, force=True)
             return (f"{Emoji.WARNING} Drugim argumentem musi być oznaczenie grupy,"
