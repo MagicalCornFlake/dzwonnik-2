@@ -109,6 +109,7 @@ def create_homework_event(message: Message) -> str:
             role = message.guild.get_role(int(group_id))  # Can raise ValueError
             for group_code, role_name in ROLE_CODES.items():
                 if role_name == str(role):
+                    group_id = group_code
                     group_text = GROUP_NAMES[group_code] + " "
                     break
             else:
