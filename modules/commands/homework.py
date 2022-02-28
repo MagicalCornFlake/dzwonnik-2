@@ -99,26 +99,24 @@ def create_homework_event(message: Message) -> str:
     except ValueError:
         return f"{Emoji.WARNING} Pierwszym argumentem musi być data o formacie: `DD.MM.YYYY`."
 
+    group_text: str = ""
     if args[2] == "@everyone":
         group_id = "grupa_0"
-        group_text = ""
     else:
         # Removes redundant characters from the second argument in order to have just the role id
         group_id: str = ''.join(filter(str.isdigit, args[2]))
         try:
             role = message.guild.get_role(int(group_id))  # Can raise ValueError
-            group_code: str = None
             for group_code, role_name in ROLE_CODES.items():
                 if role_name == str(role):
+                    group_text = GROUP_NAMES[group_code] + " "
                     break
             else:
                 raise KeyError
-            group_text = group_code + " "
         except (ValueError, KeyError):
             bot.send_log("Invalid homework event group ID", group_id, force=True)
             return (f"{Emoji.WARNING} Drugim argumentem musi być oznaczenie grupy,"
                     f" dla której jest zadanie. Podana grupa jest niedozwolona.")
-
     title = " ".join(args[3:])
     new_event = HomeworkEvent(title, group_id, message.author.id, args[1] + " 17")
     if new_event.serialised in homework_events:
