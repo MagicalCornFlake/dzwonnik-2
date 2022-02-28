@@ -7,7 +7,7 @@ from urllib import parse
 from corny_commons.util import web
 
 # Local application imports
-from ... import bot
+from modules import bot
 
 
 CURRENCY_IDS = [

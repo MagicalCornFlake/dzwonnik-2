@@ -10,8 +10,8 @@ import discord
 from corny_commons import util as ccutil
 
 # Local application imports
-from . import ensure_user_authorised
-from .. import bot
+from modules import bot
+from modules.commands import ensure_user_authorised
 
 
 DESC = None

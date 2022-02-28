@@ -9,8 +9,8 @@ from corny_commons import util as ccutil
 from corny_commons.util import web
 
 # Local application imports
-from .. import bot, util, MEMBER_IDS
-from ..util.api import lucky_numbers as numbers_api
+from modules import bot, util, MEMBER_IDS
+from modules.api.lucky_numbers import get_lucky_numbers
 
 
 DESC = """Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wykluczone."""
@@ -19,7 +19,7 @@ DESC = """Podaje aktualne szczęśliwe numerki oraz klasy, które są z nich wyk
 def get_lucky_numbers_embed(_: Message = None) -> Embed or str:
     """Event handler for the 'num' command."""
     try:
-        data = numbers_api.get_lucky_numbers()
+        data = get_lucky_numbers()
     except web.WebException as web_exc:
         exc: str = ccutil.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{exc}", force=True)

@@ -12,11 +12,9 @@ from corny_commons import file_manager, util as ccutil
 from corny_commons.util import web
 
 # Local application imports
-from modules import data_manager, commands, util
+from modules import data_manager, commands, util, api
 from modules import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
 from modules.commands import get_help, homework, steam_market, lucky_numbers, substitutions
-from modules.util.api import lucky_numbers as lucky_numbers_api, steam_market as steam_api
-from modules.util.crawlers import lesson_plan as lesson_plan_api, substitutions as substitutions_api
 
 
 # These settings ensure that data from the SU ILO API is only fetched a maximum of 45 times a day.
@@ -35,7 +33,7 @@ BAD_RESPONSE = "Error! Received an invalid response from web request. Exception 
 # The template for the log message sent when the bot's status is updated
 STATUS_LOG_TEMPLATE = "... new status message: '{}'.\n... current period: {}\n... next period: {}"
 INVALID_NUMBERS_TEMPLATE = ("Invalid lucky numbers message embed. "
-                            "Run `{}exec bot.lucky_numbers_api.cached_data`.")
+                            "Run `{}exec bot.api.lucky_numbers.cached_data`.")
 RESTARTED_BOT_MSG = "Restarted bot!"
 MESSAGE_SEND_FAIL_MSG = ("Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa."
                          " Załączam ją jako plik tekstowy.")
@@ -135,7 +133,7 @@ async def on_ready() -> None:
 
     # Initialise lesson plan forcefully; force_update switch bypasses checking for cache.
     try:
-        result = lesson_plan_api.get_lesson_plan(force_update=True)
+        result = api.lesson_plan.get_lesson_plan(force_update=True)
     except web.InvalidResponseException as web_exc:
         exc = ccutil.format_exception_info(web_exc)
         send_log(f"{BAD_RESPONSE}{exc}", force=True)
@@ -400,7 +398,7 @@ async def main_update_loop() -> None:
     # Check if the lucky numbers data is outdated
     try:
         # Try to parse the lucky numbers data date
-        cached_date: datetime.datetime = lucky_numbers_api.cached_data["date"]
+        cached_date: datetime.datetime = api.lucky_numbers.cached_data["date"]
     except (TypeError, KeyError) as exception:
         # Lucky numbers data does not contain a date
         await ping_owner()
@@ -492,8 +490,8 @@ async def check_for_steam_market_updates() -> None:
     for item in steam_market.tracked_market_items:
         await asyncio.sleep(3)
         try:
-            result = steam_api.get_item(item.name)
-            price = steam_api.get_item_price(result)
+            result = api.steam_market.get_item(item.name)
+            price = api.steam_market.get_item_price(result)
         except web.WebException as web_exc:
             await ping_owner()
             send_log(util.get_error_message(web_exc), force=True)
@@ -517,14 +515,14 @@ async def check_for_lucky_numbers_updates() -> None:
     If it has changed, announces announces the new numbers in the specified channel.
     """
     try:
-        old_cache = lucky_numbers_api.update_cache()
+        old_cache = api.lucky_numbers.update_cache()
     except web.InvalidResponseException as web_exc:
         await ping_owner()
         exc: str = ccutil.format_exception_info(web_exc)
         send_log(f"Lucky numbers update: {BAD_RESPONSE}{exc}", force=True)
     else:
-        if old_cache != lucky_numbers_api.cached_data:
-            old_str: str = lucky_numbers_api.serialise(old_cache, pretty=True)
+        if old_cache != api.lucky_numbers.cached_data:
+            old_str: str = api.lucky_numbers.serialise(old_cache, pretty=True)
             send_log(f"Lucky numbers data updated! Old data:\n{old_str}",
                      force=True)
             target_channel = testing_channel or ChannelID.NUMERKI
@@ -544,7 +542,7 @@ async def check_for_substitutions_updates(announce_on_update=False) -> None:
     If it has changed, announces the new data in the specified channel.
     """
     try:
-        new_cache, old_cache = substitutions_api.get_substitutions(True)
+        new_cache, old_cache = api.substitutions.get_substitutions(True)
         if "error" in new_cache:
             raise RuntimeError("Substitutions data could not be parsed.")
     except web.InvalidResponseException as web_exc:

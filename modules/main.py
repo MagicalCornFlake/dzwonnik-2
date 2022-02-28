@@ -10,7 +10,7 @@ import subprocess
 from corny_commons import file_manager
 
 # Local application imports
-from modules import bot, data_manager, util, commands
+from modules import bot, data_manager, commands, util
 
 
 def start_bot() -> bool:
@@ -69,7 +69,7 @@ def start_bot() -> bool:
             "text": True,
         }
         # check=False -- do not raise an exception if the process finishes with non-zero exit code
-        result = subprocess.run(["py3clean", "."], check=False **run_settings)
+        result = subprocess.run(["py3clean", "."], check=False, **run_settings)
         file_manager.log("Pyclean:", result.stderr or result.stdout, filename="bot")
         # Execute this in most cases; ensures data file is always up-to-date.
         if save_on_exit:

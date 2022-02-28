@@ -9,7 +9,7 @@ from corny_commons import file_manager
 from corny_commons.util import web
 
 # Local application imports
-from ... import Colour
+from modules import Colour
 
 PERIOD_PATTERN = re.compile(r"^<td class=\"nr\">(\d\d?)</td>$")
 DURATION_PATTERN = r"^<td class=\"g\">\s?(\d\d?):(\d\d)-\s?(\d\d?):(\d\d)</td>$"

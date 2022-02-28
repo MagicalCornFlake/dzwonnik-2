@@ -14,7 +14,7 @@ from corny_commons.util import web
 
 # Local application imports
 from modules import WEEKDAY_NAMES, Colour, util
-from modules.util.crawlers.lesson_plan import get_lesson_plan
+from modules.api.lesson_plan import get_lesson_plan
 
 
 SUB_INFO_PATTERN = r"(I*)([A-Z]*)([pg]?)\s?(?:(?:gr.\s|,\s|\si\s)p. [^,]+?[^-])*\s(.*)"

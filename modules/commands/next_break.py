@@ -9,8 +9,8 @@ from discord import Message
 from corny_commons.util import polish
 
 # Local application imports
-from . import get_datetime_from_input, get_lesson_by_roles, get_next_period
-from .. import bot, util, Emoji
+from modules import bot, util, Emoji
+from modules.commands import get_datetime_from_input, get_lesson_by_roles, get_next_period
 
 
 DESC = """Mówi kiedy jest następna przerwa.

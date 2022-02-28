@@ -5,9 +5,9 @@ from discord import Message
 from corny_commons.util import web
 
 # Local application imports
-from . import TrackedItem, ensure_user_authorised, tracked_market_items
-from .. import bot, util, data_manager, Emoji
-from ..util.api import steam_market as steam_market_api
+from modules import bot, util, data_manager, Emoji
+from modules.commands import TrackedItem, ensure_user_authorised, tracked_market_items
+from modules.api import steam_market
 
 
 DESC = """Podaje aktualną cenę dla szukanego przedmiotu na Rynku Społeczności Steam.
@@ -32,8 +32,8 @@ def get_market_price(message: Message, result_override=None) -> str:
     currency = args[-1] if len(args) > 1 else 'PLN'
     try:
         params = args[0], 730, currency
-        result = result_override or steam_market_api.get_item(*params)
-        price = steam_market_api.get_item_price(result)
+        result = result_override or steam_market.get_item(*params)
+        price = steam_market.get_item_price(result)
         return f"{Emoji.INFO} Aktualna cena dla *{args[0]}* to `{price}`."
     except web.WebException as web_exc:
         return util.get_error_message(web_exc)
@@ -57,7 +57,7 @@ def start_market_tracking(message: Message):
     else:
         item_name = args[0].rstrip()
         try:
-            result = steam_market_api.get_item(item_name)
+            result = steam_market.get_item(item_name)
         except web.WebException as ex:
             return util.get_error_message(ex)
         else:

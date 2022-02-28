@@ -4,9 +4,9 @@
 from discord import Message, Embed
 
 # Local application imports
-from . import next_lesson, next_break, plan, homework, steam_market, lucky_numbers, substitutions
-from . import meet, exec as execute, terminate
-from .. import bot
+from modules import bot
+from modules.commands import next_lesson, next_break, plan, homework, steam_market
+from modules.commands import meet, exec as execute, terminate, lucky_numbers, substitutions
 
 
 def get_help_message(message: Message) -> Embed or None:

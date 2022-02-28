@@ -1,4 +1,4 @@
-"""__init__.py file for the web utility-related modules."""
+"""Module containing general-purpose utility functions."""
 
 # Standard library imports
 from datetime import datetime
@@ -8,8 +8,9 @@ from corny_commons.util import web
 
 # Local application imports
 from modules import GROUP_NAMES
-from modules.commands import LINK_404_URL
+# from modules.commands import URL_404 TODO: revert
 
+URL_404 = "https://www.example.com/"
 OUR_CLASS = "2d"
 
 lesson_plan: dict[str, any] = {}
@@ -126,7 +127,7 @@ def format_lesson_info(lesson: dict[str, str], add_links: bool = False) -> str:
     if add_links:
         # Stylise the lesson info as a hyperlink to the Google Meet lesson
         raw_link = get_lesson_link(lesson['name'])
-        link = f"https://meet.google.com/{raw_link}" if raw_link else LINK_404_URL
+        link = f"https://meet.google.com/{raw_link}" if raw_link else URL_404
         lesson_info = f"[{lesson_info}]({link})"
 
     if lesson['group'] != "grupa_0":
@@ -154,6 +155,6 @@ def get_error_message(web_exc: web.WebException) -> str:
         return f"Nastąpił błąd w połączeniu: {web_exc.status_code}"
     if isinstance(web_exc, web.TooManyRequestsException):
         return f"Musisz poczekać jeszcze {web.MAX_REQUEST_COOLDOWN - web_exc.time_passed:.2f}s."
-    # The exception must be steam_api.NoSuchItemException
+    # The exception must be .api.steam_market.NoSuchItemException
     return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
             f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")

@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 from discord import Role, Message, TextChannel
 
 # Local application imports
-from .. import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, util, bot
+from modules import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, bot, util
 
 
-LINK_404_URL = "https://www.guzek.uk/error/404/?lang=PL&utm_source=discord"
+URL_404 = "https://www.guzek.uk/error/404/?lang=PL&utm_source=discord"
 
 
 class HomeworkEvent:

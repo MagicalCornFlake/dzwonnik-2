@@ -7,8 +7,8 @@ import re
 from discord import Message
 
 # Local application imports
-from . import ensure_user_authorised
-from .. import bot, util, data_manager, Emoji
+from modules import bot, util, data_manager, Emoji
+from modules.commands import ensure_user_authorised
 
 
 DESC = None

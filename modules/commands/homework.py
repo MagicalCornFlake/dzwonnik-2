@@ -8,8 +8,8 @@ import asyncio
 from discord import Member, Message, Embed, Reaction
 
 # Local application imports
-from . import HomeworkEvent, homework_events
-from .. import bot, Emoji, data_manager, ROLE_CODES, GROUP_NAMES
+from modules import bot, Emoji, data_manager, ROLE_CODES, GROUP_NAMES
+from modules.commands import HomeworkEvent, homework_events
 
 
 DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.

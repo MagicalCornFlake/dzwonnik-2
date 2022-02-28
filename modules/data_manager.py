@@ -9,8 +9,8 @@ from datetime import datetime
 from corny_commons import util as ccutil
 
 # Local application imports
-from modules import bot, util, commands
-from modules.util.api import lucky_numbers
+from modules import bot, commands, util
+from modules.api import lucky_numbers
 
 DATA_IDENTICAL_MSG = "... data is identical; no changes have been made."
 

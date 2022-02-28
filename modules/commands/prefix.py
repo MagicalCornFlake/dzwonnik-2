@@ -4,7 +4,7 @@
 from discord import Message, TextChannel
 
 # Local application imports
-from .. import Emoji, bot
+from modules import Emoji, bot
 
 
 DESC = """Zmienia prefiks dla komend."""

@@ -9,8 +9,8 @@ from corny_commons import util as ccutil
 from corny_commons.util import web
 
 # Local application imports
-from .. import bot, util
-from ..util.crawlers import substitutions as substitutions_api
+from modules import bot, util
+from modules.api import substitutions
 
 
 DESC = """Podaje zastępstwa na dany dzień."""
@@ -56,7 +56,7 @@ def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: s
 def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     """Event handler for the 'zast' command."""
     try:
-        data = substitutions_api.get_substitutions()[0]
+        data = substitutions.get_substitutions()[0]
     except web.WebException as web_exc:
         ex: str = ccutil.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
@@ -67,7 +67,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
             return BAD_SUBSTITUTIONS_MSG
 
     # Initialise the embed
-    url = f"{substitutions_api.SOURCE_URL}#{data['post'].get('id', 'content')}"
+    url = f"{substitutions.SOURCE_URL}#{data['post'].get('id', 'content')}"
     embed = discord.Embed(
         title=f"Zastępstwa na {datetime.strptime(data['date'], '%Y-%m-%d'):%d.%m.%Y}",
         url=url

@@ -2,11 +2,10 @@
 
 # Third-party imports
 import discord
-from corny_commons import file_manager
 
 # Local application imports
 from modules.commands import ensure_user_authorised
-from .. import bot
+from modules import bot, data_manager
 DESC = None
 
 
@@ -29,7 +28,7 @@ def exit_bot(message: discord.Message) -> str:
 
 async def terminate_bot(original_msg: discord.Message, reply_msg: discord.Message) -> None:
     """Save's the ID of the bot's exit message and terminates the bot client process."""
-    file_manager.on_exit_msg = {
+    data_manager.on_exit_msg = {
         "is_restart": reply_msg.content == RESTARTING_BOT_MSG,
         "channel_id": original_msg.channel.id,
         "message_id": reply_msg.id

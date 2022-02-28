@@ -8,8 +8,8 @@ from discord import Message, Embed
 from corny_commons.util import web
 
 # Local application imports
-from .. import util, bot, Weekday, Emoji, WEEKDAY_NAMES
-from ..util.crawlers import lesson_plan as lesson_plan_api
+from modules import bot, util, Weekday, Emoji, WEEKDAY_NAMES
+from modules.api import lesson_plan
 
 
 DESC = """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na dzień dzisiejszy.
@@ -60,14 +60,14 @@ def get_lesson_plan(message: Message) -> str or Embed:
                         raise RuntimeError(err_msg) from None
             if len(args) > 2:
                 try:
-                    plan_id = lesson_plan_api.get_plan_id(args[2])
+                    plan_id = lesson_plan.get_plan_id(args[2])
                 except ValueError:
                     raise RuntimeError(
                         f"invalid class name: {args[2]}") from None
                 else:
                     class_code = args[2]
                     try:
-                        result = lesson_plan_api.get_lesson_plan(plan_id)
+                        result = lesson_plan.get_lesson_plan(plan_id)
                     except web.WebException as web_exc:
                         # Invalid web response
                         return util.get_error_message(web_exc)
@@ -91,7 +91,7 @@ def get_lesson_plan(message: Message) -> str or Embed:
     title = f"Plan lekcji {class_code}"
     weekday = WEEKDAY_NAMES[query_day].lower().replace('środa', 'środę')
     desc = f"Liczba lekcji na **{weekday}**: {periods}"
-    lesson_plan_url = lesson_plan_api.get_plan_link(class_code)
+    lesson_plan_url = lesson_plan.get_plan_link(class_code)
     embed = Embed(title=title, description=desc, url=lesson_plan_url)
     footer = f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
