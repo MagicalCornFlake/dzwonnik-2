@@ -35,8 +35,9 @@ STATUS_LOG_TEMPLATE = "... new status message: '{}'.\n... current period: {}\n..
 INVALID_NUMBERS_TEMPLATE = ("Invalid lucky numbers message embed. "
                             "Run `{}exec bot.api.lucky_numbers.cached_data`.")
 RESTARTED_BOT_MSG = "Restarted bot!"
-MESSAGE_SEND_FAIL_MSG = ("Komenda została wykonana pomyślnie, natomiast odpowiedź jest zbyt długa."
-                         " Załączam ją jako plik tekstowy.")
+MESSAGE_SEND_FAIL_MSG = ("Komenda została wykonana pomyślnie, natomiast nie powiodło się wysłanie "
+                         "jej odpowiedzi. Prawdopodobnie jest ona zbyt długa. "
+                         "Załączam ją w formie pliku tekstowego.")
 
 HOMEWORK_EMOJI = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
 

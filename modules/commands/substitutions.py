@@ -36,9 +36,9 @@ def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: s
                 sub_msgs.append(f"{groups}*{sub_info['details']}*")
             lessons = class_data["substituted_lessons"]
             lessons = [util.format_lesson_info(lesson) for lesson in lessons]
-            # Stylise the cancelled lessons as crossed out
-            lessons = "; ".join(lessons)
-            substitution_text = f"**{class_name}**: ~~{lessons}~~ {' | '.join(sub_msgs)}"
+            # Stylise the substituted lessons as crossed out; default to "" if list empty
+            lessons = f"~~{'; '.join(lessons)}~~" if lessons else ""
+            substitution_text = f"**{class_name}**: {lessons} {' | '.join(sub_msgs)}"
 
             if class_name != util.format_class():
                 class_msgs.append(substitution_text)
@@ -91,9 +91,10 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     )
 
     # Cancelled lessons field
-    if "cancelled" in data.keys():
+    cancelled = data.get("cancelled")
+    if cancelled:
         embed.add_field(name="Lekcje odwołane",
-                        value="\n".join(data["cancelled"]))
+                        value="\n".join(cancelled))
 
     # School events fields
     for table in data["tables"]:
@@ -112,10 +113,11 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
             embed.add_field(**field_args, inline=True)
 
     # Miscellaneous information field
-    if "misc" in data.keys():
+    misc_info = data.get("misc")
+    if misc_info:
         embed.add_field(
             name="Informacje dodatkowe",
-            value="\n".join(data["misc"]),
+            value="\n".join(misc_info),
             inline=False
         )
     return embed
