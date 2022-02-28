@@ -25,7 +25,7 @@ DESC_LIST = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od poda
 
 def process_homework_events_alias(message: Message) -> str or Embed:
     """Event handler for the 'zad' command."""
-    args = message.content.split(" ")
+    args = message.content.split()
     if len(args) == 1:
         return get_homework_events(message)
     return create_homework_event(message)
@@ -56,7 +56,7 @@ def get_homework_events(message: Message, with_event_ids=False) -> str or Embed:
                     break
         if homework_event.reminder_is_active:
             # The homework hasn't been marked as completed yet
-            event_reminder_hour = homework_event.reminder_date.split(' ')[1]
+            event_reminder_hour = homework_event.reminder_date.split()[1]
             if event_reminder_hour == '17':
                 # The homework event hasn't been snoozed
                 field_name = homework_event.deadline
@@ -80,10 +80,6 @@ def get_homework_events(message: Message, with_event_ids=False) -> str or Embed:
 def create_homework_event(message: Message) -> str:
     """Event handler for the 'zadanie' command."""
     args = message.content.split()
-    if len(args) < 4:
-        return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
-                f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
-                f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
     if args[1] == "del":
         user_inputted_id = args[2].replace("event-id-", '')
         try:
@@ -99,6 +95,10 @@ def create_homework_event(message: Message) -> str:
     except ValueError:
         return f"{Emoji.WARNING} Pierwszym argumentem musi być data o formacie: `DD.MM.YYYY`."
 
+    if len(args) < 4:
+        return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}zad` termin "
+                f"oddania zadania, oznaczenie grupy, dla której jest zadanie oraz jego "
+                f"treść, lub 'del' i ID zadania, którego się chce usunąć.")
     group_text: str = ""
     if args[2] == "@everyone":
         group_id = "grupa_0"
