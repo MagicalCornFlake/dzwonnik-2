@@ -394,7 +394,7 @@ async def main_update_loop() -> None:
 
             if current_time.minute == 0:
                 # Update the substitutions cache every hour
-                await check_for_substitutions_updates(True)
+                await check_for_substitutions_updates(use_debug_channel=False)
 
     # Check if the lucky numbers data is outdated
     try:
