@@ -60,7 +60,7 @@ def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: s
 def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     """Event handler for the 'zast' command."""
     try:
-        data, old_data = substitutions.get_substitutions()[0]
+        data, old_data = substitutions.get_substitutions()
     except web.WebException as web_exc:
         ex: str = ccutil.format_exception_info(web_exc)
         bot.send_log(f"{bot.BAD_RESPONSE}{ex}", force=True)
