@@ -116,7 +116,7 @@ async def send_log_message(message) -> None:
         log_chnl: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
         await log_chnl.send(f"```py\n{message}\n```")
     except (RuntimeError, OSError, discord.errors.HTTPException) as exception:
-        fmt_exc = util.format_lesson_info(exception)
+        fmt_exc = ccutil.format_exception_info(exception)
         could_not_log_msg = f"Could not log message: '{message}'. Exception: {fmt_exc}"
         file_manager.log(could_not_log_msg, filename="bot")
 
