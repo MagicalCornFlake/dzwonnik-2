@@ -55,7 +55,6 @@ class HomeworkEvent:
         except (IndexError, TypeError):
             self.event_id = 1
         for comparison_event in event_container:
-            assert isinstance(comparison_event, HomeworkEvent)
             new_event_time = datetime.strptime(self.deadline, "%d.%m.%Y")
             comp_deadline: str = comparison_event.deadline
             old_event_time = datetime.strptime(comp_deadline, "%d.%m.%Y")
@@ -119,7 +118,6 @@ class TrackedItem:
         return False
 
 
-homework_events = HomeworkEventContainer()
 tracked_market_items: list[TrackedItem] = []
 
 
