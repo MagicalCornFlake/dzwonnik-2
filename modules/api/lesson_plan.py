@@ -224,7 +224,7 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
     # Add a timetable entry that is not present in the online lesson plan
     if "Godz" in data and isinstance(data["Godz"], list):
         # Lesson period 10 from 16:10 - 16:55
-        data["Godz"].append([[16, 10], 16, 55])
+        data["Godz"].append([[16, 10], [16, 55]])
     return data
 
 
