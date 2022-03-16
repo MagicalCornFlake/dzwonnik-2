@@ -9,7 +9,7 @@ from discord import Member, Message, Embed, Reaction
 
 # Local application imports
 from modules import bot, Emoji, data_manager, ROLE_CODES, GROUP_NAMES
-from modules.commands import HomeworkEvent, homework_events
+from modules.commands import HomeworkEvent, HomeworkEventContainer
 
 
 DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
@@ -21,6 +21,9 @@ DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień pr
     `{p}zad del 4` - usunęłoby się zadanie z ID: *event-id-4*."""
 DESC_CREATE = "Wyświetla listę wszystkich zadań domowych utworzonych za pomocą komendy `{p}zad`."
 DESC_LIST = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
+
+
+homework_events = HomeworkEventContainer()
 
 
 def process_homework_events_alias(message: Message) -> str or Embed:

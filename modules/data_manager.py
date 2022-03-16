@@ -45,10 +45,10 @@ def read_data_file(filename: str = "data.json") -> None:
         # Unpack the attributes and create a new homework event
         new_event_candidate = commands.HomeworkEvent(*attributes.values())
         new_event_candidates.append(new_event_candidate)
-    commands.homework_events.remove_disjunction(new_event_candidates)
+    commands.homework.homework_events.remove_disjunction(new_event_candidates)
     for new_event_candidate in new_event_candidates:
-        if new_event_candidate.serialised not in commands.homework_events.serialised:
-            new_event_candidate.sort_into_container(commands.homework_events)
+        if new_event_candidate.serialised not in commands.homework.homework_events.serialised:
+            new_event_candidate.sort_into_container(commands.homework.homework_events)
 
     for attributes in data.get("tracked_market_items", []):
         assert isinstance(attributes, dict)
@@ -85,7 +85,7 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
         bot.send_log(f"Saving data file '{filename}'...", force=True)
     # Creates containers with the data to be saved in .json format
     serialised_homework_events = {
-        event.id_string: event.serialised for event in commands.homework_events}
+        event.id_string: event.serialised for event in commands.homework.homework_events}
     serialised_tracked_market_items = [
         item.serialised for item in commands.tracked_market_items]
     # Creates a parent dictionary to save all data that needs to be saved
@@ -114,5 +114,5 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
 
     # Sends a log with the formatted data
     if allow_logs:
-        saved_file_msg = f"... successfully saved data file '{filename}'.\nData:\n{formatted_data}"
-        bot.send_log(saved_file_msg, force=True)
+        bot.send_log(f"... successfully saved data file '{filename}'.", force=True)
+        bot.send_log(formatted_data)
