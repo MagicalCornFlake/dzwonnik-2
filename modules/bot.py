@@ -17,10 +17,10 @@ from modules import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
 from modules.commands import get_help, homework, steam_market, lucky_numbers, substitutions
 
 
-# These settings ensure that data from the SU ILO API is only fetched a maximum of 45 times a day.
-# If the bot finds new data for a given day, it stops checking, so usually less than 45.
-UPDATE_NUMBERS_AT = 1  # Hours; i.e. check only if it's 01:00 AM
-UPDATE_NUMBERS_FOR = 15  # Minutes; i.e. only check from 01:00:00 - 01:14:59
+# These settings ensure that data from the SU ILO API is only fetched a maximum of 3 times a day.
+# If the bot finds new data for a given day, it stops checking, so usually less than 3.
+UPDATE_NUMBERS_AT = 6  # Hour; i.e. check only if it's 06:00 AM
+UPDATE_NUMBERS_FOR = 1  # Minute; i.e. only check from 01:00:00 - 01:00:59
 UPDATE_NUMBERS_EVERY = 20  # Seconds; i.e. only check 3 times a minute
 
 # Sets the maximum length of a message that can be sent without causing errors with the Discord API.

@@ -17,7 +17,7 @@ from corny_commons.util import web
 cached_data: dict[str, date or list[int or str]] = {}
 
 MAX_CACHE_AGE = 1  # Days
-SOURCE_URL = "https://europe-west1-lucky-numbers-suilo.cloudfunctions.net/app/api/luckyNumbers"
+SOURCE_URL = "https://europe-west1-suilo-page.cloudfunctions.net/app/api/luckyNumbers/v2"
 
 
 def get_lucky_numbers() -> dict[str, str or list[int or str]]:
