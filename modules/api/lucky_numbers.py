@@ -48,7 +48,7 @@ def update_cache() -> dict[str, str or list[int or str]]:
     cached_data.update(res.json())
     # If the date string is present in the dictionary, convert it into a date object.
     if cached_data["date"]:
-        data_timestamp = datetime.strptime(cached_data["date"], "%d/%m/%Y")
+        data_timestamp = datetime.strptime(cached_data["date"], "%Y-%m-%d")
         cached_data["date"] = data_timestamp.date()
     return old_cache
 
