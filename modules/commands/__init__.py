@@ -155,6 +155,9 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
     if current_day_index < Weekday.SATURDAY:
         for period, times in enumerate(util.lesson_plan["Godz"]):
             for is_during_lesson, time in enumerate(times):
+                if (period == 10 and is_during_lesson) or period > 10:
+                    # There are no more lessons for today
+                    break
                 hour, minute = time
                 if given_time.hour * 60 + given_time.minute < hour * 60 + minute:
                     when = "lesson" if is_during_lesson else "break"
