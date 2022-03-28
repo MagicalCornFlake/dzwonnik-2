@@ -156,6 +156,7 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
         for period, times in enumerate(util.lesson_plan["Godz"]):
             for is_during_lesson, time in enumerate(times):
                 if (period == 10 and is_during_lesson) or period > 10:
+                    bot.send_log("Early breaking loop searching for next lesson")
                     # There are no more lessons for today
                     break
                 hour, minute = time
@@ -164,6 +165,11 @@ def get_next_period(given_time: datetime) -> tuple[bool, int, int]:
                     found = f"... this is before {hour:02}:{minute:02} (period {period} {when})."
                     bot.send_log(found)
                     return True, period + 10 * is_during_lesson, current_day_index
+            else:
+                # The loop wasn't broken
+                continue
+            # There was an early break
+            break
         # Could not find any such lesson.
         # If it's currently Friday, the modulo operation will return 0 (Monday).
         next_school_day: Weekday = (current_day_index + 1) % Weekday.SATURDAY
