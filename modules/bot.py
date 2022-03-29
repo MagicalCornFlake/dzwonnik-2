@@ -499,8 +499,8 @@ async def check_for_steam_market_updates() -> None:
             send_log(util.get_error_message(web_exc), force=True)
             return
         # Strips the price string of any non-digit characters and returns it as an integer
-        char_list = [char if char in "0123456789" else '' for char in price]
-        price = int(''.join(char_list))
+        char_list = [char if char in "0123456789" else "" for char in price]
+        price = int("".join(char_list))
         if item.min_price < price < item.max_price:
             continue
         target_channel = client.get_channel(

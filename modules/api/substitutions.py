@@ -37,7 +37,9 @@ def get_int_ranges_from_string(lessons_string: str) -> list[str]:
     facilitate JSON serialisation.
     """
     lesson_ints = []
-    for lesson in lessons_string.rstrip('l').split(','):
+    lesson_hours = lessons_string.rstrip("l")
+    lesson_hours = lesson_hours.split("i" if "i" in lesson_hours else ",")
+    for lesson in lesson_hours:
         if "-" in lesson:
             start, end = lesson.split('-')
             for num in range(int(start), int(end) + 1):
@@ -144,7 +146,7 @@ def extract_header_data(elem, child_elem, subs_data) -> tuple[str, any]:
     text = child_elem.xpath("./text()")
     child_elem_text = child_elem.text
     if text:
-        child_elem_text = ''.join(text)
+        child_elem_text = "".join(text)
     try:
         # Check if the child element has an 'underline' child element with the date text
         date_string = child_elem[0].text.lstrip("Zastępstwa ")
