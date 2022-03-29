@@ -84,7 +84,7 @@ def create_homework_event(message: Message) -> str:
     """Event handler for the 'zadanie' command."""
     args = message.content.split()
     if args[1] == "del":
-        user_inputted_id = args[2].replace("event-id-", '')
+        user_inputted_id = args[2].replace("event-id-", "")
         try:
             deleted_event = delete_homework_event(int(user_inputted_id))
         except ValueError:
@@ -107,7 +107,7 @@ def create_homework_event(message: Message) -> str:
         group_id = "grupa_0"
     else:
         # Removes redundant characters from the second argument in order to have just the role id
-        group_id: str = ''.join(filter(str.isdigit, args[2]))
+        group_id: str = "".join(filter(str.isdigit, args[2]))
         try:
             role = message.guild.get_role(int(group_id))  # Can raise ValueError
             for group_code, role_name in ROLE_CODES.items():
