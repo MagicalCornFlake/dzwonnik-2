@@ -130,8 +130,9 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     return embed
 
 
-async def announce_new_substitutions() -> None:
+async def announce_new_substitutions(_: discord.Message, bot_reply: discord.Message) -> None:
     """Callback to be run after the command is executed. Announces the substitutions if new."""
+    await bot.send_log([str(type(embed)) for embed in bot_reply.embeds])
     try:
         await bot.announce_substitutions(temp_data["embed"])
     except KeyError:
