@@ -85,7 +85,7 @@ client = discord.Client(intents=intents)
 prefix: str = '!'
 
 # Makes the log messages sent by the bot more verbose.
-verbose_log_messages: bool = False
+VERBOSE_LOG_MESSAGES: bool = False
 
 # Determines whether or not the bot should save the data file once it terminates.
 restart_on_exit: bool = True
@@ -98,7 +98,7 @@ def send_log(*raw_message, force: bool = False) -> None:
     """Determine if the message should actually be logged.
     If it should, generate the string that should be sent.
     """
-    if not (verbose_log_messages or force):
+    if not (VERBOSE_LOG_MESSAGES or force):
         return
 
     msg = file_manager.log(*raw_message, filename="bot")
