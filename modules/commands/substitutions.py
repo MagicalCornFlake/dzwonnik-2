@@ -98,7 +98,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     cancelled = data.get("cancelled")
     if cancelled:
         embed.add_field(name="Lekcje odwołane",
-                        value="\n".join(cancelled))
+                        value=" ".join(cancelled))
 
     # School events fields
     for table in data["tables"]:

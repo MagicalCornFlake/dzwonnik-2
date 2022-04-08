@@ -6,6 +6,7 @@ details.
 import json
 import re
 import datetime
+from sqlite3 import IntegrityError
 
 # Third-party imports
 import lxml.html
@@ -24,17 +25,16 @@ SUB_GROUPS_PATTERN = re.compile(r"\s?(?:gr.\s|,\s|\si\s)(p. [^,]+?[^-,])\s")
 SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
-def get_int_ranges_from_string(lessons_string: str) -> list[str]:
+def get_int_ranges_from_string(lessons_string: str) -> list[int]:
     """Parses a string and returns a list of all integer ranges contained within it.
 
-    For example, the string '1,4-6l' would return the list ['1', '4', '5', '6'].
+    For example, the string '1,4-6l' would return the list [1, 4, 5, 6].
     Strings containing no range (e.g. '6l') return a list with the single integer.
 
     Arguments:
         lessons_string -- the string to parse.
 
-    Returns a list of all the found periods. Note that the integers are presented as strings to
-    facilitate JSON serialisation.
+    Returns a list of all the found periods.
     """
     lesson_ints = []
     lesson_hours = lessons_string.rstrip("l")
@@ -42,10 +42,9 @@ def get_int_ranges_from_string(lessons_string: str) -> list[str]:
     for lesson in lesson_hours:
         if "-" in lesson:
             start, end = lesson.split('-')
-            for num in range(int(start), int(end) + 1):
-                lesson_ints.append(str(num))
+            lesson_ints += range(int(start), int(end) + 1)
         else:
-            lesson_ints.append(lesson)
+            lesson_ints.append(int(lesson))
     return lesson_ints
 
 
@@ -69,7 +68,7 @@ def extract_from_table(elem, table: dict[str, any]) -> None:
             column_data[j].append(cell_text)
 
 
-def get_substituted_lessons(class_name: str, weekday: int, period_str: str):
+def get_substituted_lessons(class_name: str, weekday: int, period: IntegrityError):
     """Checks the lesson plan for the lessons that would normally have taken place."""
     class_id: str = util.format_class(class_name, reverse=True)
     try:
@@ -79,7 +78,7 @@ def get_substituted_lessons(class_name: str, weekday: int, period_str: str):
         lessons_on_period: list[dict] = []
     else:
         weekday_name = WEEKDAY_NAMES[weekday]
-        lessons_on_period: list[dict] = lesson_plan[weekday_name][int(period_str)]
+        lessons_on_period: list[dict] = lesson_plan[weekday_name][period]
     return lessons_on_period
 
 
@@ -225,6 +224,9 @@ def parse_html(html: str) -> dict:
             if not elem_text or not elem_text.strip():
                 # Skip blank 'p' elements
                 return
+            if elem_text.lower().startswith("zajęcia z"):
+                subs_data["cancelled"].append(elem_text)
+                return
             if "są odwołane" in elem_text:
                 # Ensure there is a trailing period
                 if not elem_text.endswith("."):
@@ -261,6 +263,15 @@ def parse_html(html: str) -> dict:
                 raise no_matches_exc from None
             subs_data["error"] = ccutil.format_exception_info(no_matches_exc)
             break
+
+    # Sort the lessons in ascending order
+    unsorted_lessons = subs_data["lessons"]
+    sorted_lessons = {}
+    for key in sorted(unsorted_lessons.keys()):
+        # Iterates through the lesson keys
+        # Use string keys to facilitate JSON serialisation
+        sorted_lessons[str(key)] = unsorted_lessons[key]
+    subs_data["lessons"] = sorted_lessons
 
     # Return dictionary with substitution data
     return subs_data
