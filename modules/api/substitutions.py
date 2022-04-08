@@ -133,27 +133,24 @@ def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
                 class_subs)
 
 
-def extract_header_data(elem, child_elem, subs_data) -> tuple[str, any]:
+def extract_header_data(elem, child_elems, subs_data) -> tuple[str, any]:
     """Parses the main information header elements."""
+    child_elem_text = "".join([chld.text or "" for chld in child_elems])
     if "text-align: center;" not in elem.attrib.get("style", ""):
         # This is not an informational header
-        if not (child_elem.text and child_elem.text.strip()):
+        if not (child_elem_text and child_elem_text.strip()):
             # Skip blank child elements
             return
         # This is the header for a table
         subs_data["tables"].append({
-            "title": child_elem.text,
+            "title": child_elem_text,
             "headings": [],
             "columns": []
         })
         return
-    text = child_elem.xpath("./text()")
-    child_elem_text = child_elem.text
-    if text:
-        child_elem_text = "".join(text)
     try:
         # Check if the child element has an 'underline' child element with the date text
-        date_string = child_elem[0].text.lstrip("Zastępstwa ")
+        date_string = child_elems[0][0].text.lstrip("Zastępstwa ")
         date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
     except (IndexError, ValueError):
         if child_elem_text.upper() == child_elem_text:
@@ -214,10 +211,15 @@ def parse_html(html: str) -> dict:
         if elem.tag != "p":
             # Skip non-paragraph elements (i.e. comments, divs etc.)
             return
-        try:
-            # Check if this element has children
-            child_elem = elem[0]
-        except IndexError:
+        # Check if this element has children
+        child_elems = elem.xpath("./*")
+        if child_elems:
+            # The current element does have children
+            if any(chld.tag != "strong" for chld in child_elems):
+                # The child elements are not all bold tags
+                return
+            extract_header_data(elem, child_elems, subs_data)
+        else:
             # The current element has no children
             elem_text: str = elem.text
             if not elem_text or not elem_text.strip():
@@ -240,11 +242,6 @@ def parse_html(html: str) -> dict:
             else:
                 # This is probably the actual substitutions text
                 extract_substitutions_text(elem_text, subs_data)
-        else:
-            # The current element does have children
-            if child_elem.tag != "strong":
-                return
-            extract_header_data(elem, child_elem, subs_data)
 
     for i, p_elem in enumerate(post_elem):
         try:
