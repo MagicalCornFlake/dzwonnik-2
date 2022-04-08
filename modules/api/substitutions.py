@@ -109,10 +109,14 @@ def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
             "No date provided in substitutions data. Defaulting to Monday.")
         weekday_int: int = 0
 
+    match = SUB_INFO_PATTERN.match(info)
+    if match is None:
+        file_manager.log("Could not find a lesson entry match for", info)
+        return
+    class_year, classes, class_info, details = match.groups()
+
     for lesson in lesson_ints:
         subs_data["lessons"].setdefault(lesson, {})
-        class_year, classes, class_info, details = SUB_INFO_PATTERN.match(
-            info).groups()
         for class_letter in classes or "?":
             class_name = f"{class_year or ''}{class_letter}{class_info or ''}"
             subs_data["lessons"][lesson].setdefault(class_name, {
