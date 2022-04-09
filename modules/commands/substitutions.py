@@ -71,7 +71,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
             return BAD_SUBSTITUTIONS_MSG
         # Check if the data was updated
         if data != old_data:
-            temp_data["data_updated"] = True
+            temp_data["updated_for_same_day"] = data.get("date") == old_data.get("date")
 
     # Initialise the embed
     url = f"{substitutions.SOURCE_URL}#{data['post'].get('id', 'content')}"
@@ -132,7 +132,8 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
 
 async def announce_new_substitutions(_: discord.Message, bot_reply: discord.Message) -> None:
     """Callback to be run after the command is executed. Announces the substitutions if new."""
-    if not temp_data.get("data_updated"):
+    updated_for_same_day: bool or None = temp_data.get("updated_for_same_day")
+    if updated_for_same_day is None:
         # The substitutions were not changed. Don't announce them.
         return
     try:
@@ -140,7 +141,8 @@ async def announce_new_substitutions(_: discord.Message, bot_reply: discord.Mess
         if not isinstance(embed, discord.Embed):
             raise ValueError
     except (IndexError, ValueError):
-        await bot.send_log("Error! Could not send the substitutions announcement embed.", True)
+        await bot.send_log("Error! Could not send the substitutions announcement embed.",
+                           force=True)
     else:
-        await bot.announce_substitutions(embed)
+        await bot.announce_substitutions(embed, same_day=updated_for_same_day)
     temp_data.clear()

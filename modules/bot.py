@@ -538,17 +538,38 @@ async def check_for_lucky_numbers_updates() -> None:
             send_log(INVALID_NUMBERS_TEMPLATE.format(prefix))
 
 
-async def announce_substitutions(subs: discord.Embed, debug_mode: bool = False) -> str or None:
+async def announce_substitutions(subs: discord.Embed, same_day: bool = False,
+                                 debug_mode: bool = False) -> str or None:
     """Announces the new substitutions data in the appropriate channel."""
 
     send_log("Substitutions data updated!", force=True)
     # Determine the channel to which the substitutions embed shall be sent
     target_channel = ChannelID.BOT_TESTING if debug_mode else ChannelID.SUBSTITUTIONS
-    target_channel = client.get_channel(testing_channel or target_channel)
+    target_channel: discord.TextChannel = client.get_channel(testing_channel or target_channel)
     # Announce the new substitutions
     if not isinstance(subs, discord.Embed):
+        # The provided substitutions embed is an error message
         return subs
-    await target_channel.send(embed=subs)
+    if same_day:
+        message_id = data_manager.last_substitutions.get("message_id")  # Can be None
+        try:
+            last_subs_msg: discord.Message = await target_channel.fetch_message(message_id)
+        except (discord.errors.NotFound, discord.errors.HTTPException):
+            # The last substitutions message was not in this channel. Announce as usual.
+            # HTTPException may also be thrown if the argument for the message ID is None
+            pass
+        else:
+            # Edit the last substitutions message instead of sending a new one.
+            await last_subs_msg.edit(embed=subs)
+            date: str = data_manager.last_substitutions.get("for_date")
+            if date:
+                date = " na " + date
+            await target_channel.send(f"Zaktualizowano zastępstwa{date}!")
+            return
+    announcement_msg: discord.Message = await target_channel.send(embed=subs)
+    data_manager.last_substitutions["message_id"] = announcement_msg.id
+    date: str = subs.title.lstrip("Zastępstwa na")
+    data_manager.last_substitutions["for_date"] = date
 
 
 async def check_for_substitutions_updates(use_debug_channel: bool = True) -> None:
@@ -574,7 +595,9 @@ async def check_for_substitutions_updates(use_debug_channel: bool = True) -> Non
             # The cache was not updated. Do nothing.
             return
         subs_embed: discord.Embed or str = substitutions.get_substitutions_embed()
-        exception_message = await announce_substitutions(subs_embed, use_debug_channel)
+        same_day = new_cache.get("date") == old_cache.get("date")
+        exception_message = await announce_substitutions(
+            subs_embed, same_day=same_day, debug_mode=use_debug_channel)
         if exception_message is None:
             # No error occured
             return

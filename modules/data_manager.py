@@ -16,6 +16,7 @@ DATA_IDENTICAL_MSG = "... data is identical; no changes have been made."
 
 
 on_exit_msg = {}
+last_substitutions = {}
 
 
 def read_data_file(filename: str = "data.json") -> None:
@@ -38,6 +39,8 @@ def read_data_file(filename: str = "data.json") -> None:
     util.lesson_links.update(data.get("lesson_links", {}))
     # Read the on exit message saved in data file if it exists
     on_exit_msg.update(data.get("on_exit_msg", {}))
+    # Read the last substitutions info saved in data file if it exists
+    last_substitutions.update(data.get("last_substitutions", {}))
     # Creates new instances of the HomeworkEvent class with the data from the file
     new_event_candidates = commands.HomeworkEventContainer()
     for attributes in data.get("homework_events", {}).values():
@@ -94,9 +97,9 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
         "homework_events": serialised_homework_events,
         "tracked_market_items": serialised_tracked_market_items,
         "lucky_numbers": lucky_numbers.serialise(),
-        "on_exit_msg": on_exit_msg
+        "on_exit_msg": on_exit_msg,
+        "last_substitutions": last_substitutions
     }
-
     # Checks if the data actually needs to be saved
     with open(filename, 'r', encoding="UTF-8") as file:
         existing_data = json.load(file)
