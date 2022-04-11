@@ -141,8 +141,7 @@ async def announce_new_substitutions(_: discord.Message, bot_reply: discord.Mess
         if not isinstance(embed, discord.Embed):
             raise ValueError
     except (IndexError, ValueError):
-        await bot.send_log("Error! Could not send the substitutions announcement embed.",
-                           force=True)
+        bot.send_log("Error! Could not send the substitutions announcement embed.", force=True)
     else:
         await bot.announce_substitutions(embed, same_day=updated_for_same_day)
     temp_data.clear()

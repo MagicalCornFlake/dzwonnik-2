@@ -210,7 +210,7 @@ async def on_message(message: discord.Message) -> None:
                 return
             reply_is_embed = isinstance(reply, discord.Embed)
             args = {"embed" if reply_is_embed else "content": reply}
-            reply_msg = await try_send_message(message, True, args, reply)
+            reply_msg = await try_send_message(message, True, args, {"data": reply})
             on_success_coroutine = command_info.get("on_completion")
             if on_success_coroutine:
                 await on_success_coroutine(message, reply_msg)
@@ -629,26 +629,31 @@ async def ping_owner(channel_id: int = ChannelID.BOT_LOGS) -> None:
 
 
 async def try_send_message(user_message: discord.Message, should_reply: bool, send_args: dict,
-                           on_fail_data, on_fail_msg: str = None) -> discord.Message:
+                           on_fail_options: dict[str, str or dict] = {}) -> discord.Message:
     """Attempts to send a message. If it's too long, sends a text file with the contents instead.
 
     Arguments:
         user_message -- the user message reference to reply to, if necessary.
         should_reply -- a boolean indicating if the message should be a reply to the user message.
         send_args -- a dictionary containing either the key 'content' or 'embed'.
-        on_fail_data -- the data to send in the text file if sending fails.
+        on_fail_options -- a dictionary containing keys 'data', 'msg' and 'filename'.
+            - data -- the data to send in the text file if sending fails.
+            - msg -- the message to send on failure.
+            - filename -- the name of the file to send when sending fails. Default: `result.txt`
     """
     send_method = user_message.reply if should_reply else user_message.channel.send
     try:
         reply_msg = await send_method(**send_args)
     except discord.errors.HTTPException as http_exc:
+        on_fail_data = on_fail_options.get("data")
         send_log("Message too long. Length of data:", len(str(on_fail_data)))
         send_log(ccutil.format_exception_info(http_exc))
-        reply_msg = await send_method(on_fail_msg or MESSAGE_SEND_FAIL_MSG)
-        should_iterate = on_fail_msg and isinstance(on_fail_data, list)
+        reply_msg = await send_method(on_fail_options.get("msg", MESSAGE_SEND_FAIL_MSG))
+        should_iterate = "msg" in on_fail_options and isinstance(on_fail_data, list)
         if isinstance(on_fail_data, discord.Embed):
             on_fail_data = {"embed": on_fail_data.to_dict()}
-        with open("result.txt", 'w', encoding="UTF-8") as file:
+        filename = on_fail_options.get("filename", "result.txt")
+        with open(filename, 'w', encoding="UTF-8") as file:
             results: list[str] = []
             for element in on_fail_data if should_iterate else [on_fail_data]:
                 processing_element_msg = f"Processing element with type {type(element)}"
@@ -666,5 +671,5 @@ async def try_send_message(user_message: discord.Message, should_reply: bool, se
                 else:
                     results.append(str(element))
             file.write("\n".join(results))
-        await user_message.channel.send(file=discord.File("result.txt"))
+        await user_message.channel.send(file=discord.File(filename))
     return reply_msg

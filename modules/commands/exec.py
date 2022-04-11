@@ -151,4 +151,4 @@ async def execute_code(original_msg: discord.Message, reply_msg: discord.Message
         exec_result = await process_execution(original_msg)
     new_content = reply_msg.content.replace("executing...", "executed!")
     await reply_msg.edit(content=new_content)
-    await bot.try_send_message(original_msg, False, {"content": exec_result}, exec_result)
+    await bot.try_send_message(original_msg, False, {"content": exec_result}, {"data": exec_result})
