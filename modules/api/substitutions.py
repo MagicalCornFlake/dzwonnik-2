@@ -6,6 +6,7 @@ details.
 import json
 import re
 import datetime
+from sqlite3 import IntegrityError
 
 # Third-party imports
 import lxml.html
@@ -24,17 +25,16 @@ SUB_GROUPS_PATTERN = re.compile(r"\s?(?:gr.\s|,\s|\si\s)(p. [^,]+?[^-,])\s")
 SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
-def get_int_ranges_from_string(lessons_string: str) -> list[str]:
+def get_int_ranges_from_string(lessons_string: str) -> list[int]:
     """Parses a string and returns a list of all integer ranges contained within it.
 
-    For example, the string '1,4-6l' would return the list ['1', '4', '5', '6'].
+    For example, the string '1,4-6l' would return the list [1, 4, 5, 6].
     Strings containing no range (e.g. '6l') return a list with the single integer.
 
     Arguments:
         lessons_string -- the string to parse.
 
-    Returns a list of all the found periods. Note that the integers are presented as strings to
-    facilitate JSON serialisation.
+    Returns a list of all the found periods.
     """
     lesson_ints = []
     lesson_hours = lessons_string.rstrip("l")
@@ -42,10 +42,9 @@ def get_int_ranges_from_string(lessons_string: str) -> list[str]:
     for lesson in lesson_hours:
         if "-" in lesson:
             start, end = lesson.split('-')
-            for num in range(int(start), int(end) + 1):
-                lesson_ints.append(str(num))
+            lesson_ints += range(int(start), int(end) + 1)
         else:
-            lesson_ints.append(lesson)
+            lesson_ints.append(int(lesson))
     return lesson_ints
 
 
@@ -69,7 +68,7 @@ def extract_from_table(elem, table: dict[str, any]) -> None:
             column_data[j].append(cell_text)
 
 
-def get_substituted_lessons(class_name: str, weekday: int, period_str: str):
+def get_substituted_lessons(class_name: str, weekday: int, period: IntegrityError):
     """Checks the lesson plan for the lessons that would normally have taken place."""
     class_id: str = util.format_class(class_name, reverse=True)
     try:
@@ -79,7 +78,7 @@ def get_substituted_lessons(class_name: str, weekday: int, period_str: str):
         lessons_on_period: list[dict] = []
     else:
         weekday_name = WEEKDAY_NAMES[weekday]
-        lessons_on_period: list[dict] = lesson_plan[weekday_name][int(period_str)]
+        lessons_on_period: list[dict] = lesson_plan[weekday_name][period]
     return lessons_on_period
 
 
@@ -109,10 +108,14 @@ def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
             "No date provided in substitutions data. Defaulting to Monday.")
         weekday_int: int = 0
 
+    match = SUB_INFO_PATTERN.match(info)
+    if match is None:
+        file_manager.log("Could not find a lesson entry match for", info)
+        return
+    class_year, classes, class_info, details = match.groups()
+
     for lesson in lesson_ints:
         subs_data["lessons"].setdefault(lesson, {})
-        class_year, classes, class_info, details = SUB_INFO_PATTERN.match(
-            info).groups()
         for class_letter in classes or "?":
             class_name = f"{class_year or ''}{class_letter}{class_info or ''}"
             subs_data["lessons"][lesson].setdefault(class_name, {
@@ -129,27 +132,24 @@ def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
                 class_subs)
 
 
-def extract_header_data(elem, child_elem, subs_data) -> tuple[str, any]:
+def extract_header_data(elem, child_elems, subs_data) -> tuple[str, any]:
     """Parses the main information header elements."""
+    child_elem_text = "".join([chld.text or "" for chld in child_elems])
     if "text-align: center;" not in elem.attrib.get("style", ""):
         # This is not an informational header
-        if not (child_elem.text and child_elem.text.strip()):
+        if not (child_elem_text and child_elem_text.strip()):
             # Skip blank child elements
             return
         # This is the header for a table
         subs_data["tables"].append({
-            "title": child_elem.text,
+            "title": child_elem_text,
             "headings": [],
             "columns": []
         })
         return
-    text = child_elem.xpath("./text()")
-    child_elem_text = child_elem.text
-    if text:
-        child_elem_text = "".join(text)
     try:
         # Check if the child element has an 'underline' child element with the date text
-        date_string = child_elem[0].text.lstrip("Zastępstwa ")
+        date_string = child_elems[0][0].text.lstrip("Zastępstwa ")
         date = datetime.datetime.strptime(date_string, "%d.%m.%Y")
     except (IndexError, ValueError):
         if child_elem_text.upper() == child_elem_text:
@@ -210,14 +210,22 @@ def parse_html(html: str) -> dict:
         if elem.tag != "p":
             # Skip non-paragraph elements (i.e. comments, divs etc.)
             return
-        try:
-            # Check if this element has children
-            child_elem = elem[0]
-        except IndexError:
+        # Check if this element has children
+        child_elems = elem.xpath("./*")
+        if child_elems:
+            # The current element does have children
+            if any(chld.tag != "strong" for chld in child_elems):
+                # The child elements are not all bold tags
+                return
+            extract_header_data(elem, child_elems, subs_data)
+        else:
             # The current element has no children
             elem_text: str = elem.text
             if not elem_text or not elem_text.strip():
                 # Skip blank 'p' elements
+                return
+            if elem_text.lower().startswith("zajęcia z"):
+                subs_data["cancelled"].append(elem_text)
                 return
             if "są odwołane" in elem_text:
                 # Ensure there is a trailing period
@@ -236,11 +244,6 @@ def parse_html(html: str) -> dict:
             else:
                 # This is probably the actual substitutions text
                 extract_substitutions_text(elem_text, subs_data)
-        else:
-            # The current element does have children
-            if child_elem.tag != "strong":
-                return
-            extract_header_data(elem, child_elem, subs_data)
 
     for i, p_elem in enumerate(post_elem):
         try:
@@ -260,6 +263,15 @@ def parse_html(html: str) -> dict:
                 raise no_matches_exc from None
             subs_data["error"] = ccutil.format_exception_info(no_matches_exc)
             break
+
+    # Sort the lessons in ascending order
+    unsorted_lessons = subs_data["lessons"]
+    sorted_lessons = {}
+    for key in sorted(unsorted_lessons.keys()):
+        # Iterates through the lesson keys
+        # Use string keys to facilitate JSON serialisation
+        sorted_lessons[str(key)] = unsorted_lessons[key]
+    subs_data["lessons"] = sorted_lessons
 
     # Return dictionary with substitution data
     return subs_data

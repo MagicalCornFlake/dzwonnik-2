@@ -21,7 +21,7 @@ DESC_TEMPLATE = "Liczba zastępstw dla klasy {}: **{}**"
 
 
 # Data to be stored between functions while the command is executing
-temp_data: dict[str, any] = {}
+temp_data: dict[str, bool] = {}
 
 
 def add_substitution_text_fields(embed: discord.Embed, data: dict, source_url: str) -> int:
@@ -69,6 +69,9 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
         # Ensure the data is valid
         if "error" in data or not {"teachers", "date", "events"}.issubset(data):
             return BAD_SUBSTITUTIONS_MSG
+        # Check if the data was updated
+        if data != old_data:
+            temp_data["updated_for_same_day"] = data.get("date") == old_data.get("date")
 
     # Initialise the embed
     url = f"{substitutions.SOURCE_URL}#{data['post'].get('id', 'content')}"
@@ -98,7 +101,7 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
     cancelled = data.get("cancelled")
     if cancelled:
         embed.add_field(name="Lekcje odwołane",
-                        value="\n".join(cancelled))
+                        value=" ".join(cancelled))
 
     # School events fields
     for table in data["tables"]:
@@ -124,18 +127,21 @@ def get_substitutions_embed(_: discord.Message = None) -> discord.Embed or str:
             value="\n".join(misc_info),
             inline=False
         )
-    # Check if the data was updated
-    if data != old_data:
-        temp_data["embed"] = embed
     return embed
 
 
-async def announce_new_substitutions() -> None:
+async def announce_new_substitutions(_: discord.Message, bot_reply: discord.Message) -> None:
     """Callback to be run after the command is executed. Announces the substitutions if new."""
-    try:
-        await bot.announce_substitutions(temp_data["embed"])
-    except KeyError:
+    updated_for_same_day: bool or None = temp_data.get("updated_for_same_day")
+    if updated_for_same_day is None:
         # The substitutions were not changed. Don't announce them.
-        pass
-    finally:
-        temp_data.clear()
+        return
+    try:
+        embed = bot_reply.embeds[0]
+        if not isinstance(embed, discord.Embed):
+            raise ValueError
+    except (IndexError, ValueError):
+        bot.send_log("Error! Could not send the substitutions announcement embed.", force=True)
+    else:
+        await bot.announce_substitutions(embed, same_day=updated_for_same_day)
+    temp_data.clear()

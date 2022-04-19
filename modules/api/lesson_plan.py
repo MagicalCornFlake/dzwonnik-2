@@ -24,6 +24,14 @@ SOURCE_URL = "http://www.lo1.gliwice.pl/wp-content/uploads/static/plan/plany/o{i
 
 MAX_CLASS_YEAR = 3
 
+SUBJECT_NAME_MAPPINGS = {
+    "mat": "r-mat",
+    "mat.": "mat",
+    "matematyka": "mat",
+    "chem.": "chemia",
+    "fiz.": "fizyka"
+}
+
 
 def get_plan_id(class_id: str or int = None) -> int:
     """Gets the plan ID that is used on the school website of a given class.
@@ -174,11 +182,9 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             name: str = lesson_name
             for mapping in mappings:
                 name = name.replace(*mapping)
-            # Edge case mappings for mathematics
-            if name == "mat":
-                name = "r-mat"
-            elif name in ["mat.", "matematyka"]:
-                name = "mat"
+            # Edge case mappings
+            if name in SUBJECT_NAME_MAPPINGS:
+                name = SUBJECT_NAME_MAPPINGS[name]
             tmp.append({
                 "name": name.lower(),
                 "group": "grupa_" + group,
