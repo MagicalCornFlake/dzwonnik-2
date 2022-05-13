@@ -154,7 +154,7 @@ def get_error_message(web_exc: web.WebException) -> str:
     if isinstance(web_exc, web.InvalidResponseException):
         return f"Nastąpił błąd w połączeniu: {web_exc.status_code}"
     if isinstance(web_exc, web.TooManyRequestsException):
-        return f"Musisz poczekać jeszcze {web.MAX_REQUEST_COOLDOWN - web_exc.time_passed:.2f}s."
+        return f"Musisz poczekać jeszcze {web_exc.cooldown}s."
     # The exception must be .api.steam_market.NoSuchItemException
     return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
             f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")

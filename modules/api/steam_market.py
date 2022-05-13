@@ -86,9 +86,13 @@ def _make_api_request(url_template, raw_query: str, force: bool) -> dict[str, an
     Raises NoSuchItemException if the item was not found.
     """
     query_encoded = parse.quote(raw_query)
-    result = web.make_request(url_template + query_encoded, ignore_request_limit=force).json()
-    if not result.get("success"):
-        raise NoSuchItemException(raw_query)
+    try:
+        result = web.make_request(url_template + query_encoded, ignore_request_limit=force).json()
+    except web.InvalidResponseException as not_found_exc:
+        raise NoSuchItemException(raw_query) from not_found_exc
+    else:
+        if not result.get("success"):
+            raise NoSuchItemException(raw_query)
     return result
 
 
@@ -155,7 +159,7 @@ if __name__ == "__main__":
                     usr_input = input(f"Enter query ({mode_text} mode)...\n> ")
                     try:
                         output = api_function(usr_input)
-                    except web.InvalidResponseException as invalid_response_exc:
+                    except web.WebException as invalid_response_exc:
                         print(">>> ERROR!", invalid_response_exc)
                     else:
                         pretty = json.dumps(output, indent=2, ensure_ascii=False)
