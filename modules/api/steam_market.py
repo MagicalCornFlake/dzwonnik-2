@@ -46,7 +46,7 @@ CURRENCY_IDS = [
 ]
 
 COULD_NOT_FIND_PRICE_MSG = "Could not find item's lowest price. Check if this is true:"
-SOURCE_URL = "{}priceoverview/?appid={}&currency={}&market_hash_name={}"
+SOURCE_URL = "https://www.steamcommunity.com/market/priceoverview/?appid={}&currency={}&market_hash_name={}"
 
 
 def get_currency_id(currency: str):
@@ -92,10 +92,9 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bo
     Returns a dictionary containing the JSON response.
     Raises NoSuchItemException if the item was not found.
     """
-    steam_url = "https://www.steamcommunity.com/market/"
     currency_id = get_currency_id(currency)
     query_encoded = parse.quote(raw_query)
-    url = SOURCE_URL.format(steam_url, app_id, currency_id, query_encoded)
+    url = SOURCE_URL.format(app_id, currency_id, query_encoded)
     result = web.make_request(url, ignore_request_limit=force).json()
     if not result["success"]:
         raise NoSuchItemException(raw_query)
