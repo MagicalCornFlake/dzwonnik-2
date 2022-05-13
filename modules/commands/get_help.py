@@ -69,6 +69,10 @@ INFO: dict[help, dict[str, any]] = {
         "description": steam_market.DESC_UNTRACK,
         "function": steam_market.stop_market_tracking
     },
+    "wyszukaj": {
+        "description": steam_market.DESC_SEARCH,
+        "function": steam_market.search_for_item
+    },
     "numerki": {
         "description": lucky_numbers.DESC,
         "function": lucky_numbers.get_lucky_numbers_embed

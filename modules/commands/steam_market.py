@@ -1,7 +1,7 @@
 """Module containing code relating to the Steam Community Market commands."""
 
 # Third-party imports
-from discord import Message
+from discord import Message, Embed
 from corny_commons.util import web
 
 # Local application imports
@@ -15,6 +15,11 @@ Parametry: __przedmiot__, __waluta__
 Przykłady: 
 `{p}cena Operation Broken Fang Case` - wyświetliłaby się cena dla tego przedmiotu, domyślnie w zł.
 `{p}cena Operation Broken Fang Case waluta=EUR` - wyświetliłaby się cena w euro."""
+DESC_SEARCH = """Wykonuje wyszukiwanie przedmiotów w bazie danych Rynku Społeczności Steam.
+Parametry: __przedmiot__
+Przykład:
+`{p}wyszukaj Operation Broken Fang` - wyświetliłaby się lista zawierająca do dziesięciu przedmiotów.
+"""
 DESC_TRACK = """Zaczyna śledzić dany przedmiot na Rynku Społeczności Steam i wysyła powiadomienie,\
 gdy cena wykroczy podaną granicę.
 Parametry: __nazwa przedmiotu__, __cena minimalna__, __cena maksymalna__
@@ -23,6 +28,8 @@ enia tego przedmiotu z powiadomieniem, gdy cena się obniży poniżej 1,00zł lu
 DESC_UNTRACK = """Przestaje śledzić dany przedmiot na Rynku Społeczności Steam.
 Parametry: __nazwa przedmiotu__
 Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny tego przedmiotu."""
+
+STEAM_URL = "https://www.steamcommunity.com/market/search/?q="
 
 
 def get_market_price(message: Message, result_override=None) -> str:
@@ -34,9 +41,33 @@ def get_market_price(message: Message, result_override=None) -> str:
         params = args[0], 730, currency
         result = result_override or steam_market.get_item(*params)
         price = steam_market.get_item_price(result)
-        return f"{Emoji.INFO} Aktualna cena dla *{args[0]}* to `{price}`."
     except web.WebException as web_exc:
         return util.get_error_message(web_exc)
+    else:
+        return f"{Emoji.INFO} Aktualna cena dla *{args[0]}* to `{price}`."
+
+
+def search_for_item(message: Message) -> Embed:
+    """Event handler for the 'wyszukaj' command."""
+    raw_query = message.content[len(f"{bot.prefix}wyszukaj "):]
+    try:
+        response: dict[str, any] = steam_market.search_item(raw_query)
+    except web.WebException as web_exc:
+        return util.get_error_message(web_exc)
+    total =  response.get("total_count", 0)
+    first = response.get("start", -1) + 1
+    last = min(response.get("pagesize", first), total)
+    desc = f"Pokazuję {first}-{last} z {total}."
+    embed = Embed(title=f"Wynik wyszukania \"{raw_query}\":", description=desc)
+    for result in response.get("results", []):
+        game = result['app_name']
+        price = result['sell_price_text']
+        volume = result['sell_listings']
+        hash_name = result['hash_name']
+        text = f"Gra: {game}\nCena: {price}\nIlość: {volume}\nNazwa: {hash_name}"
+        embed.add_field(name=result["name"], value=text)
+    embed.url = STEAM_URL + response["searchdata"]["query"]
+    return embed
 
 
 # Returns the message to send when the user wishes to track an item on the Steam Community Market
