@@ -58,15 +58,14 @@ def search_for_item(message: Message) -> Embed:
     first = response.get("start", -1) + 1
     last = min(response.get("pagesize", first), total)
     desc = f"Pokazuję {first}-{last} z {total}."
-    embed = Embed(title=f"Wynik wyszukania \"{raw_query}\":", description=desc)
+    url = STEAM_URL + response["searchdata"]["query"]
+    embed = Embed(title=f"Wynik wyszukania \"{raw_query}\":", description=desc, url=url)
     for result in response.get("results", []):
         game = result['app_name']
         price = result['sell_price_text']
         volume = result['sell_listings']
-        hash_name = result['hash_name']
-        text = f"Gra: {game}\nCena: {price}\nIlość: {volume}\nNazwa: {hash_name}"
-        embed.add_field(name=result["name"], value=text)
-    embed.url = STEAM_URL + response["searchdata"]["query"]
+        text = f"Gra: {game}\nCena: {price}\nIlość: {volume}\nNazwa: {result['hash_name']}"
+        embed.add_field(name=result["name"], value=text, inline=False)
     return embed
 
 
