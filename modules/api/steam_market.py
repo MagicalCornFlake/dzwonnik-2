@@ -46,7 +46,8 @@ CURRENCY_IDS = [
 ]
 
 COULD_NOT_FIND_PRICE_MSG = "Could not find item's lowest price. Check if this is true:"
-SOURCE_URL = "https://www.steamcommunity.com/market/priceoverview/?appid={}&currency={}&market_hash_name={}"
+SOURCE_URL = ("https://www.steamcommunity.com/market/priceoverview/"
+              "?appid={}&currency={}&market_hash_name={}")
 
 
 def get_currency_id(currency: str):
