@@ -58,7 +58,7 @@ def search_for_item(message: Message) -> Embed:
     first = response.get("start", -1) + 1
     last = min(response.get("pagesize", first), total)
     desc = f"Pokazuję {first}-{last} z {total}."
-    url = STEAM_URL + response["searchdata"]["query"]
+    url = STEAM_URL + response["query_encoded"]
     embed = Embed(title=f"Wynik wyszukania \"{raw_query}\":", description=desc, url=url)
     for result in response.get("results", []):
         game = result['app_name']

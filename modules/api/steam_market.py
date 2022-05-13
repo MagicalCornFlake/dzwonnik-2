@@ -93,7 +93,8 @@ def _make_api_request(url_template, raw_query: str, force: bool) -> dict[str, an
     else:
         if not result.get("success"):
             raise NoSuchItemException(raw_query)
-    return result
+        result["query_encoded"] = query_encoded
+        return result
 
 
 def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bool = False
