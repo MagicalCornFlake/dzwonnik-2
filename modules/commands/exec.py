@@ -21,21 +21,6 @@ MISSING_ARGUMENTS_MSG = "Type an expression or command to execute."
 EXPRESSION_TEMPLATE = "async def __execute(message):\n    {}\n    return locals()"
 
 
-class ExecResultList(list):
-    """Defines a custom class that derives from the `list` base type.
-
-    This class redefines the += operator to append new items rather than merge lists.
-    """
-
-    def __init__(self):
-        super().__init__(self)
-
-    def __iadd__(self, __x):
-        """Appends an item to the list."""
-        self.append(__x)
-        return self
-
-
 def inject_code(expression: str) -> str:
     """Attempts to inject code so that the evaluation result of the expression is saved in memory.
 
@@ -50,7 +35,7 @@ def inject_code(expression: str) -> str:
         expression = expression.replace("return ", injection_snippet)
         # If the user-inputted code contains a return statement, return the locals variable
         expression = expression.replace("return", "return locals()")
-        expression = "__temp = ExecResultList()\n" + expression
+        expression = "__temp = util.ExecResultList()\n" + expression
     else:
         # No user-specified return value
         # Attempt to inject code so that the evaluation of the first line is returned
@@ -93,10 +78,10 @@ async def process_execution(message: discord.Message) -> str:
         exec_result = ccutil.format_exception_info(exec_exc)
     else:
         # Default the temp variable to an empty ExecResultList if it's not been assigned
-        exec_result = execute_locals.get("__temp", ExecResultList())
+        exec_result = execute_locals.get("__temp", util.ExecResultList())
 
         # Check if the results list is empty
-        if isinstance(exec_result, ExecResultList) and not exec_result:
+        if isinstance(exec_result, util.ExecResultList) and not exec_result:
             return "*(return value unspecified)*"
     temp_variable_log_msg = f"Temp variable ({type(exec_result)}):\n{exec_result}"
     bot.send_log(temp_variable_log_msg, force=True)

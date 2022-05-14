@@ -9,7 +9,6 @@ from corny_commons.util import web
 
 # Local application imports
 from modules import GROUP_NAMES
-from modules.commands.exec import ExecResultList
 # from modules.commands import URL_404 TODO: revert
 
 URL_404 = "https://www.example.com/"
@@ -21,6 +20,21 @@ lesson_links: dict[str, str] = {}
 # Used to show the current lesson in the lesson plan (e.g. '!plan' command).
 current_period: int = -1
 next_period: int = -1
+
+
+class ExecResultList(list):
+    """Defines a custom class that derives from the `list` base type.
+
+    This class redefines the += operator to append new items rather than merge lists.
+    """
+
+    def __init__(self):
+        super().__init__(self)
+
+    def __iadd__(self, __x):
+        """Appends an item to the list."""
+        self.append(__x)
+        return self
 
 
 def format_class(class_name: str = None, reverse: bool = False):
