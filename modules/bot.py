@@ -4,6 +4,7 @@
 import asyncio
 import datetime
 import json
+from aiohttp import ClientConnectionError
 
 # Third-party imports
 import discord
@@ -133,8 +134,8 @@ async def send_log_message(message) -> None:
         await client.wait_until_ready()
         log_chnl: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
         await log_chnl.send(f"```py\n{message}\n```")
-    except (RuntimeError, OSError, discord.errors.HTTPException) as exception:
-        fmt_exc = ccutil.format_exception_info(exception)
+    except (RuntimeError, OSError, discord.errors.HTTPException, ClientConnectionError) as log_exc:
+        fmt_exc = ccutil.format_exception_info(log_exc)
         could_not_log_msg = f"Could not log message: '{message}'. Exception: {fmt_exc}"
         file_manager.log(could_not_log_msg, filename="bot")
 
