@@ -93,17 +93,20 @@ def start_market_tracking(message: Message):
         item_name = args[0].strip()
         try:
             result = steam_market.get_item(item_name)
-        except web.WebException as ex:
-            return util.get_error_message(ex)
+        except web.WebException as web_exc:
+            return util.get_error_message(web_exc)
         author_id = message.author.id
         item = TrackedItem(item_name, min_price, max_price, author_id)
-        if item in tracked_market_items:
-            for item in tracked_market_items:
-                if item.name.lower() == item_name.lower():
-                    author = f"użytkownika <@{item.author_id}>"
-                    who = author if item.author_id != author_id else "Ciebie"
-                    return (f"{Emoji.WARNING} Przedmiot *{item.name}* jest już śledzony"
-                            f"przez {who}.")
+        for existing_item in tracked_market_items:
+            if existing_item.serialised != item.serialised:
+                continue
+            # There is already an identical market track request
+            if existing_item.author_id == author_id:
+                other_author_description = "Ciebie"
+            else:
+                other_author_description = f"użytkownika <@{existing_item.author_id}>"
+            return (f"{Emoji.WARNING} Przedmiot *{item_name}* jest już śledzony"
+                    f"przez {other_author_description}.")
         tracked_market_items.append(item)
         data_manager.save_data_file()
         price = get_market_price(item_name, result_override=result)
