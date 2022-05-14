@@ -598,6 +598,16 @@ async def announce_substitutions(
     if not isinstance(subs, discord.Embed):
         # The provided substitutions embed is an error message
         return subs
+    raw_subs: dict[str, any] = api.substitutions.get_substitutions()
+    send_message_args = {
+        "channel": target_channel,
+        "content": subs,
+        "on_fail_options": {
+            "to_send": raw_subs,
+            "msg": SUBSTITUTIONS_TOO_LONG_MSG,
+            "filename": "substitutions.json",
+        },
+    }
     if same_day:
         message_id = data_manager.last_substitutions.get("message_id")  # Can be None
         try:
@@ -610,21 +620,15 @@ async def announce_substitutions(
             pass
         else:
             # Edit the last substitutions message instead of sending a new one.
-            await last_subs_msg.edit(embed=subs)
-            date: str = data_manager.last_substitutions.get("for_date")
+            await try_send_message(**send_message_args, edit_method=last_subs_msg.edit)
+            date: str = data_manager.last_substitutions.get("for_date", "")
             if date:
                 date = " na " + date
+            # `date` can be an empty string or one of form " na mm.dd.YYYY"
             await target_channel.send(f"Zaktualizowano zastępstwa{date}!")
             return
-    raw_subs: dict[str, any] = api.substitutions.get_substitutions()
     announcement_msg: discord.Message = await try_send_message(
-        target_channel,
-        subs,
-        on_fail_options={
-            "to_send": raw_subs,
-            "msg": SUBSTITUTIONS_TOO_LONG_MSG,
-            "filename": "substitutions.json",
-        },
+        **send_message_args
     )
     data_manager.last_substitutions["message_id"] = announcement_msg.id
     date: str = subs.title.lstrip("Zastępstwa na")
@@ -691,8 +695,9 @@ async def ping_owner(channel_id: int = ChannelID.BOT_LOGS) -> None:
 async def try_send_message(
     channel: discord.TextChannel,
     content: str or discord.Embed,
-    reply_method=None,
-    on_fail_options: dict[str, str or dict] = None,
+    reply_method = None,
+    edit_method = None,
+    on_fail_options: dict[str, str or dict] = None
 ) -> discord.Message:
     """Attempts to send a message. If it's too long, sends a text file with the contents instead.
 
@@ -700,6 +705,7 @@ async def try_send_message(
         channel -- the channel reference that the message should be sent in.
         content -- the message content, which can either be a string or a `discord.Embed`.
         reply_method -- an optional `discord.Message.reply` instance method reference to be used.
+        edit_method -- an optional `discord.Message.edit` instance method reference to be used.
         on_fail_options -- a dictionary containing keys 'data', 'msg' and 'filename'.
             - to_send -- the data to send in the text file if sending fails. Default: `content`
             - msg -- the message to send on failure.
@@ -713,7 +719,7 @@ async def try_send_message(
 
     args = {"embed" if isinstance(content, discord.Embed) else "content": content}
     try:
-        reply_msg = await reply_method(**args)
+        reply_msg = await (edit_method or reply_method)(**args)
     except discord.errors.HTTPException as http_exc:
         send_log(ccutil.format_exception_info(http_exc))
     else:
