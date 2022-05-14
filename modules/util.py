@@ -179,28 +179,14 @@ def get_error_message(web_exc: web.WebException) -> str:
 def format_code_results(code_results: ExecResultList or any) -> ExecResultList:
     """Formats returned Python expressions as strings or JSON using Discord markdown formatting."""
     results = []
-    json_result_indices = []
-    for res in code_results if isinstance(code_results, ExecResultList) else [code_results]:
-        json_result_indices.append("")
-        if type(res) in [list, dict, tuple]:
+    for result in code_results if isinstance(code_results, ExecResultList) else [code_results]:
+        if type(result) in [list, dict, tuple]:
             try:
-                # Add the index of the current result to the list of JSON result indices
-                json_result_indices.append(len(results))
-
-                tmp = json.dumps(res, indent=2, ensure_ascii=False)
-                results.append(tmp)
+                json_string = json.dumps(result, indent=2, ensure_ascii=False)
+                results.append(f"```json\n{json_string}```")
             except (TypeError, OverflowError):
                 pass
             else:
                 continue
-        results.append(str(res))
-
-    # Format the results using Discord formatting
-    formatted_results = ExecResultList()
-
-    for index, result in enumerate(results):
-        if index in json_result_indices:
-            formatted_results += f"```json\n{result}```"
-        else:
-            formatted_results += f"```py\n{str(result) or 'None'}```"
-    return formatted_results
+        results.append(f"```py\n{str(result) or 'None'}```")
+    return results
