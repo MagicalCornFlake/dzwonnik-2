@@ -118,9 +118,6 @@ class TrackedItem:
         return False
 
 
-tracked_market_items: list[TrackedItem] = []
-
-
 def ensure_user_authorised(message: Message, err_msg: str = "", owner_only: bool = False) -> None:
     """Raises an exception if the message author does not have the appropriate permissions.
 

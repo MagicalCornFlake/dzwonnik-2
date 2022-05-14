@@ -6,7 +6,7 @@ from corny_commons.util import web
 
 # Local application imports
 from modules import bot, util, data_manager, Emoji
-from modules.commands import TrackedItem, ensure_user_authorised, tracked_market_items
+from modules.commands import TrackedItem, ensure_user_authorised
 from modules.api import steam_market
 
 
@@ -30,6 +30,9 @@ Parametry: __nazwa przedmiotu__
 Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny tego przedmiotu."""
 
 STEAM_URL = "https://www.steamcommunity.com/market/search/?q="
+
+
+tracked_market_items: list[TrackedItem] = []
 
 
 def get_market_price(message: Message or str, result_override=None) -> str:

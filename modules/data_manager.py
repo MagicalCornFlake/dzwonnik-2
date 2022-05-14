@@ -56,8 +56,8 @@ def read_data_file(filename: str = "data.json") -> None:
     for attributes in data.get("tracked_market_items", []):
         assert isinstance(attributes, dict)
         item = commands.TrackedItem(*attributes.values())
-        if item not in commands.tracked_market_items:
-            commands.tracked_market_items.append(item)
+        if item not in commands.steam_market.tracked_market_items:
+            commands.steam_market.tracked_market_items.append(item)
 
     lucky_numbers.cached_data = data.get("lucky_numbers", {})
     try:
@@ -90,7 +90,7 @@ def save_data_file(filename: str = "data.json", allow_logs: bool = True) -> None
     serialised_homework_events = {
         event.id_string: event.serialised for event in commands.homework.homework_events}
     serialised_tracked_market_items = [
-        item.serialised for item in commands.tracked_market_items]
+        item.serialised for item in commands.steam_market.tracked_market_items]
     # Creates a parent dictionary to save all data that needs to be saved
     data_to_be_saved = {
         "lesson_links": {code: link for code, link in util.lesson_links.items() if link},
