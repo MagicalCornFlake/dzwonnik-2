@@ -11,15 +11,17 @@ from modules.commands import meet, exec as execute, terminate, lucky_numbers, su
 
 def get_help_message(message: Message) -> Embed or None:
     """Event handler for the 'help' command."""
-    desc = f"Prefiks dla komend: `{bot.prefix}`"
-    embed = Embed(title="Lista komend", description=desc)
+    desc = f"*Prefiks dla komend:* `{bot.prefix}`"
     args: str = message.content.strip().lower().split(" ")
     if len(args) >= 2 and args[-1] in INFO:
         # Display help for specific command
+        title = "Pomoc w obsłudze komendy"
         commands_to_iterate = [(args[-1], INFO[args[-1]])]
     else:
         # Display help for all commands
+        title = "Lista komend"
         commands_to_iterate = INFO.items()
+    embed = Embed(title=title, description=desc)
     for command_name, info in commands_to_iterate:
         command_description = info.get("description")
         if not command_description:

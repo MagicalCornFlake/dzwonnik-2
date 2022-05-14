@@ -20,7 +20,7 @@ Parametry: __przedmiot__
 Przykład:
 `{p}wyszukaj Operation Broken Fang` - wyświetliłaby się lista zawierająca do dziesięciu przedmiotów.
 """
-DESC_TRACK = """Zaczyna śledzić dany przedmiot na Rynku Społeczności Steam i wysyła powiadomienie,\
+DESC_TRACK = """Zaczyna śledzić dany przedmiot na Rynku Społeczności Steam i wysyła powiadomienie, \
 gdy cena wykroczy podaną granicę.
 Parametry: __nazwa przedmiotu__, __cena minimalna__, __cena maksymalna__
 Przykład: `{p}sledz Operation Broken Fang Case min=1.00 max=3.00` - stworzyłoby się zlecenie śledz\
@@ -32,11 +32,13 @@ Przykład: `{p}odsledz Operation Broken Fang Case` - zaprzestaje śledzenie ceny
 STEAM_URL = "https://www.steamcommunity.com/market/search/?q="
 
 
-def get_market_price(message: Message, result_override=None) -> str:
+def get_market_price(message: Message or str, result_override=None) -> str:
     """Event handler for the 'cena' command."""
-    raw_args = message.content[len(f"{bot.prefix}cena "):].split(" waluta=")
-    args: list[str] = [message] if result_override else raw_args
-    currency = args[-1] if len(args) > 1 else 'PLN'
+    if result_override is None:
+        args: list[str] = message.content[len(f"{bot.prefix}cena "):].split(" waluta=")
+    else:
+        args: list[str] = [message]
+    currency = args[-1].strip() if len(args) > 1 else 'PLN'
     try:
         params = args[0], 730, currency
         result = result_override or steam_market.get_item(*params)
