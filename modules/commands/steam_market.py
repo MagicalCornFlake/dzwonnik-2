@@ -90,26 +90,25 @@ def start_market_tracking(message: Message):
                 f"cenę maksymalną. Przykład: `{bot.prefix}sledz Operation Broken Fang Case "
                 f"min=1 max=3`.")
     else:
-        item_name = args[0].rstrip()
+        item_name = args[0].strip()
         try:
             result = steam_market.get_item(item_name)
         except web.WebException as ex:
             return util.get_error_message(ex)
-        else:
-            author_id = message.author.id
-            item = TrackedItem(item_name, min_price, max_price, author_id)
-            if item in tracked_market_items:
-                for item in tracked_market_items:
-                    if item.name.lower() == item_name.lower():
-                        author = f"użytkownika <@{item.author_id}>"
-                        who = author if item.author_id != author_id else "Ciebie"
-                        return (f"{Emoji.WARNING} Przedmiot *{item.name}* jest już śledzony"
-                                f"przez {who}.")
-            tracked_market_items.append(item)
-            data_manager.save_data_file()
-            price = get_market_price(item_name, result_override=result)
-            return (f"{Emoji.CHECK} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w"
-                    f" przedziale `{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n{price}")
+        author_id = message.author.id
+        item = TrackedItem(item_name, min_price, max_price, author_id)
+        if item in tracked_market_items:
+            for item in tracked_market_items:
+                if item.name.lower() == item_name.lower():
+                    author = f"użytkownika <@{item.author_id}>"
+                    who = author if item.author_id != author_id else "Ciebie"
+                    return (f"{Emoji.WARNING} Przedmiot *{item.name}* jest już śledzony"
+                            f"przez {who}.")
+        tracked_market_items.append(item)
+        data_manager.save_data_file()
+        price = get_market_price(item_name, result_override=result)
+        return (f"{Emoji.CHECK} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w"
+                f" przedziale `{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n{price}")
 
 
 def stop_market_tracking(message: Message) -> str:

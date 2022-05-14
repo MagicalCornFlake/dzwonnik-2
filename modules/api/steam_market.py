@@ -109,15 +109,16 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bo
         force -- a boolean indicating if the request limit should be ignored. Defaults to False.
 
     Returns a dictionary containing the JSON response.
+    #### JSON response structure:
+    {
+        "success": bool,
+        "lowest_price"?: "0,00curr",
+        "volume"?: "00,000",
+        "median_price"?: "0,00curr"
+    }
+
     Raises NoSuchItemException if the item was not found.
     """
-    # Data JSON structure:
-    # {
-    #     "success": bool,
-    #     "lowest_price"?: "0,00curr",
-    #     "volume"?: "00,000",
-    #     "median_price"?: "0,00curr"
-    # }
     currency_id = get_currency_id(currency)
     url_template = SOURCE_URL_A.format(app_id, currency_id)
     return _make_api_request(url_template, raw_query, force)
