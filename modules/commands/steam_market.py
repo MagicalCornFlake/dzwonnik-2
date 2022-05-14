@@ -104,9 +104,9 @@ def start_market_tracking(message: Message):
                                 f"przez {who}.")
             tracked_market_items.append(item)
             data_manager.save_data_file()
-            price = get_market_price(item_name, result_override=result)[1]
+            price = get_market_price(item_name, result_override=result)
             return (f"{Emoji.CHECK} Stworzono zlecenie śledzenia przedmiotu *{item_name}* w"
-                    f"przedziale `{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n{price}")
+                    f" przedziale `{min_price/100:.2f}zł - {max_price/100:.2f}zł`.\n{price}")
 
 
 def stop_market_tracking(message: Message) -> str:
