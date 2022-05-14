@@ -14,9 +14,9 @@ def get_help_message(message: Message) -> Embed or None:
     desc = f"Prefiks dla komend: `{bot.prefix}`"
     embed = Embed(title="Lista komend", description=desc)
     args: str = message.content.strip().lower().split(" ")
-    if len(args) >= 2 and args[1] in INFO:
+    if len(args) >= 2 and args[-1] in INFO:
         # Display help for specific command
-        commands_to_iterate = [(args[1], INFO[args[1]])]
+        commands_to_iterate = [(args[-1], INFO[args[-1]])]
     else:
         # Display help for all commands
         commands_to_iterate = INFO.items()
