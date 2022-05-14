@@ -21,10 +21,11 @@ def read_file_contents(message: Message) -> str:
         # if not filename.endswith(".json"):
         #     raise FileNotFoundError
         with open(filename, "r", encoding="UTF-8") as file:
+            contents = file.read()
             try:
-                contents = json.load(file)
+                contents = json.loads(contents)
             except json.JSONDecodeError:
-                contents = file.read()
+                pass
     except (IndexError, FileNotFoundError):
         if len(args) == 1:
             return "Należy podać nazwę pliku."
