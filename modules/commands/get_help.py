@@ -5,8 +5,8 @@ from discord import Message, Embed
 
 # Local application imports
 from modules import bot
-from modules.commands import next_lesson, next_break, plan, homework, steam_market
-from modules.commands import meet, exec as execute, terminate, lucky_numbers, substitutions
+from modules.commands import next_lesson, next_break, plan, homework, steam_market, lucky_numbers
+from modules.commands import substitutions, meet, exec as execute, terminate, dump_file
 
 
 def get_help_message(message: Message) -> Embed or None:
@@ -110,5 +110,9 @@ INFO: dict[str, dict[str, any]] = {
         "description": terminate.DESC,
         "function": terminate.exit_bot,
         "on_completion": terminate.terminate_bot
+    },
+    "dumpfile": {
+        "description": dump_file.DESC,
+        "function": dump_file.read_file_contents
     }
 }

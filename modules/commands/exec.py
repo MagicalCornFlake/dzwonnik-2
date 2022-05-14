@@ -3,14 +3,13 @@
 
 # Standard library imports
 import ast
-import json
 
 # Third-party imports
 import discord
 from corny_commons import util as ccutil
 
 # Local application imports
-from modules import bot
+from modules import bot, util
 from modules.commands import ensure_user_authorised
 
 
@@ -101,30 +100,8 @@ async def process_execution(message: discord.Message) -> str:
             return "*(return value unspecified)*"
     temp_variable_log_msg = f"Temp variable ({type(exec_result)}):\n{exec_result}"
     bot.send_log(temp_variable_log_msg, force=True)
-    results = []
-    json_result_indices = []
-    for res in exec_result if isinstance(exec_result, ExecResultList) else [exec_result]:
-        json_result_indices.append("")
-        if type(res) in [list, dict, tuple]:
-            try:
-                # Add the index of the current result to the list of JSON result indices
-                json_result_indices.append(len(results))
 
-                tmp = json.dumps(res, indent=2, ensure_ascii=False)
-                results.append(tmp)
-            except (TypeError, OverflowError):
-                results.append(str(res))
-        else:
-            results.append(str(res))
-
-    # Format the results using Discord formatting
-    formatted_results = ExecResultList()
-
-    for index, result in enumerate(results):
-        if index in json_result_indices:
-            formatted_results += f"```json\n{result}```"
-        else:
-            formatted_results += f"```py\n{str(result) or 'None'}```"
+    formatted_results = util.format_code_results(exec_result)
 
     return "\n".join(formatted_results)
 

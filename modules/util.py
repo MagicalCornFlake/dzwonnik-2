@@ -2,12 +2,14 @@
 
 # Standard library imports
 from datetime import datetime
+import json
 
 # Third-party imports
 from corny_commons.util import web
 
 # Local application imports
 from modules import GROUP_NAMES
+from modules.commands.exec import ExecResultList
 # from modules.commands import URL_404 TODO: revert
 
 URL_404 = "https://www.example.com/"
@@ -158,3 +160,33 @@ def get_error_message(web_exc: web.WebException) -> str:
     # The exception must be .api.steam_market.NoSuchItemException
     return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
             f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")
+
+
+def format_code_results(code_results: ExecResultList or any) -> ExecResultList:
+    """Formats returned Python expressions as strings or JSON using Discord markdown formatting."""
+    results = []
+    json_result_indices = []
+    for res in code_results if isinstance(code_results, ExecResultList) else [code_results]:
+        json_result_indices.append("")
+        if type(res) in [list, dict, tuple]:
+            try:
+                # Add the index of the current result to the list of JSON result indices
+                json_result_indices.append(len(results))
+
+                tmp = json.dumps(res, indent=2, ensure_ascii=False)
+                results.append(tmp)
+            except (TypeError, OverflowError):
+                pass
+            else:
+                continue
+        results.append(str(res))
+
+    # Format the results using Discord formatting
+    formatted_results = ExecResultList()
+
+    for index, result in enumerate(results):
+        if index in json_result_indices:
+            formatted_results += f"```json\n{result}```"
+        else:
+            formatted_results += f"```py\n{str(result) or 'None'}```"
+    return formatted_results
