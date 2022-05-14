@@ -11,12 +11,14 @@ from modules import bot, util
 
 DESC = None
 
+DEFAULT_FILENAME = "data.json"
+
 
 def read_file_contents(message: Message) -> str:
     """Command handler for the 'dumpfile' command."""
     args: list[str] = message.content.split(" ")
     try:
-        filename = args[1]
+        filename = args[1] if len(args) >= 2 else DEFAULT_FILENAME
         bot.send_log(f"Reading file '{filename}'...", force=True)
         # if not filename.endswith(".json"):
         #     raise FileNotFoundError
@@ -26,9 +28,7 @@ def read_file_contents(message: Message) -> str:
                 contents = json.loads(contents)
             except json.JSONDecodeError:
                 pass
-    except (IndexError, FileNotFoundError):
-        if len(args) == 1:
-            return "Należy podać nazwę pliku."
+    except FileNotFoundError:
         return "Niepoprawna nazwa pliku."
     else:
         formatted_contents = util.format_code_results(contents)
