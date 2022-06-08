@@ -440,9 +440,9 @@ async def main_update_loop() -> None:
         cached_date: datetime.datetime = api.lucky_numbers.cached_data["date"]
     except (TypeError, KeyError) as exception:
         # Lucky numbers data does not contain a date
-        await ping_owner()
+        # await ping_owner()
         fmt_exc = ccutil.format_exception_info(exception)
-        send_log(fmt_exc, force=True)
+        send_log(fmt_exc)
     else:
         if cached_date == current_time.date() or current_time.hour != UPDATE_NUMBERS_AT:
             # Data does not need to be updated; only update at the given time
