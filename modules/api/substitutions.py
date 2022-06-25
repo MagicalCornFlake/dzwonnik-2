@@ -37,11 +37,11 @@ def get_int_ranges_from_string(lessons_string: str) -> list[int]:
     Returns a list of all the found periods.
     """
     lesson_ints = []
-    lesson_hours = lessons_string.rstrip("l")
+    lesson_hours = lessons_string.strip().rstrip("l")
     lesson_hours = lesson_hours.split("i" if "i" in lesson_hours else ",")
     for lesson in lesson_hours:
         if "-" in lesson:
-            start, end = lesson.split('-')
+            start, end = lesson.split("-")
             lesson_ints += range(int(start), int(end) + 1)
         else:
             lesson_ints.append(int(lesson))
@@ -72,7 +72,9 @@ def get_substituted_lessons(class_name: str, weekday: int, period: IntegrityErro
     """Checks the lesson plan for the lessons that would normally have taken place."""
     class_id: str = util.format_class(class_name, reverse=True)
     try:
-        lesson_plan: dict[str, list[list[dict]]] = get_lesson_plan(class_id, force_update=None)[0]
+        lesson_plan: dict[str, list[list[dict]]] = get_lesson_plan(
+            class_id, force_update=None
+        )[0]
     except ValueError:
         # The class has no lesson plan
         lessons_on_period: list[dict] = []
@@ -98,14 +100,16 @@ def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
     if "date" in subs_data:
         # Parse the date from the substitutions page
         weekday_int: int = datetime.datetime.strptime(
-            subs_data["date"], "%Y-%m-%d").weekday()
+            subs_data["date"], "%Y-%m-%d"
+        ).weekday()
     else:
         # Default to Monday; this shouldn't be possible
         # The date is usually the first element in the page contents
         # This would mean that for some reason it's not included on the substitutions page
         # (which hasn't happened yet)
         file_manager.log(
-            "No date provided in substitutions data. Defaulting to Monday.")
+            "No date provided in substitutions data. Defaulting to Monday."
+        )
         weekday_int: int = 0
 
     match = SUB_INFO_PATTERN.match(info)
@@ -118,18 +122,22 @@ def extract_substitutions_text(elem_text: str, subs_data: dict) -> None:
         subs_data["lessons"].setdefault(lesson, {})
         for class_letter in classes or "?":
             class_name = f"{class_year or ''}{class_letter}{class_info or ''}"
-            subs_data["lessons"][lesson].setdefault(class_name, {
-                "substituted_lessons": get_substituted_lessons(class_name, weekday_int, lesson),
-                "substitutions": []
-            })
+            subs_data["lessons"][lesson].setdefault(
+                class_name,
+                {
+                    "substituted_lessons": get_substituted_lessons(
+                        class_name, weekday_int, lesson
+                    ),
+                    "substitutions": [],
+                },
+            )
             class_subs = {
                 "details": details,
-                "groups": SUB_GROUPS_PATTERN.findall(info)
+                "groups": SUB_GROUPS_PATTERN.findall(info),
             }
             if not class_subs["groups"]:
                 class_subs.pop("groups")
-            subs_data["lessons"][lesson][class_name]["substitutions"].append(
-                class_subs)
+            subs_data["lessons"][lesson][class_name]["substitutions"].append(class_subs)
 
 
 def extract_header_data(elem, child_elems, subs_data) -> tuple[str, any]:
@@ -141,11 +149,9 @@ def extract_header_data(elem, child_elems, subs_data) -> tuple[str, any]:
             # Skip blank child elements
             return
         # This is the header for a table
-        subs_data["tables"].append({
-            "title": child_elem_text,
-            "headings": [],
-            "columns": []
-        })
+        subs_data["tables"].append(
+            {"title": child_elem_text, "headings": [], "columns": []}
+        )
         return
     try:
         # Check if the child element has an 'underline' child element with the date text
@@ -159,7 +165,7 @@ def extract_header_data(elem, child_elems, subs_data) -> tuple[str, any]:
         if "teachers" in subs_data:
             subs_data["events"].append(child_elem_text)
             return
-        subs_data["teachers"] = child_elem_text.split(', ')
+        subs_data["teachers"] = child_elem_text.split(", ")
     else:
         # This is the element header containing the substitutions date
         subs_data["date"] = str(date.date())
@@ -187,7 +193,7 @@ def parse_html(html: str) -> dict:
         "tables": [],
         "misc": [],
         "cancelled": [],
-        "lessons": {}
+        "lessons": {},
     }
 
     def extract_data(elem: lxml.html.Element, next_elem: lxml.html.Element) -> None:
@@ -200,11 +206,9 @@ def parse_html(html: str) -> dict:
             # Check if any table headers have been found prior to the table element
             if len(subs_data["tables"]) == 0:
                 # There hasn't; append a blank table object
-                subs_data["tables"].append({
-                    "title": "[Brak nagłówku tabeli]",
-                    "headings": [],
-                    "columns": []
-                })
+                subs_data["tables"].append(
+                    {"title": "[Brak nagłówku tabeli]", "headings": [], "columns": []}
+                )
             extract_from_table(elem, subs_data["tables"][-1])
             return
         if elem.tag != "p":
@@ -236,11 +240,9 @@ def parse_html(html: str) -> dict:
             # Check if this is the childless element right before a table tag
             if next_elem is not None and next_elem.tag == "table":
                 # It is; assuming it's the element containing the table's title text
-                subs_data["tables"].append({
-                    "title": elem_text,
-                    "headings": [],
-                    "columns": []
-                })
+                subs_data["tables"].append(
+                    {"title": elem_text, "headings": [], "columns": []}
+                )
             else:
                 # This is probably the actual substitutions text
                 extract_substitutions_text(elem_text, subs_data)
@@ -257,9 +259,11 @@ def parse_html(html: str) -> dict:
             # Page structure has changed, return the nature of the error.
             if __name__ == "__main__":
                 # Makes the error easier to see for debugging
-                print(json.dumps(subs_data, indent=2, ensure_ascii=False),
-                      f"\n{Colour.FAIL}Error encountered while processing child element "
-                      f"{Colour.WARNING}{i + 1}{Colour.FAIL}!{Colour.ENDC}")
+                print(
+                    json.dumps(subs_data, indent=2, ensure_ascii=False),
+                    f"\n{Colour.FAIL}Error encountered while processing child element "
+                    f"{Colour.WARNING}{i + 1}{Colour.FAIL}!{Colour.ENDC}",
+                )
                 raise no_matches_exc from None
             subs_data["error"] = ccutil.format_exception_info(no_matches_exc)
             break
@@ -286,16 +290,18 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, dict]:
     Returns the data itself and a tuple containing the new and the old data (can be compared to
     check if the cache has changed).
     """
+
     def update_cache_callback() -> dict:
         html: str = web.get_html(SOURCE_URL, ignore_request_limit=force_update)
         return parse_html(html)
+
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
 
 if __name__ == "__main__":
     colours = vars(Colour)
     for col in colours:
-        if not col.startswith('_') and col is not None:
+        if not col.startswith("_") and col is not None:
             print(f"Colour {colours[col]}{col}{Colour.ENDC}")
     print()
     try:
