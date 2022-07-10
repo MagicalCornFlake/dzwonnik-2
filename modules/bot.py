@@ -13,7 +13,7 @@ from corny_commons import file_manager, util as ccutil
 from corny_commons.util import web
 
 # Local application imports
-from modules import data_manager, commands, util, api
+from modules import Month, data_manager, commands, util, api
 from modules import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
 from modules.commands import (
     get_help,
@@ -64,8 +64,18 @@ HOMEWORK_EMOJI = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
 # noinspection SpellCheckingInspection
 AUTOMATIC_BOT_REPLIES = {MY_SERVER_ID: {"co jest?": "nie wjem"}}
 
+DAYS_IN_WEEKEND = len([Weekday.SATURDAY, Weekday.SUNDAY])
 
-class ChannelID:
+
+class StatusMsg(str):
+    """Constant declarations for bot status messages."""
+
+    LESSONS_END: str = "koniec lekcji!"
+    SUMMER_HOLIDAYS: str = "wakacje!"
+    WEEKEND: str = "weekend!"
+
+
+class ChannelID(int):
     """Constant declarations for Discord channnel IDs."""
 
     RANGI: int = 773135499627593738
@@ -134,7 +144,12 @@ async def send_log_message(message) -> None:
         await client.wait_until_ready()
         log_chnl: discord.TextChannel = client.get_channel(ChannelID.BOT_LOGS)
         await log_chnl.send(f"```py\n{message}\n```")
-    except (RuntimeError, OSError, discord.errors.HTTPException, ClientConnectionError) as log_exc:
+    except (
+        RuntimeError,
+        OSError,
+        discord.errors.HTTPException,
+        ClientConnectionError,
+    ) as log_exc:
         fmt_exc = ccutil.format_exception_info(log_exc)
         could_not_log_msg = f"Could not log message: '{message}'. Exception: {fmt_exc}"
         file_manager.log(could_not_log_msg, filename="bot")
@@ -261,7 +276,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     result = commands.get_next_period(query_time)
     next_period_is_today, current_period, next_lesson_weekday = result
 
-    if next_period_is_today:
+    def get_message_for_today():
         util.current_period = current_period % 10
         # Get the details of the next lesson.
         params = [util.current_period, next_lesson_weekday, ROLE_CODES.keys()]
@@ -286,41 +301,48 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
                 # Currently before school
                 util.current_period = -1
                 send_log("The current period is before school starts (-1).")
-                new_status_msg = "szkoła o " + time
-            else:
-                send_log(f"It is currently period {util.current_period}.")
-                new_status_msg = "przerwa do " + time
-        else:
-            # Currently lesson
-            # Dictionary with lesson group code and lesson name
-            msgs: dict[str, str] = {}
-            for role_code in list(ROLE_CODES.keys())[1:]:
-                params[-1] = ["grupa_0", role_code]
-                lesson = commands.get_lesson_by_roles(*params)
-                if not lesson or lesson["period"] > util.next_period:
-                    # No lesson for that group
-                    continue
-                send_log("... validated!", lesson)
-                msgs[lesson["group"]] = util.get_lesson_name(lesson["name"])
-                # Found lesson for 'grupa_0' (whole class)
-                if lesson["group"] == "grupa_0":
-                    found_lesson_msg = (
-                        "Found lesson for entire class, skipping individual groups."
-                    )
-                    send_log(found_lesson_msg)
-                    break
-            # set(msgs.values()) returns a list of unique lesson names
-            lesson_text = "/".join(set(msgs.values()))
-            if len(msgs) == 1 and list(msgs.keys())[0] != "grupa_0":
-                # Specify the group the current lesson is for if only one group has it
-                lesson_text += " " + GROUP_NAMES[list(msgs.keys())[0]]
-            formatted_time = util.get_formatted_period_time()
-            new_status_msg = f"{lesson_text} do {formatted_time.split('-')[1]}"
-    else:
+                return "szkoła o " + time
+            send_log(f"It is currently period {util.current_period}.")
+            return "przerwa do " + time
+        # Currently lesson
+        # Dictionary with lesson group code and lesson name
+        msgs: dict[str, str] = {}
+        for role_code in list(ROLE_CODES.keys())[1:]:
+            params[-1] = ["grupa_0", role_code]
+            lesson = commands.get_lesson_by_roles(*params)
+            if not lesson or lesson["period"] > util.next_period:
+                # No lesson for that group
+                continue
+            send_log("... validated!", lesson)
+            msgs[lesson["group"]] = util.get_lesson_name(lesson["name"])
+            # Found lesson for 'grupa_0' (whole class)
+            if lesson["group"] == "grupa_0":
+                found_lesson_msg = (
+                    "Found lesson for entire class, skipping individual groups."
+                )
+                send_log(found_lesson_msg)
+                break
+        # set(msgs.values()) returns a list of unique lesson names
+        lesson_text = "/".join(set(msgs.values()))
+        if len(msgs) == 1 and list(msgs.keys())[0] != "grupa_0":
+            # Specify the group the current lesson is for if only one group has it
+            lesson_text += " " + GROUP_NAMES[list(msgs.keys())[0]]
+        formatted_time = util.get_formatted_period_time()
+        return f"{lesson_text} do {formatted_time.split('-')[1]}"
+
+    def get_message_for_next_school_day():
         # After the last lesson for the given day
         util.current_period = -1
         is_weekend = query_time.weekday() >= Weekday.FRIDAY
-        new_status_msg = "weekend!" if is_weekend else "koniec lekcji!"
+        return StatusMsg.WEEKEND if is_weekend else StatusMsg.LESSONS_END
+
+    if check_is_summer_holidays(query_time):
+        new_status_msg = StatusMsg.SUMMER_HOLIDAYS
+    elif next_period_is_today:
+        new_status_msg = get_message_for_today()
+    else:
+        new_status_msg = get_message_for_next_school_day()
+
     if client.activity and new_status_msg == client.activity.name:
         send_log("... new status message is unchanged.", force=True)
         return False
@@ -404,6 +426,19 @@ async def remind_about_homework_event(
     data_manager.save_data_file()
 
 
+def check_is_summer_holidays(current_time: datetime.datetime) -> bool:
+    """Returns a boolean indicating if it is currently the summer holidays."""
+    current_year = current_time.year
+    holidays_end = datetime.datetime(current_year, Month.SEPTEMBER, 1)
+    if current_time >= holidays_end:
+        return True
+    # The summer holidays start after the Friday of the second-to-last week of June
+    june_thirtieth = datetime.date(current_year, Month.JUNE, 30)
+    holidays_start = 30 - june_thirtieth.weekday() - DAYS_IN_WEEKEND
+    holidays_start = datetime.datetime(current_year, Month.JUNE, holidays_start)
+    return current_time >= holidays_start
+
+
 @loop(seconds=1)
 async def main_update_loop() -> None:
     """Routinely fetches data from various APIs to ensure the cache is up-to-date.
@@ -454,6 +489,8 @@ async def main_update_loop() -> None:
         ):
             # Initial update period of API update window; don't update more than the maximum
             return
+    if check_is_summer_holidays(current_time):
+        return
     # Lucky numbers data is not current; update it
     await check_for_lucky_numbers_updates()
 
@@ -627,9 +664,7 @@ async def announce_substitutions(
             # `date` can be an empty string or one of form " na mm.dd.YYYY"
             await target_channel.send(f"Zaktualizowano zastępstwa{date}!")
             return
-    announcement_msg: discord.Message = await try_send_message(
-        **send_message_args
-    )
+    announcement_msg: discord.Message = await try_send_message(**send_message_args)
     data_manager.last_substitutions["message_id"] = announcement_msg.id
     date: str = subs.title.lstrip("Zastępstwa na")
     data_manager.last_substitutions["for_date"] = date
@@ -695,9 +730,9 @@ async def ping_owner(channel_id: int = ChannelID.BOT_LOGS) -> None:
 async def try_send_message(
     channel: discord.TextChannel,
     content: str or discord.Embed,
-    reply_method = None,
-    edit_method = None,
-    on_fail_options: dict[str, str or dict] = None
+    reply_method=None,
+    edit_method=None,
+    on_fail_options: dict[str, str or dict] = None,
 ) -> discord.Message:
     """Attempts to send a message. If it's too long, sends a text file with the contents instead.
 

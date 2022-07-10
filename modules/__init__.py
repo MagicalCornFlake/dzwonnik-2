@@ -6,19 +6,21 @@ that are used repeatedly in the program.
 
 class Colour:
     """Constant definitions for colours used in the console."""
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
 class Emoji(str):
     """Constant definitions for Discord message emoji."""
+
     CASH: str = ":moneybag:"
     CHECK: str = ":white_check_mark:"
     CHECK_2: str = ":ballot_box_with_check:"
@@ -32,6 +34,7 @@ class Emoji(str):
 
 class Weekday(int):
     """Constant definitions for the integers corresponding to each day of the week."""
+
     MONDAY: int = 0
     TUESDAY: int = 1
     WEDNESDAY: int = 2
@@ -41,13 +44,24 @@ class Weekday(int):
     SUNDAY: int = 6
 
 
-WEEKDAY_NAMES = [
-    "Poniedziałek",
-    "Wtorek",
-    "Środa",
-    "Czwartek",
-    "Piątek"
-]
+class Month(int):
+    """Constant declarations for the months of the year."""
+
+    JANUARY: int = 1
+    FEBRUARY: int = 2
+    MARCH: int = 3
+    APRIL: int = 4
+    MAY: int = 5
+    JUNE: int = 6
+    JULY: int = 7
+    AUGUST: int = 8
+    SEPTEMBER: int = 9
+    OCTOBER: int = 10
+    NOVEMBER: int = 11
+    DECEMBER: int = 12
+
+
+WEEKDAY_NAMES = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek"]
 
 # What group code correlates to which Discord role
 ROLE_CODES = {
@@ -63,7 +77,7 @@ ROLE_CODES = {
     "grupa_RCH": "Chemia Rozszerzona",
     "grupa_RH": "Historia Rozszerzona",
     "grupa_RG": "Geografia Rozszerzona",
-    "grupa_RF": "Fizyka Rozszerzona"
+    "grupa_RF": "Fizyka Rozszerzona",
 }
 
 # Dictionary with text to use when sending messages, e.g. 'lekcja dla grupy drugiej'
@@ -80,7 +94,7 @@ GROUP_NAMES = {
     "grupa_RCH": "dla rozszerzenia z chemii",
     "grupa_RH": "dla rozszerzenia z historii",
     "grupa_RG": "dla rozszerzenia z geografii",
-    "grupa_RF": "dla rozszerzenia z fizyki"
+    "grupa_RF": "dla rozszerzenia z fizyki",
 }
 
 
@@ -104,7 +118,7 @@ MEMBER_IDS = [
     770183107348529183,  # 16 Lena Masal
     692691918986936320,  # 17 Kalina Maziarczyk
     769604750898757662,  # 18 Mateusz Miodyński
-    "Amelia Sapota",     # 19 Amelia Sapota
+    "Amelia Sapota",  # 19 Amelia Sapota
     770183024339714068,  # 20 Zofia Smołka
     770552880791814146,  # 21 Aleksandra Sobczyk
     626490320401596437,  # 22 Klara Sokół
