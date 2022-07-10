@@ -431,7 +431,7 @@ def check_is_summer_holidays(current_time: datetime.datetime) -> bool:
     current_year = current_time.year
     holidays_end = datetime.datetime(current_year, Month.SEPTEMBER, 1)
     if current_time >= holidays_end:
-        return True
+        return False
     # The summer holidays start after the Friday of the second-to-last week of June
     june_thirtieth = datetime.date(current_year, Month.JUNE, 30)
     holidays_start = 30 - june_thirtieth.weekday() - DAYS_IN_WEEKEND
