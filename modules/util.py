@@ -9,10 +9,10 @@ from corny_commons.util import web
 
 # Local application imports
 from modules import GROUP_NAMES
-# from modules.commands import URL_404 TODO: revert
 
-URL_404 = "https://www.example.com/"
-OUR_CLASS = "2d"
+URL_404 = "https://www.guzek.uk/error/404/?lang=PL&utm_source=discord"
+
+OUR_CLASS = "3d"
 
 lesson_plan: dict[str, any] = {}
 lesson_links: dict[str, str] = {}
@@ -56,10 +56,12 @@ def format_class(class_name: str = None, reverse: bool = False):
         return f"{class_num}{class_name[class_num:].lower()}"
     class_name = class_name or OUR_CLASS
     if len(class_name) < 2:
-        err_msg = f"Invalid class name: '{class_name}' is too short (min. 2 characters)."
+        err_msg = (
+            f"Invalid class name: '{class_name}' is too short (min. 2 characters)."
+        )
         raise ValueError(err_msg)
     try:
-        formatted = 'I' * int(class_name[0])
+        formatted = "I" * int(class_name[0])
     except ValueError:
         err_msg = f"Invalid class name: '{class_name}' does not start with a number."
         raise ValueError(err_msg) from None
@@ -67,7 +69,9 @@ def format_class(class_name: str = None, reverse: bool = False):
         return formatted + class_name[1:].upper()
 
 
-def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tuple[str, datetime]:
+def get_time(
+    period: int, base_time: datetime, get_period_end_time: bool
+) -> tuple[str, datetime]:
     """Returns a datetime on the same day of `base_time` with the time corresponding to the
     start (or end) time of the given period.
 
@@ -78,12 +82,7 @@ def get_time(period: int, base_time: datetime, get_period_end_time: bool) -> tup
     """
     times = lesson_plan["Godz"][period]
     hour, minute = times[get_period_end_time]
-    replace_args = {
-        "hour": hour,
-        "minute": minute,
-        "second": 0,
-        "microsecond": 0
-    }
+    replace_args = {"hour": hour, "minute": minute, "second": 0, "microsecond": 0}
     date_time = base_time.replace(**replace_args)
     return date_time
 
@@ -99,10 +98,10 @@ def get_lesson_name(lesson_code: str) -> str:
         "j.": (False, "język "),
         "hiszp.": (True, "hiszpański"),
         "ang.": (True, "angielski"),
-        "przedsięb.": (True, "przedsiębiorczość")
+        "przedsięb.": (True, "przedsiębiorczość"),
     }
     # Remove trailing '.' and leading 'r-'
-    lesson_name = lesson_code[2 * lesson_code.startswith('r-'):]
+    lesson_name = lesson_code[2 * lesson_code.startswith("r-") :]
     for abbreviation, behaviour in mappings.items():
         map_entire_word, mapping = behaviour
         if map_entire_word or lesson_name.startswith(abbreviation):
@@ -136,18 +135,18 @@ def get_lesson_link(lesson_code: str) -> str:
 
 def format_lesson_info(lesson: dict[str, str], add_links: bool = False) -> str:
     """Formats the lesson object into a string representation of it."""
-    lesson_name = get_lesson_name(lesson['name'])
-    room = lesson['room_id']
+    lesson_name = get_lesson_name(lesson["name"])
+    room = lesson["room_id"]
 
     lesson_info: str = f"{lesson_name} - sala {room}"
     if add_links:
         # Stylise the lesson info as a hyperlink to the Google Meet lesson
-        raw_link = get_lesson_link(lesson['name'])
+        raw_link = get_lesson_link(lesson["name"])
         link = f"https://meet.google.com/{raw_link}" if raw_link else URL_404
         lesson_info = f"[{lesson_info}]({link})"
 
-    if lesson['group'] != "grupa_0":
-        group_name = GROUP_NAMES.get(lesson['group'], lesson['group'])
+    if lesson["group"] != "grupa_0":
+        group_name = GROUP_NAMES.get(lesson["group"], lesson["group"])
         lesson_info += f" ({group_name})"
     return lesson_info
 
@@ -160,7 +159,7 @@ def get_formatted_period_time(period: int or str = None) -> str:
         period -- the period to get the times for. Defaults to the current period.
     """
     times: list[list[int]] = lesson_plan["Godz"][int(period or current_period)]
-    return "-".join([':'.join([f"{t:02}" for t in time]) for time in times])
+    return "-".join([":".join([f"{t:02}" for t in time]) for time in times])
 
 
 def get_error_message(web_exc: web.WebException) -> str:
@@ -172,14 +171,18 @@ def get_error_message(web_exc: web.WebException) -> str:
     if isinstance(web_exc, web.TooManyRequestsException):
         return f"Musisz poczekać jeszcze {web_exc.cooldown}s."
     # The exception must be .api.steam_market.NoSuchItemException
-    return (f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
-            f"Spróbuj ponownie i upewnij się, że nazwa się zgadza.")
+    return (
+        f":x: Nie znaleziono przedmiotu `{web_exc.query}`. "
+        f"Spróbuj ponownie i upewnij się, że nazwa się zgadza."
+    )
 
 
 def format_code_results(code_results: ExecResultList or any) -> ExecResultList:
     """Formats returned Python expressions as strings or JSON using Discord markdown formatting."""
     results = []
-    for result in code_results if isinstance(code_results, ExecResultList) else [code_results]:
+    for result in (
+        code_results if isinstance(code_results, ExecResultList) else [code_results]
+    ):
         if type(result) in [list, dict, tuple]:
             try:
                 json_string = json.dumps(result, indent=2, ensure_ascii=False)

@@ -169,7 +169,7 @@ async def on_ready() -> None:
 
     # Initialise lesson plan forcefully; force_update switch bypasses checking for cache.
     try:
-        result = api.lesson_plan.get_lesson_plan(force_update=True)
+        result = api.lesson_plan.get_lesson_plan("2e", force_update=True)
     except web.InvalidResponseException as web_exc:
         exc = ccutil.format_exception_info(web_exc)
         send_log(f"{BAD_RESPONSE}{exc}", force=True)

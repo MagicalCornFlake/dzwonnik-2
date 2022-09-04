@@ -10,9 +10,6 @@ from discord import Role, Message, TextChannel
 from modules import Weekday, Emoji, WEEKDAY_NAMES, ROLE_CODES, bot, util
 
 
-URL_404 = "https://www.guzek.uk/error/404/?lang=PL&utm_source=discord"
-
-
 class HomeworkEvent:
     """Custom object type for homework events."""
 

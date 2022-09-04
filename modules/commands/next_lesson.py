@@ -10,7 +10,7 @@ from corny_commons.util import polish
 
 # Local application imports
 from modules import bot, util, Emoji, Weekday, GROUP_NAMES
-from modules.commands import URL_404, get_datetime_from_input, get_next_period, get_lesson_by_roles
+from modules.commands import get_datetime_from_input, get_next_period, get_lesson_by_roles
 
 
 DESC = """Mówi jaką mamy następną lekcję.
@@ -81,7 +81,7 @@ def get_next_lesson(message: Message) -> str or Embed:
     if raw_link:
         link = f"[meet.google.com](https://meet.google.com/{raw_link})"
     else:
-        link = f"[brak]({URL_404})"
+        link = f"[brak]({util.URL_404})"
     embed.add_field(name="Link do lekcji", value=link)
     temp_var = f"Użyj komendy {bot.prefix}nl, aby pokazać tą wiadomość."
     embed.set_footer(text=temp_var)

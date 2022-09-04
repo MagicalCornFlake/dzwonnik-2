@@ -6,6 +6,7 @@ import discord
 # Local application imports
 from modules.commands import ensure_user_authorised
 from modules import bot, data_manager
+
 DESC = None
 
 
@@ -26,12 +27,14 @@ def exit_bot(message: discord.Message) -> str:
     return EXITING_BOT_MSG
 
 
-async def terminate_bot(original_msg: discord.Message, reply_msg: discord.Message) -> None:
+async def terminate_bot(
+    original_msg: discord.Message, reply_msg: discord.Message
+) -> None:
     """Save's the ID of the bot's exit message and terminates the bot client process."""
     data_manager.on_exit_msg = {
         "is_restart": reply_msg.content == RESTARTING_BOT_MSG,
         "channel_id": original_msg.channel.id,
-        "message_id": reply_msg.id
+        "message_id": reply_msg.id,
     }
     bot.main_update_loop.stop()
     await bot.close()
