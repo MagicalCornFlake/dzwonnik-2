@@ -62,10 +62,9 @@ def get_lesson_plan(message: Message) -> str or Embed:
                 try:
                     plan_id = lesson_plan.get_plan_id(args[2])
                 except ValueError:
-                    raise RuntimeError(
-                        f"invalid class name: {args[2]}") from None
+                    raise RuntimeError(f"invalid class name: {args[2]}") from None
                 else:
-                    class_code = args[2]
+                    class_code = args[2].lower()
                     try:
                         result = lesson_plan.get_lesson_plan(plan_id)
                     except web.WebException as web_exc:
@@ -74,12 +73,13 @@ def get_lesson_plan(message: Message) -> str or Embed:
                     else:
                         class_lesson_plan = result[0]
         except RuntimeError:
-            return (f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer "
-                    f"dnia (1-5) bądź dzień tygodnia, lub zostawić parametry komendy puste."
-                    f" Drugim opcjonalnym argumentem jest nazwa klasy.")
+            return (
+                f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer "
+                f"dnia (1-5) bądź dzień tygodnia, lub zostawić parametry komendy puste."
+                f" Drugim opcjonalnym argumentem jest nazwa klasy."
+            )
 
-    plan: list[list[dict[str, any]]
-               ] = class_lesson_plan[WEEKDAY_NAMES[query_day]]
+    plan: list[list[dict[str, any]]] = class_lesson_plan[WEEKDAY_NAMES[query_day]]
 
     # The generator expression creates a list that maps each element from 'plan' to the boolean it
     # evaluates to. Empty lists are evaluated as False, non-empty lists are evaluated as True.
@@ -88,10 +88,13 @@ def get_lesson_plan(message: Message) -> str or Embed:
     periods: int = sum([bool(lesson) for lesson in plan])
     first_period: int = 0
 
-    title = f"Plan lekcji {class_code}"
-    weekday = WEEKDAY_NAMES[query_day].lower().replace('środa', 'środę')
+    title = f"Plan lekcji dla {class_code}"
+    weekday = WEEKDAY_NAMES[query_day].lower().replace("środa", "środę")
     desc = f"Liczba lekcji na **{weekday}**: {periods}"
-    lesson_plan_url = lesson_plan.get_plan_link(class_code)
+    try:
+        lesson_plan_url = lesson_plan.get_plan_link(class_code)
+    except ValueError:
+        return f"{Emoji.WARNING} Nie powiodło się pobieranie planu lekcji dla klasy {class_code}."
     embed = Embed(title=title, description=desc, url=lesson_plan_url)
     footer = f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość."
     embed.set_footer(text=footer)
