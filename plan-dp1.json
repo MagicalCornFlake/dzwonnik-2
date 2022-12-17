@@ -1,0 +1,243 @@
+[
+  [
+    {
+      "blockStart": 0,
+      "blockEnd": 2,
+      "lessons": [{ "name": "Physical Education" }]
+    },
+    {
+      "blockStart": 3,
+      "blockEnd": 4,
+      "lessons": [
+        { "name": "German B", "level": "HL" },
+        { "name": "Spanish B", "level": "SL/HL" },
+        { "name": "French B", "level": "SL/HL" },
+        { "name": "German B", "level": "SL" }
+      ]
+    },
+    {
+      "blockStart": 5,
+      "blockEnd": 6,
+      "lessons": [
+        { "name": "History", "level": "HL" },
+        { "name": "Physics", "level": "HL" },
+        { "name": "Chemistry 2", "level": "HL" },
+        { "name": "Biology 2", "level": "HL" },
+        { "name": "Geography", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 7,
+      "blockEnd": 8,
+      "lessons": [
+        { "name": "Polish A", "level": "HL" },
+        { "name": "Polish A 1", "level": "SL" },
+        { "name": "Polish A 2", "level": "SL" },
+        { "name": "Polish A 3", "level": "SL" }
+      ]
+    },
+    {
+      "blockStart": 9,
+      "blockEnd": 10,
+      "lessons": [
+        { "name": "Biology 1", "level": "HL" },
+        { "name": "Chemistry 1", "level": "HL" },
+        { "name": "Biology", "level": "SL" }
+      ]
+    }
+  ],
+  [
+    {
+      "blockStart": 0,
+      "blockEnd": 1,
+      "lessons": [{ "name": "Mathematics AA", "level": "SL" }]
+    },
+    {
+      "blockStart": 2,
+      "blockEnd": 3,
+      "lessons": [
+        { "name": "History", "level": "SL/HL" },
+        { "name": "Economics", "level": "SL" },
+        { "name": "Geography", "level": "SL/HL" }
+      ]
+    },
+    {
+      "blockStart": 4,
+      "blockEnd": 5,
+      "lessons": [
+        { "name": "Psychology", "level": "HL" },
+        { "name": "Mathematics AA", "level": "HL" },
+        { "name": "Mathematics AI", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 6,
+      "blockEnd": 7,
+      "lessons": [
+        { "name": "Mathematics AI", "level": "SL" },
+        { "name": "Physics", "level": "SL/HL" },
+        { "name": "Biology 2", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 8,
+      "blockEnd": 9,
+      "lessons": [
+        { "name": "English A", "level": "HL" },
+        { "name": "English B 1", "level": "HL" },
+        { "name": "English B 2", "level": "HL" },
+        { "name": "English B 3", "level": "HL" }
+      ]
+    }
+  ],
+  [
+    {
+      "blockStart": 0,
+      "blockEnd": 0,
+      "lessons": [{ "name": "Religious Education" }]
+    },
+    {
+      "blockStart": 1,
+      "blockEnd": 2,
+      "lessons": [
+        { "name": "Chemistry 2", "level": "SL/HL" },
+        { "name": "Chemistry 1", "level": "HL" },
+        { "name": "TOK 3" }
+      ]
+    },
+    {
+      "blockStart": 3,
+      "blockEnd": 4,
+      "lessons": [
+        { "name": "German B", "level": "HL" },
+        { "name": "Spanish B", "level": "SL/HL" },
+        { "name": "French B", "level": "SL/HL" },
+        { "name": "German B", "level": "SL" }
+      ]
+    },
+    {
+      "blockStart": 5,
+      "blockEnd": 6,
+      "lessons": [
+        { "name": "English A", "level": "HL" },
+        { "name": "English B 1", "level": "HL" },
+        { "name": "English B 2", "level": "HL" },
+        { "name": "English B 3", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 7,
+      "blockEnd": 8,
+      "lessons": [
+        { "name": "Mathematics AI", "level": "SL" },
+        { "name": "Physics", "level": "SL/HL" },
+        { "name": "Biology 2", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 9,
+      "blockEnd": 10,
+      "lessons": [{ "name": "Psychology", "level": "SL/HL" }]
+    }
+  ],
+  [
+    {
+      "blockStart": 0,
+      "blockEnd": 0,
+      "lessons": [{ "name": "Mathematics AA", "level": "SL" }]
+    },
+    {
+      "blockStart": 1,
+      "blockEnd": 2,
+      "lessons": [
+        { "name": "History", "level": "SL/HL" },
+        { "name": "Geography", "level": "SL/HL" }
+      ]
+    },
+    {
+      "blockStart": 2,
+      "blockEnd": 3,
+      "lessons": [{ "name": "Economics", "level": "SL" }]
+    },
+    {
+      "blockStart": 3,
+      "blockEnd": 4,
+      "lessons": [
+        { "name": "Polish A", "level": "HL" },
+        { "name": "Biology 1", "level": "HL" },
+        { "name": "TOK 2" }
+      ]
+    },
+    {
+      "blockStart": 5,
+      "blockEnd": 6,
+      "lessons": [
+        { "name": "Mathematics AA", "level": "HL" },
+        { "name": "Mathematics AI", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 7,
+      "blockEnd": 8,
+      "lessons": [
+        { "name": "Psychology", "level": "SL/HL" },
+        { "name": "TOK 1" }
+      ]
+    }
+  ],
+  [
+    {
+      "blockStart": 0,
+      "blockEnd": 1,
+      "lessons": [
+        { "name": "Chemistry 2", "level": "SL/HL" },
+        { "name": "German B", "level": "HL" },
+        { "name": "French B", "level": "HL" },
+        { "name": "Spanish B", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 2,
+      "blockEnd": 3,
+      "lessons": [
+        { "name": "Biology 1", "level": "HL" },
+        { "name": "Biology", "level": "SL" },
+        { "name": "Chemistry 1", "level": "HL" },
+        { "name": "TOK 4" }
+      ]
+    },
+    {
+      "blockStart": 4,
+      "blockEnd": 4,
+      "lessons": [{ "name": "Mathematics AA", "level": "SL" }]
+    },
+    {
+      "blockStart": 4,
+      "blockEnd": 5,
+      "lessons": [
+        { "name": "Mathematics AA", "level": "HL" },
+        { "name": "Mathematics AI", "level": "HL" }
+      ]
+    },
+    {
+      "blockStart": 6,
+      "blockEnd": 7,
+      "lessons": [
+        { "name": "Polish A", "level": "HL" },
+        { "name": "Polish A 1", "level": "SL" },
+        { "name": "Polish A 2", "level": "SL" },
+        { "name": "Polish A 3", "level": "SL" }
+      ]
+    },
+    {
+      "blockStart": 8,
+      "blockEnd": 9,
+      "lessons": [
+        { "name": "English A", "level": "HL" },
+        { "name": "English B 1", "level": "HL" },
+        { "name": "English B 2", "level": "HL" },
+        { "name": "English B 3", "level": "HL" }
+      ]
+    }
+  ]
+]

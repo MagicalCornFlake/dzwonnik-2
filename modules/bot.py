@@ -169,28 +169,27 @@ async def on_ready() -> None:
 
     # Initialise lesson plan forcefully; force_update switch bypasses checking for cache.
     try:
-        result = api.lesson_plan.get_lesson_plan("2e", force_update=True)
+        plan = api.lesson_plan.get_lesson_plan_dp()
     except web.InvalidResponseException as web_exc:
         exc = ccutil.format_exception_info(web_exc)
         send_log(f"{BAD_RESPONSE}{exc}", force=True)
     else:
-        plan: dict = result[0]
         send_log(f"Initialised lesson plan as {type(plan)}.")
-        util.lesson_plan = plan
+        util.lesson_plan_dp = plan
 
     # Intialise array of schooldays
-    schooldays = [key for key in util.lesson_plan if key in WEEKDAY_NAMES]
+    # schooldays = [key for key in plan if key in WEEKDAY_NAMES]
 
     # Initialise set of unique lesson names
-    lesson_names = set()
-    for schoolday in schooldays:
-        for lessons in util.lesson_plan[schoolday]:
-            for lesson in lessons:
-                lesson_names.add(lesson["name"])
+    # lesson_names = set()
+    # for schoolday in schooldays:
+    #     for lessons in plan[schoolday]:
+    #         for lesson in lessons:
+    #             lesson_names.add(lesson["name"])
 
-    # Initialise dictionary of lesson links
-    for lesson_name in sorted(lesson_names):
-        util.get_lesson_link(lesson_name)
+    # # Initialise dictionary of lesson links
+    # for lesson_name in sorted(lesson_names):
+    #     util.get_lesson_link(lesson_name)
 
     # Starts loops that run continuously
     main_update_loop.start()
@@ -495,22 +494,31 @@ async def main_update_loop() -> None:
     await check_for_lucky_numbers_updates()
 
 
-async def check_for_status_updates(
-    current_time: datetime.datetime, force: bool = False
-) -> str:
+async def check_for_status_updates(current_time: datetime.datetime, force = False) -> str:
     """Checks if the current hour and minute is in any time slot for the lesson plan timetable."""
     now = current_time.hour, current_time.minute
     # Loop throught each period to see if the current time is the same as either start or end time
-    if not force:
-        for start_end_times in util.lesson_plan["Godz"]:
-            if now in start_end_times:
-                # Current time is either the period's start or end time; stop checking further times
-                break
-        else:
-            # We have reached the end of the loop without finding a match
+    start_end_times = None
+    for start_end_times in util.lesson_plan_dp["times"]:
+        if now in start_end_times:
+            # Current time is either the period's start or end time; stop checking further times
+            break
+    else:
+        # We have reached the end of the loop without finding a match
+        if not force:
             return "The status message does not need updating."
     # Check is successful; update bot's Discord status
-    msg: str = get_new_status_msg()
+    if start_end_times is None:
+        msg = "Jestem Dzwonnik 2!"
+    elif now == start_end_times[1]:
+        msg = "Przerwa!"
+    else:
+        formatted_times = map(
+            lambda time: ":".join(map(lambda digit: f"{digit:02}", time)),
+            start_end_times,
+        )
+        msg = " - ".join(formatted_times)
+
     if not msg:
         # Do not update the status if it evaluates to False (i.e. status does not need updating)
         return "The status message is the same as before (no changes made)."

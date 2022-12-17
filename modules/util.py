@@ -15,6 +15,7 @@ URL_404 = "https://www.guzek.uk/error/404/?lang=PL&utm_source=discord"
 OUR_CLASS = "3d"
 
 lesson_plan: dict[str, any] = {}
+lesson_plan_dp: dict[str, list[list[int]] or list[list[dict]]] = {}
 lesson_links: dict[str, str] = {}
 
 # Used to show the current lesson in the lesson plan (e.g. '!plan' command).

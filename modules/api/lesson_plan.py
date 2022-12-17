@@ -273,6 +273,14 @@ def get_lesson_plan(
     )
 
 
+def get_lesson_plan_dp():
+    """Reads the lesson plan for the DP class."""
+    with open("plan-dp1.json", "r", encoding="utf-8") as file:
+        lesson_plan: list[list[dict]] = json.load(file)
+    random_plan, _ = get_lesson_plan(1)
+    return {"times": random_plan["Godz"], "weekdays": lesson_plan}
+
+
 def _log(*args):
     if __name__ == "__main__":
         print(*args)
