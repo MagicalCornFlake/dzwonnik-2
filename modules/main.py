@@ -5,6 +5,7 @@ import asyncio
 import importlib
 import os
 import subprocess
+import sys
 
 # Third-party imports
 from corny_commons import file_manager
@@ -31,6 +32,9 @@ def start_bot() -> bool:
     else:
         starting_msg = "Program starting..."
     bot.send_log(f"    --- {starting_msg} ---", force=True)
+    if "--dev" in sys.argv:
+        bot.VERBOSE_LOG_MESSAGES = True
+        bot.send_log("Enabling verbose logging.")
     file_manager.read_env()
     data_manager.read_data_file("data.json")
     event_loop = asyncio.get_event_loop()
