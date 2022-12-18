@@ -159,7 +159,8 @@ def get_formatted_period_time(period: int or str = None) -> str:
     Arguments:
         period -- the period to get the times for. Defaults to the current period.
     """
-    times: list[list[int]] = lesson_plan["Godz"][int(period or current_period)]
+    period = current_period if period is None else int(period)
+    times: list[list[int]] = lesson_plan_dp["times"][period]
     return "-".join([":".join([f"{t:02}" for t in time]) for time in times])
 
 

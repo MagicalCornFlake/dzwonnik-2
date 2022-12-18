@@ -34,7 +34,7 @@ def get_next_break(message: Message) -> str:
 
     if next_period_is_today:
         lesson = get_lesson_by_roles(
-            lesson_period % 10, time.weekday(), message.author.roles
+            lesson_period % 20, time.weekday(), message.author.roles
         )
         if not lesson:
             return f"{Emoji.INFO} Dzisiaj już nie ma dla Ciebie żadnych lekcji!"

@@ -14,7 +14,7 @@ from corny_commons.util import web
 
 # Local application imports
 from modules import Month, data_manager, commands, util, api
-from modules import Emoji, Weekday, ROLE_CODES, WEEKDAY_NAMES, GROUP_NAMES
+from modules import Emoji, Weekday, ROLE_CODES
 from modules.commands import (
     get_help,
     homework,
@@ -278,59 +278,70 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
         next_lesson_weekday,
     ) = commands.get_next_period(query_time)
 
-    def get_message_for_today():
-        util.current_period = current_period % 10
-        # Get the details of the next lesson.
-        params = [util.current_period, next_lesson_weekday, ROLE_CODES.keys()]
-        lesson = commands.get_lesson_by_roles(*params)
-        if lesson:
-            util.next_period = lesson["period"]
-            send_log(f"The next lesson is on period {util.next_period}.")
-        # Get the period of the first lesson
-        first_period = -1  # Initialise period so that PyLint does not complain
-        weekday_name = WEEKDAY_NAMES[query_time.weekday()]
-        plan_for_given_day: list[list] = util.lesson_plan[weekday_name]
-        for first_period, lessons in enumerate(plan_for_given_day):
-            if lessons:
-                send_log(f"The first lesson is on period {first_period}.")
-                break
+    # REGION old status message generator
+    # def get_message_for_today():
+    #     util.current_period = current_period % 20
+    #     # Get the details of the next lesson.
+    #     params = [util.current_period, next_lesson_weekday, ROLE_CODES.keys()]
+    #     lesson = commands.get_lesson_by_roles(*params)
+    #     if lesson:
+    #         util.next_period = lesson["period"]
+    #         send_log(f"The next lesson is on period {util.next_period}.")
+    #     # Get the period of the first lesson
+    #     first_period = -1  # Initialise period so that PyLint does not complain
+    #     weekday_name = WEEKDAY_NAMES[query_time.weekday()]
+    #     plan_for_given_day: list[list] = util.lesson_plan[weekday_name]
+    #     for first_period, lessons in enumerate(plan_for_given_day):
+    #         if lessons:
+    #             send_log(f"The first lesson is on period {first_period}.")
+    #             break
 
-        if current_period < 10 or util.next_period != util.current_period:
-            # Currently break time
-            formatted_time = util.get_formatted_period_time(util.next_period)
-            time = formatted_time.split("-", maxsplit=1)[0]
-            if util.next_period == first_period:
-                # Currently before school
-                util.current_period = -1
-                send_log("The current period is before school starts (-1).")
-                return "szkoła o " + time
-            send_log(f"It is currently period {util.current_period}.")
-            return "przerwa do " + time
-        # Currently lesson
-        # Dictionary with lesson group code and lesson name
-        msgs: dict[str, str] = {}
-        for role_code in list(ROLE_CODES.keys())[1:]:
-            params[-1] = ["grupa_0", role_code]
-            lesson = commands.get_lesson_by_roles(*params)
-            if not lesson or lesson["period"] > util.next_period:
-                # No lesson for that group
-                continue
-            send_log("... validated!", lesson)
-            msgs[lesson["group"]] = util.get_lesson_name(lesson["name"])
-            # Found lesson for 'grupa_0' (whole class)
-            if lesson["group"] == "grupa_0":
-                found_lesson_msg = (
-                    "Found lesson for entire class, skipping individual groups."
-                )
-                send_log(found_lesson_msg)
-                break
-        # set(msgs.values()) returns a list of unique lesson names
-        lesson_text = "/".join(set(msgs.values()))
-        if len(msgs) == 1 and list(msgs.keys())[0] != "grupa_0":
-            # Specify the group the current lesson is for if only one group has it
-            lesson_text += " " + GROUP_NAMES[list(msgs.keys())[0]]
-        formatted_time = util.get_formatted_period_time()
-        return f"{lesson_text} do {formatted_time.split('-')[1]}"
+    #     if current_period < 20 or util.next_period != util.current_period:
+    #         # Currently break time
+    #         formatted_time = util.get_formatted_period_time(util.next_period)
+    #         time = formatted_time.split("-", maxsplit=1)[0]
+    #         if util.next_period == first_period:
+    #             # Currently before school
+    #             util.current_period = -1
+    #             send_log("The current period is before school starts (-1).")
+    #             return "szkoła o " + time
+    #         send_log(f"It is currently period {util.current_period}.")
+    #         return "przerwa do " + time
+    #     # Currently lesson
+    #     # Dictionary with lesson group code and lesson name
+    #     msgs: dict[str, str] = {}
+    #     for role_code in list(ROLE_CODES.keys())[1:]:
+    #         params[-1] = ["grupa_0", role_code]
+    #         lesson = commands.get_lesson_by_roles(*params)
+    #         if not lesson or lesson["period"] > util.next_period:
+    #             # No lesson for that group
+    #             continue
+    #         send_log("... validated!", lesson)
+    #         msgs[lesson["group"]] = util.get_lesson_name(lesson["name"])
+    #         # Found lesson for 'grupa_0' (whole class)
+    #         if lesson["group"] == "grupa_0":
+    #             found_lesson_msg = (
+    #                 "Found lesson for entire class, skipping individual groups."
+    #             )
+    #             send_log(found_lesson_msg)
+    #             break
+    #     # set(msgs.values()) returns a list of unique lesson names
+    #     lesson_text = "/".join(set(msgs.values()))
+    #     if len(msgs) == 1 and list(msgs.keys())[0] != "grupa_0":
+    #         # Specify the group the current lesson is for if only one group has it
+    #         lesson_text += " " + GROUP_NAMES[list(msgs.keys())[0]]
+    #     formatted_time = util.get_formatted_period_time()
+    #     return f"{lesson_text} do {formatted_time.split('-')[1]}"
+    # ENDREGION
+
+    def get_message_for_today_2():
+        if current_period < 20:
+            formatted_time = util.get_formatted_period_time(current_period)
+            lesson_start = formatted_time.split("-", maxsplit=1)[0]
+            msg = "szkola o" if current_period == 0 else "przerwa do"
+            return f"{msg} {lesson_start}"
+        lessons = commands.get_lessons_dp(current_period, next_lesson_weekday)
+        return " | ".join(lessons)
 
     def get_message_for_next_school_day():
         # After the last lesson for the given day
@@ -341,7 +352,7 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     if check_is_summer_holidays(query_time):
         new_status_msg = StatusMsg.SUMMER_HOLIDAYS
     elif next_period_is_today:
-        new_status_msg = get_message_for_today()
+        new_status_msg = get_message_for_today_2()
     else:
         new_status_msg = get_message_for_next_school_day()
 

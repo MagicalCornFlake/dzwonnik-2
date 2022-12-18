@@ -145,20 +145,23 @@ def parse_html(html: str) -> dict[str, list[list[dict[str, str]]]]:
             times = tuple(
                 int(time) for time in DURATION_PATTERN.match(raw_line).groups()
             )
+            return times[:2], times[2:]
+            # Don't use below code since the timetable has since been updated to be accurate.
+
             # Check if the lesson start hour is less than 12:00 (i.e. old timetable still relevant)
-            lesson_start_hour = times[0]
-            if lesson_start_hour < 12:
-                return times[:2], times[2:]
+            # lesson_start_hour = times[0]
+            # if lesson_start_hour < 12:
+            #     return times[:2], times[2:]
             # The lesson is after or 12:00.
             # We must manually change the returned values since the timetable is not up-to-date.
             # After 12:00, the breaks last 5 minutes instead of 10.
-            new_times = {
-                12: ((12, 50), (13, 35)),
-                13: ((13, 40), (14, 25)),
-                14: ((14, 30), (15, 15)),
-                15: ((15, 20), (16, 5)),
-            }
-            return new_times[lesson_start_hour]
+            # new_times = {
+            #     12: ((12, 50), (13, 35)),
+            #     13: ((13, 40), (14, 25)),
+            #     14: ((14, 30), (15, 15)),
+            #     15: ((15, 20), (16, 5)),
+            # }
+            # return new_times[lesson_start_hour]
         # Row containing lesson information for a given period
         tmp: list[dict[str, str]] = []
         for match in LESSON_PATTERN.findall(raw_line):
