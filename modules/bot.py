@@ -54,7 +54,7 @@ MESSAGE_SEND_FAIL_MSG = (
     "Załączam ją w formie pliku tekstowego."
 )
 SUBSTITUTIONS_TOO_LONG_MSG = (
-    "Zastępstwa zostały zaktualizowane, natomiast jest ich zbyt dużo, "
+    "Zastępstwa zostały zaktualizowane, natomiast jest ich zbyt wiele, "
     "aby je móc wysłać w formie wiadomości Rich Text. Załączam je jako plik JSON."
 )
 
@@ -272,8 +272,11 @@ def get_new_status_msg(query_time: datetime.datetime = None) -> str or False:
     query_time = query_time or datetime.datetime.now()
     send_log("Updating bot status ...", force=True)
     # Get the period of the end of the current lesson (if any) or the beginning of the next break.
-    result = commands.get_next_period(query_time)
-    next_period_is_today, current_period, next_lesson_weekday = result
+    (
+        next_period_is_today,
+        current_period,
+        next_lesson_weekday,
+    ) = commands.get_next_period(query_time)
 
     def get_message_for_today():
         util.current_period = current_period % 10
@@ -494,31 +497,20 @@ async def main_update_loop() -> None:
     await check_for_lucky_numbers_updates()
 
 
-async def check_for_status_updates(current_time: datetime.datetime, force = False) -> str:
+async def check_for_status_updates(current_time: datetime.datetime, force=False) -> str:
     """Checks if the current hour and minute is in any time slot for the lesson plan timetable."""
     now = current_time.hour, current_time.minute
     # Loop throught each period to see if the current time is the same as either start or end time
-    start_end_times = None
-    for start_end_times in util.lesson_plan_dp["times"]:
-        if now in start_end_times:
-            # Current time is either the period's start or end time; stop checking further times
-            break
-    else:
-        # We have reached the end of the loop without finding a match
-        if not force:
+    if not force:
+        for start_end_times in util.lesson_plan_dp["times"]:
+            if now in start_end_times:
+                # Current time is either the period's start or end time; stop checking further times
+                break
+        else:
+            # We have reached the end of the loop without finding a match
             return "The status message does not need updating."
     # Check is successful; update bot's Discord status
-    if start_end_times is None:
-        msg = "Jestem Dzwonnik 2!"
-    elif now == start_end_times[1]:
-        msg = "Przerwa!"
-    else:
-        formatted_times = map(
-            lambda time: ":".join(map(lambda digit: f"{digit:02}", time)),
-            start_end_times,
-        )
-        msg = " - ".join(formatted_times)
-
+    msg: str = get_new_status_msg(current_time)
     if not msg:
         # Do not update the status if it evaluates to False (i.e. status does not need updating)
         return "The status message is the same as before (no changes made)."
