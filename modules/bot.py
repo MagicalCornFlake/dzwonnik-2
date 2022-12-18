@@ -177,6 +177,10 @@ async def on_ready() -> None:
         send_log(f"Initialised lesson plan as {type(plan)}.")
         util.lesson_plan_dp = plan
 
+    with open("teachers.json", "r", encoding="utf-8") as file:
+        data = json.load(file)
+        util.teacher_subjects = data
+
     # Intialise array of schooldays
     # schooldays = [key for key in plan if key in WEEKDAY_NAMES]
 
@@ -646,7 +650,7 @@ async def announce_substitutions(
     if not isinstance(subs, discord.Embed):
         # The provided substitutions embed is an error message
         return subs
-    raw_subs: dict[str, any] = api.substitutions.get_substitutions()
+    raw_subs: dict[str, any] = api.substitutions.get_substitutions()[0]
     send_message_args = {
         "channel": target_channel,
         "content": subs,
@@ -677,7 +681,9 @@ async def announce_substitutions(
             return
     announcement_msg: discord.Message = await try_send_message(**send_message_args)
     data_manager.last_substitutions["message_id"] = announcement_msg.id
-    date: str = subs.title.lstrip("Zastępstwa na")
+    date: str = max(
+        raw_subs.keys(), key=lambda x: datetime.datetime.strptime(x, "%d.%m.%Y")
+    )
     data_manager.last_substitutions["for_date"] = date
 
 
@@ -703,8 +709,8 @@ async def check_for_substitutions_updates(use_debug_channel: bool = True) -> Non
         if new_cache == old_cache:
             # The cache was not updated. Do nothing.
             return
-        subs_embed: discord.Embed or str = substitutions.get_substitutions_embed()
-        same_day = new_cache.get("date") == old_cache.get("date")
+        subs_embed: discord.Embed or str = substitutions.get_new_substitutions_embed()
+        same_day = new_cache.keys() == old_cache.keys()
         exception_message = await announce_substitutions(
             subs_embed, same_day=same_day, debug_mode=use_debug_channel
         )

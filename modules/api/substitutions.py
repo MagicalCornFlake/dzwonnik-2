@@ -22,6 +22,12 @@ SUB_INFO_PATTERN = r"(I*)([A-Z]*)([pg]?)\s?(?:(?:gr.\s|,\s|\si\s)p. [^,]+?[^-])*
 SUB_INFO_PATTERN = re.compile(SUB_INFO_PATTERN)
 SUB_GROUPS_PATTERN = re.compile(r"\s?(?:gr.\s|,\s|\si\s)(p. [^,]+?[^-,])\s")
 
+DATE_PATTERN = re.compile(r"^Zastępstwa (?P<date>\d{2}\.\d{2}\.\d{4})$")
+TEACHER_PATTERN = re.compile(
+    r"^Zajęcia z (?:p. [^,]+(?:, | i |w klasach matury międzynarodowej))+ są odwołane\.?$"
+)
+TEACHERS_PATTERN = re.compile(r"(?<=p. )[^\s,]+")
+
 SOURCE_URL = "http://www.lo1.gliwice.pl/zastepstwa-2/"
 
 
@@ -281,6 +287,49 @@ def parse_html(html: str) -> dict:
     return subs_data
 
 
+def parse_html_new(html: str) -> dict:
+    """Parses the HTML and finds a specific hard-coded substitutions post, then collects the
+    relevant data from it. Only collects information regarding cancelled IB classes.
+
+    Arguments:
+        html -- a string containing whole HTML code, e.g. from the contents of a web request's
+        response.
+
+    Returns a dictionary containing the extracted data.
+    """
+    root: lxml.html.Element = lxml.html.fromstring(html)
+    post_xpath: str = "//div[@id='content']/div"
+    try:
+        post_elem: lxml.html.Element = root.xpath(post_xpath)[0]
+    except IndexError as no_matches_exc:
+        return {"error": ccutil.format_exception_info(no_matches_exc)}
+
+    result: dict[str, list[str]] = {}
+    date = None
+
+    def extract(elem: lxml.html.Element):
+        if elem.tag != "p":
+            return
+        text: str = elem.text_content().strip()
+        if not text:
+            return
+        match = DATE_PATTERN.match(text)
+        if match:
+            nonlocal date
+            date = match.groupdict().get("date")
+            result[date] = []
+            return
+        match = TEACHER_PATTERN.match(text)
+        if not match:
+            return
+        match = TEACHERS_PATTERN.findall(text)
+        result[date] += match
+
+    for p_elem in post_elem:
+        extract(p_elem)
+    return result
+
+
 def get_substitutions(force_update: bool = False) -> tuple[dict, dict]:
     """Gets the current lesson substitutions.
 
@@ -293,7 +342,7 @@ def get_substitutions(force_update: bool = False) -> tuple[dict, dict]:
 
     def update_cache_callback() -> dict:
         html: str = web.get_html(SOURCE_URL, ignore_request_limit=force_update)
-        return parse_html(html)
+        return parse_html_new(html)
 
     return file_manager.get_cache("subs", force_update, update_cache_callback)
 
