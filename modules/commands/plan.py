@@ -10,9 +10,10 @@ from corny_commons.util import web
 # Local application imports
 from modules import bot, util, Weekday, Emoji, WEEKDAY_NAMES
 from modules.api import lesson_plan
+from modules.commands import get_lessons_dp
 
 
-DESC = """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na dzień dzisiejszy.
+DESC = """Pokazuje plan lekcji dla danego dnia, domyślnie dla naszej klasy na dzień dzisiejszy.
     Parametry: __dzień tygodnia__, __nazwa klasy__
     Przykłady:
     `{p}plan` - wyświetliłby się plan lekcji na dziś/najbliższy dzień szkolny.
@@ -21,15 +22,85 @@ DESC = """Pokazuje plan lekcji dla danego dnia, domyślnie naszej klasy oraz na 
     `{p}plan pon 1a` - wyświetliłby się plan lekcji na poniedziałek dla klasy 1a."""
 
 
+def get_weekday(day: int) -> str:
+    """Returns a conjugated weekday name corresponding to the day number."""
+    return WEEKDAY_NAMES[day].lower().replace("środa", "środę")
+
+
+def get_lesson_description(period: int, day: int) -> str:
+    """Gets the description for a given period in the lesson plan."""
+    txt = f"Lekcja {period} ({util.get_formatted_period_time(period)})"
+    is_current_lesson = (
+        day == datetime.now().weekday() and period == util.current_period
+    )
+    lesson_description = f"*{txt}    <── TERAZ*" if is_current_lesson else txt
+    return lesson_description
+
+
+def format_lesson_plan(
+    plan: dict[str, list[list[dict[str, any]]]], query_day: int, class_code: str
+):
+    """Formats the given lesson plan."""
+    today_plan: list[list[dict[str, any]]] = plan[WEEKDAY_NAMES[query_day]]
+
+    # The generator expression creates a list that maps each element from 'plan' to the boolean it
+    # evaluates to. Empty lists are evaluated as False, non-empty lists are evaluated as True.
+    # The sum function adds the contents of the list, keeping in mind that True = 1 and False = 0.
+    # In essence, 'periods' evaluates to the number of non-empty lists in 'plan'.
+    periods: int = sum([bool(lesson) for lesson in today_plan])
+    first_period: int = 0
+
+    desc = f"Liczba lekcji na **{get_weekday(query_day)}**: {periods}"
+    try:
+        lesson_plan_url = lesson_plan.get_plan_link(class_code)
+    except ValueError:
+        return f"{Emoji.WARNING} Nie powiodło się pobieranie planu lekcji dla klasy {class_code}."
+    embed = Embed(
+        title=f"Plan lekcji dla {class_code}", description=desc, url=lesson_plan_url
+    )
+    embed.set_footer(text=f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość.")
+
+    for period in plan["Nr"]:
+        if not today_plan[period]:
+            # No lesson for the current period
+            first_period += 1
+            continue
+
+        # Get all lessons this period
+        lessons = today_plan[period]
+        # Format each lesson object into a string
+        lessons = [util.format_lesson_info(lesson, True) for lesson in lessons]
+        lessons = "\n".join(lessons)
+
+        embed.add_field(
+            name=get_lesson_description(period, query_day), value=lessons, inline=False
+        )
+    return embed
+
+
+def format_lesson_plan_dp(query_day: int) -> str or Embed:
+    """Formats the lesson plan for DP."""
+    embed = Embed(
+        title=f"Plan lekcji dla {util.OUR_CLASS}",
+        description=f"Wyświetlam plan na **{get_weekday(query_day)}**.",
+    )
+    embed.set_footer(text=f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość.")
+    for period, _ in enumerate(util.lesson_plan_dp["times"]):
+        lessons = "\n".join(get_lessons_dp(period, query_day))
+        if not lessons:
+            continue
+        embed.add_field(
+            name=get_lesson_description(period, query_day), value=lessons, inline=False
+        )
+    return embed
+
+
 def get_lesson_plan(message: Message) -> str or Embed:
     """Event handler for the 'plan' command."""
     args: list[str] = message.content.split(" ")
     today = datetime.now().weekday()
-    class_lesson_plan = util.lesson_plan
-    class_code = util.OUR_CLASS
-    if len(args) == 1:
-        query_day = today if today < Weekday.SATURDAY else Weekday.MONDAY
-    else:
+    query_day = today if today < Weekday.SATURDAY else Weekday.MONDAY
+    if len(args) > 1:
         query_day = -1
         # This 'try' clause raises RuntimeError if the input is invalid for whatever reason
         try:
@@ -66,12 +137,11 @@ def get_lesson_plan(message: Message) -> str or Embed:
                 else:
                     class_code = args[2].lower()
                     try:
-                        result = lesson_plan.get_lesson_plan(plan_id)
+                        plan, _ = lesson_plan.get_lesson_plan(plan_id)
                     except web.WebException as web_exc:
                         # Invalid web response
                         return util.get_error_message(web_exc)
-                    else:
-                        class_lesson_plan = result[0]
+                    return format_lesson_plan(plan, query_day, class_code)
         except RuntimeError:
             return (
                 f"{Emoji.WARNING} Należy napisać po komendzie `{bot.prefix}plan` numer "
@@ -79,40 +149,4 @@ def get_lesson_plan(message: Message) -> str or Embed:
                 f" Drugim opcjonalnym argumentem jest nazwa klasy."
             )
 
-    plan: list[list[dict[str, any]]] = class_lesson_plan[WEEKDAY_NAMES[query_day]]
-
-    # The generator expression creates a list that maps each element from 'plan' to the boolean it
-    # evaluates to. Empty lists are evaluated as False, non-empty lists are evaluated as True.
-    # The sum function adds the contents of the list, keeping in mind that True = 1 and False = 0.
-    # In essence, 'periods' evaluates to the number of non-empty lists in 'plan'.
-    periods: int = sum([bool(lesson) for lesson in plan])
-    first_period: int = 0
-
-    title = f"Plan lekcji dla {class_code}"
-    weekday = WEEKDAY_NAMES[query_day].lower().replace("środa", "środę")
-    desc = f"Liczba lekcji na **{weekday}**: {periods}"
-    try:
-        lesson_plan_url = lesson_plan.get_plan_link(class_code)
-    except ValueError:
-        return f"{Emoji.WARNING} Nie powiodło się pobieranie planu lekcji dla klasy {class_code}."
-    embed = Embed(title=title, description=desc, url=lesson_plan_url)
-    footer = f"Użyj komendy {bot.prefix}plan, aby pokazać tą wiadomość."
-    embed.set_footer(text=footer)
-
-    for period in class_lesson_plan["Nr"]:
-        if not plan[period]:
-            # No lesson for the current period
-            first_period += 1
-            continue
-
-        # Get all lessons this period
-        lessons = plan[period]
-        # Format each lesson object into a string
-        lessons = [util.format_lesson_info(lesson, True) for lesson in lessons]
-        lessons = "\n".join(lessons)
-
-        txt = f"Lekcja {period} ({util.get_formatted_period_time(period)})"
-        is_current_lesson = query_day == today and period == util.current_period
-        lesson_description = f"*{txt}    <── TERAZ*" if is_current_lesson else txt
-        embed.add_field(name=lesson_description, value=lessons, inline=False)
-    return embed
+    return format_lesson_plan_dp(query_day)

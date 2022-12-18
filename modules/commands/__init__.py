@@ -236,7 +236,7 @@ def get_lesson_by_roles(
     return {}
 
 
-def get_lessons_dp(query_period: int, weekday: int):
+def get_lessons_dp(query_period: int, weekday: int) -> list[str]:
     """Returns a list of all the lessons currently taking place."""
 
     def format_lesson(lesson: dict) -> str:
