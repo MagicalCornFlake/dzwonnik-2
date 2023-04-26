@@ -34,7 +34,7 @@ Dzwonnik 2 was created using **discord.py**, the official library for creating D
 
 Dzwonnik 2 additionally uses some third-party libraries to complete specific tasks:
  - lxml -- the `html` module
- - [corny_commons](https://github.com/MagicalCornFlake/corny_commons) (a package by the same author) -- the `util.web` module
+ - [corny-commons](https://github.com/kguzek/corny-commons) (a package by the same author) -- the `util.web` module
 
 # Usage
 Dzwonnik 2 is a Discord bot intended to be used on Konrad Guzek's school Discord server. The server's ID is hard-coded into the module constants, however with modifications it would be able to run on other severs as well. The default command prefix is `!`, but its usage in the code is extremely organised so with a single modification the prefix could be changed to any string. Note that there is currently no built-in command for changing the prefix, however there is a command for executing python code accessible to the sever owner.
@@ -61,6 +61,9 @@ These commands are special commands that do not appear in the help message. They
 
 ### **meet**
 The `meet` command allows users to view all currently set Google Meet links for each lesson. This feature is accessible to every user by default. Also, if a lesson name is specified after this command, the bot only responds with the link set for that specific lesson. However, if after a lesson name there is a Meet link specified, the bot changes the link that is saved for that lesson. This feature is only for administrators by default.
+
+### **cena**
+The `cena` command allows users to fetch Steam Community Market price data for a particular item. An item's name must be provided after the command name, and the bot will reply with the current price at that given moment.
 
 ## **Owner/Developer commands**
 These commands are hard-coded to only be available to Konrad Guzek, but the user ID may be changed in the code to allow for a specific user to use them. They are dangerous commands that directly impact the functionality of the bot.
