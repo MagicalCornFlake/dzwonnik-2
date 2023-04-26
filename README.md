@@ -8,6 +8,7 @@
     - [**help**](#help)
     - [**nl**](#nl)
     - [**nb**](#nb)
+    - [**cena**](#cena)
   - [**Administrator commands**](#administrator-commands)
     - [**meet**](#meet)
   - [**Owner/Developer commands**](#ownerdeveloper-commands)
@@ -54,16 +55,16 @@ The `nl` command replies with information about the next lesson. By default, it 
 Finally, when a lesson is found, the bot provides the name of the lesson, the time of the lesson (as well as the day of the week if that isn't today) and a countdown to show how much time there is until the start of the lesson. This countdown is not live -- it is only current as of the time the message was sent. Next, the bot checks if there was a Google Meet link set for the lesson, and if so, it sends the link as well.
 
 ### **nb**
-The `nb` command works similarly to the `nl` command in how it checks for the next period, however it sends information about when the current period ends. If it's currently breaktime, it checks for information after the next break after this one. Just like the `nl` command, it sends information about the timespan of the break as well as a static countdown to its start. If it's the last break for the given day (so there are no lessons after the break), it also reports that information. 
+The `nb` command works similarly to the `nl` command in how it checks for the next period, however it sends information about when the current period ends. If it's currently breaktime, it checks for information after the next break after this one. Just like the `nl` command, it sends information about the timespan of the break as well as a static countdown to its start. If it's the last break for the given day (so there are no lessons after the break), it also reports that information.
+
+### **cena**
+The `cena` command allows users to fetch Steam Community Market price data for a particular item. An item's name must be provided after the command name, and the bot will reply with the current price at that given moment.
 
 ## **Administrator commands**
 These commands are special commands that do not appear in the help message. They only change surface settings, so in theory they are safe to use by any user, however they have been restricted to users with the *administrator* permission by default to prevent accidental typos and misuse.
 
 ### **meet**
 The `meet` command allows users to view all currently set Google Meet links for each lesson. This feature is accessible to every user by default. Also, if a lesson name is specified after this command, the bot only responds with the link set for that specific lesson. However, if after a lesson name there is a Meet link specified, the bot changes the link that is saved for that lesson. This feature is only for administrators by default.
-
-### **cena**
-The `cena` command allows users to fetch Steam Community Market price data for a particular item. An item's name must be provided after the command name, and the bot will reply with the current price at that given moment.
 
 ## **Owner/Developer commands**
 These commands are hard-coded to only be available to Konrad Guzek, but the user ID may be changed in the code to allow for a specific user to use them. They are dangerous commands that directly impact the functionality of the bot.
