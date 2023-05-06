@@ -12,47 +12,51 @@ from modules import bot
 
 
 CURRENCY_IDS = [
-    'USD',  # United States Dollar
-    'GBP',  # Great British Pound
-    'EUR',  # Euro
-    'CHF',  # Swiss Franc
-    'RUB',  # Russian Ruble
-    'PLN',  # Polish Zloty
-    'BRL',  # Brazilian Real
-    'JPY',  # Japanese Yen
-    'NOK',  # Norwegian Krone
-    'IDR',  # Indonesian Rupee
-    'MYR',  # Malaysian Ringgit
-    'PHP',  # Philippine Peso
-    'SGD',  # Singapore Dollar
-    'THB',  # Thai Baht
-    'VND',  # Vietnamese Dong
-    'KRW',  # South Korean Won
-    'TRY',  # Turkish Lira
-    'UAH',  # Ukrainian Hryvnia
-    'MXN',  # Mexican Peso
-    'CAD',  # Canadian Dollar
-    'AUD',  # Australian Dollar
-    'NZD',  # New Zealand Dollar
-    'CNY',  # Chinese Yuan Renminbi
-    'INR',  # Indian Rupee
-    'CLP',  # Chilean Peso
-    'PEN',  # Peruvian Sol
-    'COP',  # Colombian Peso
-    'ZAR',  # South African Rand
-    'HKD',  # Hong Kong Dollar
-    'TWD',  # Taiwan New Dollar
-    'SAR',  # Saudi Arabian Riyal
-    'AED'   # Emirati Dirham
+    "USD",  # United States Dollar
+    "GBP",  # Great British Pound
+    "EUR",  # Euro
+    "CHF",  # Swiss Franc
+    "RUB",  # Russian Ruble
+    "PLN",  # Polish Zloty
+    "BRL",  # Brazilian Real
+    "JPY",  # Japanese Yen
+    "NOK",  # Norwegian Krone
+    "IDR",  # Indonesian Rupee
+    "MYR",  # Malaysian Ringgit
+    "PHP",  # Philippine Peso
+    "SGD",  # Singapore Dollar
+    "THB",  # Thai Baht
+    "VND",  # Vietnamese Dong
+    "KRW",  # South Korean Won
+    "TRY",  # Turkish Lira
+    "UAH",  # Ukrainian Hryvnia
+    "MXN",  # Mexican Peso
+    "CAD",  # Canadian Dollar
+    "AUD",  # Australian Dollar
+    "NZD",  # New Zealand Dollar
+    "CNY",  # Chinese Yuan Renminbi
+    "INR",  # Indian Rupee
+    "CLP",  # Chilean Peso
+    "PEN",  # Peruvian Sol
+    "COP",  # Colombian Peso
+    "ZAR",  # South African Rand
+    "HKD",  # Hong Kong Dollar
+    "TWD",  # Taiwan New Dollar
+    "SAR",  # Saudi Arabian Riyal
+    "AED",  # Emirati Dirham
 ]
 
 COULD_NOT_FIND_PRICE_MSG = "Could not find item's lowest price. Check if this is true:"
 
-SOURCE_URL_A = ("https://www.steamcommunity.com/market/priceoverview/"
-              "?appid={}&currency={}&market_hash_name=")
+SOURCE_URL_A = (
+    "https://www.steamcommunity.com/market/priceoverview/"
+    "?appid={}&currency={}&market_hash_name="
+)
 
-SOURCE_URL_B = ("https://steamcommunity.com/market/search/render/"
-                "?norender=1&start={}&count={}&query=")
+SOURCE_URL_B = (
+    "https://steamcommunity.com/market/search/render/"
+    "?norender=1&start={}&count={}&query="
+)
 
 
 def get_currency_id(currency: str):
@@ -61,6 +65,7 @@ def get_currency_id(currency: str):
         return CURRENCY_IDS.index(currency) + 1
     except ValueError:
         return 6
+
 
 # Define custom exceptions
 class NoSuchItemException(web.WebException):
@@ -71,7 +76,9 @@ class NoSuchItemException(web.WebException):
         message -- explanation of the error
     """
 
-    _default_message = "There is no item called '{query}' on the Steam Community Market."
+    _default_message = (
+        "There is no item called '{query}' on the Steam Community Market."
+    )
 
     def __init__(self, query: str, message=_default_message):
         self.query = query
@@ -87,7 +94,9 @@ def _make_api_request(url_template, raw_query: str, force: bool) -> dict[str, an
     """
     query_encoded = parse.quote(raw_query)
     try:
-        result = web.make_request(url_template + query_encoded, ignore_request_limit=force).json()
+        result = web.make_request(
+            url_template + query_encoded, ignore_request_limit=force
+        ).json()
     except web.InvalidResponseException as not_found_exc:
         raise NoSuchItemException(raw_query) from not_found_exc
     else:
@@ -97,8 +106,9 @@ def _make_api_request(url_template, raw_query: str, force: bool) -> dict[str, an
         return result
 
 
-def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bool = False
-             ) -> dict[str, bool or str]:
+def get_item(
+    raw_query: str, app_id: int = 730, currency: str = "PLN", force: bool = False
+) -> dict[str, bool or str]:
     """Makes a web query on the Steam Community Market API for the specified search term.
 
     Arguments:
@@ -110,12 +120,14 @@ def get_item(raw_query: str, app_id: int = 730, currency: str = 'PLN', force: bo
 
     Returns a dictionary containing the JSON response.
     #### JSON response structure:
+    ```
     {
         "success": bool,
         "lowest_price"?: "0,00curr",
         "volume"?: "00,000",
         "median_price"?: "0,00curr"
     }
+    ```
 
     Raises NoSuchItemException if the item was not found.
     """
@@ -143,10 +155,10 @@ def search_item(raw_query: str, force: bool = False) -> dict[str, any]:
 def get_item_price(item_data: dict[str, bool or str]) -> str:
     """Returns the item's lowest price. If that's not available, sends the median price."""
     try:
-        price = item_data['lowest_price']
+        price = item_data["lowest_price"]
     except KeyError:
         bot.send_log(f"{COULD_NOT_FIND_PRICE_MSG}\n{item_data}", force=True)
-        price = item_data['median_price']
+        price = item_data["median_price"]
     return price
 
 
@@ -154,8 +166,12 @@ if __name__ == "__main__":
     # Debugging mode CLI
     try:
         while True:
-            search_mode = input("Enter input mode (search | item info)...\n> ").startswith("s")
-            api_function, mode_text = (search_item, "search") if search_mode else (get_item, "info")
+            search_mode = input(
+                "Enter input mode (search | item info)...\n> "
+            ).startswith("s")
+            api_function, mode_text = (
+                (search_item, "search") if search_mode else (get_item, "info")
+            )
             try:
                 while True:
                     usr_input = input(f"Enter query ({mode_text} mode)...\n> ")
