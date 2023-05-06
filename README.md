@@ -8,6 +8,7 @@
     - [**help**](#help)
     - [**nl**](#nl)
     - [**nb**](#nb)
+    - [**cena**](#cena)
   - [**Administrator commands**](#administrator-commands)
     - [**meet**](#meet)
   - [**Owner/Developer commands**](#ownerdeveloper-commands)
@@ -34,7 +35,7 @@ Dzwonnik 2 was created using **discord.py**, the official library for creating D
 
 Dzwonnik 2 additionally uses some third-party libraries to complete specific tasks:
  - lxml -- the `html` module
- - [corny_commons](https://github.com/MagicalCornFlake/corny_commons) (a package by the same author) -- the `util.web` module
+ - [corny-commons](https://github.com/kguzek/corny-commons) (a package by the same author) -- the `util.web` module
 
 # Usage
 Dzwonnik 2 is a Discord bot intended to be used on Konrad Guzek's school Discord server. The server's ID is hard-coded into the module constants, however with modifications it would be able to run on other severs as well. The default command prefix is `!`, but its usage in the code is extremely organised so with a single modification the prefix could be changed to any string. Note that there is currently no built-in command for changing the prefix, however there is a command for executing python code accessible to the sever owner.
@@ -54,7 +55,10 @@ The `nl` command replies with information about the next lesson. By default, it 
 Finally, when a lesson is found, the bot provides the name of the lesson, the time of the lesson (as well as the day of the week if that isn't today) and a countdown to show how much time there is until the start of the lesson. This countdown is not live -- it is only current as of the time the message was sent. Next, the bot checks if there was a Google Meet link set for the lesson, and if so, it sends the link as well.
 
 ### **nb**
-The `nb` command works similarly to the `nl` command in how it checks for the next period, however it sends information about when the current period ends. If it's currently breaktime, it checks for information after the next break after this one. Just like the `nl` command, it sends information about the timespan of the break as well as a static countdown to its start. If it's the last break for the given day (so there are no lessons after the break), it also reports that information. 
+The `nb` command works similarly to the `nl` command in how it checks for the next period, however it sends information about when the current period ends. If it's currently breaktime, it checks for information after the next break after this one. Just like the `nl` command, it sends information about the timespan of the break as well as a static countdown to its start. If it's the last break for the given day (so there are no lessons after the break), it also reports that information.
+
+### **cena**
+The `cena` command allows users to fetch Steam Community Market price data for a particular item. An item's name must be provided after the command name, and the bot will reply with the current price at that given moment.
 
 ## **Administrator commands**
 These commands are special commands that do not appear in the help message. They only change surface settings, so in theory they are safe to use by any user, however they have been restricted to users with the *administrator* permission by default to prevent accidental typos and misuse.
