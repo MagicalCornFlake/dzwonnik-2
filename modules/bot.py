@@ -57,6 +57,7 @@ SUBSTITUTIONS_TOO_LONG_MSG = (
     "Zastępstwa zostały zaktualizowane, natomiast jest ich zbyt wiele, "
     "aby je móc wysłać w formie wiadomości Rich Text. Załączam je jako plik JSON."
 )
+STATUS_UPDATE_UNNECESSARY_MSG = "The status message does not need updating."
 
 HOMEWORK_EMOJI = Emoji.UNICODE_CHECK, Emoji.UNICODE_ALARM_CLOCK
 
@@ -476,7 +477,9 @@ async def main_update_loop() -> None:
     # Tasks that only update on the first second of a given minute
     if current_time.second == 0:
         # Update the bot status once a minute
-        send_log(await check_for_status_updates(current_time))
+        status_update_msg: str = await check_for_status_updates(current_time)
+        if status_update_msg != STATUS_UPDATE_UNNECESSARY_MSG:
+            send_log(status_update_msg)
 
         if current_time.minute % 30 == 0:
             # Update the Steam Market prices every half hour
@@ -523,7 +526,7 @@ async def check_for_status_updates(current_time: datetime.datetime, force=False)
                 break
         else:
             # We have reached the end of the loop without finding a match
-            return "The status message does not need updating."
+            return STATUS_UPDATE_UNNECESSARY_MSG
     # Check is successful; update bot's Discord status
     msg: str = get_new_status_msg(current_time)
     if not msg:
