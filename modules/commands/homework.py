@@ -12,15 +12,15 @@ from modules import bot, Emoji, data_manager, ROLE_CODES, GROUP_NAMES
 from modules.commands import HomeworkEvent, HomeworkEventContainer
 
 
-DESC = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
+DESC_CREATE = """Tworzy nowe zadanie i automatycznie ustawia powiadomienie na dzień przed.
     Jeśli w parametrach podane jest hasło 'del' oraz nr zadania, **zadanie to zostanie usunięte**.
     Parametry: __data__, __grupa__, __treść__ | 'del', __ID zadania__
     Przykłady:
     `{p}zad 31.12.2024 @Grupa 1 Zrób ćwiczenie 5` - stworzyłoby się zadanie na __31.12.2024__\
     dla grupy **pierwszej** z treścią: *Zrób ćwiczenie 5*.
     `{p}zad del 4` - usunęłoby się zadanie z ID: *event-id-4*."""
-DESC_CREATE = "Wyświetla listę wszystkich zadań domowych utworzonych za pomocą komendy `{p}zad`."
-DESC_LIST = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
+DESC_LIST = "Wyświetla listę wszystkich zadań domowych utworzonych za pomocą komendy `{p}zad`."
+DESC = "Alias komendy `{p}zadanie` lub `{p}zadania`, w zależności od podanych argumentów."
 
 
 homework_events = HomeworkEventContainer()
